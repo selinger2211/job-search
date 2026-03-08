@@ -59,10 +59,12 @@ Research briefs are generated on-demand, saved locally, and tracked in a "Recent
 - **Deep research mode** — extended AI research triggered at the screening stage, covering 10-K filings, earnings calls, Glassdoor sentiment, leadership changes, competitive threats, and more
 - **Auto resume tailoring** — paste a JD and get two outputs: a quick-tailor markup showing exactly what to change, and a full rewrite with rephrased bullets, reordered sections, and a custom summary — both stored in the company workspace
 - **Interview prep deck (PPTX)** — auto-generated slide deck from the research brief with company overview, role breakdown, key talking points, and a "questions to ask" closing slide
+- **LinkedIn network map** — import your LinkedIn connections CSV to map 1st-degree connections to pipeline companies. "Warm intro" badges on pipeline cards, network strength indicators, and AI-assisted path-finding for 2nd-degree targets. Connection names are referenced in generated research briefs.
 
 ### V3.0 — Intelligence layer
 
 - **Google Calendar & Gmail integration** — auto-detect interview invites and recruiter threads, surface them in the pipeline, and offer one-click deep research when a screening is scheduled
+- **BuiltIn.com job feed** — surface relevant tech job listings from BuiltIn.com for pipeline companies during research brief generation, with optional direct feed integration if a public API becomes available
 - **Smart stage suggestions** — prompt to advance a role when outreach gets a reply or an interview lands on the calendar
 - **Weekly digest** — automated summary of pipeline movement, stale roles, and suggested next actions
 
