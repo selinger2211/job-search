@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Search Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; }
+
+  /* ── Layout ─────────────────────────────────────────── */
+  .app { max-width: 1500px; margin: 0 auto; padding: 16px 20px; }
+  .header { background: linear-gradient(135deg, #1a3a5c 0%, #2e75b6 100%); color: white; padding: 18px 28px; border-radius: 12px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { font-size: 20px; font-weight: 700; }
+  .header-sub { font-size: 12px; opacity: 0.75; margin-top: 3px; }
+  .header-stats { display: flex; gap: 14px; }
+  .stat-box { text-align: center; background: rgba(255,255,255,0.15); padding: 8px 14px; border-radius: 8px; }
+  .stat-box .num { font-size: 20px; font-weight: 700; }
+  .stat-box .lbl { font-size: 10px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+  /* ── Cards ──────────────────────────────────────────── */
+  .card { background: white; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+  .card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #4a5568; margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+  .card-title .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+  /* ── Today's Actions ────────────────────────────────── */
+  .today-card { border-left: 4px solid #2e75b6; }
+  .action-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f4f8; }
+  .action-item:last-child { border-bottom: none; }
+  .action-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .action-text strong { display: block; font-size: 12px; color: #1a202c; }
+  .action-text span { font-size: 11px; color: #718096; }
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  .badge-blue   { background: #ebf4ff; color: #2e75b6; }
+  .badge-green  { background: #f0fdf4; color: #16a34a; }
+  .badge-amber  { background: #fffbeb; color: #d97706; }
+  .badge-purple { background: #faf5ff; color: #7c3aed; }
+  .badge-red    { background: #fef2f2; color: #dc2626; }
+
+  /* ── Search / Filter bar ────────────────────────────── */
+  .search-bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .search-bar { flex: 1; padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; color: #1a202c; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center; }
+  .search-bar:focus { outline: none; border-color: #2e75b6; }
+  .search-clear { display: none; padding: 5px 10px; background: #f7fafc; border: 1.5px solid #e2e8f0; border-radius: 6px; font-size: 11px; color: #4a5568; cursor: pointer; white-space: nowrap; }
+  .search-clear.visible { display: block; }
+  .filter-count { font-size: 11px; color: #718096; white-space: nowrap; }
+
+  /* ── Pipeline ────────────────────────────────────────── */
+  .pipeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .pipeline-col { background: #f7fafc; border-radius: 10px; padding: 10px 8px; min-height: 100px; transition: background 0.15s, box-shadow 0.15s; }
+  .pipeline-col.drag-over { background: #ebf4ff; box-shadow: inset 0 0 0 2px #2e75b6; }
+  .pipeline-col-header { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 7px; display: flex; align-items: center; justify-content: space-between; }
+  .pipeline-col-count { background: white; border-radius: 10px; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+
+  /* Pipeline cards — compact */
+  .pipeline-card { background: white; border-radius: 7px; padding: 8px 9px; margin-bottom: 6px; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 3px solid transparent; transition: transform 0.1s, box-shadow 0.1s, opacity 0.1s; user-select: none; }
+  .pipeline-card:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+  .pipeline-card.dragging { opacity: 0.4; cursor: grabbing; }
+  .pipeline-card .co  { font-size: 11px; font-weight: 700; color: #1a3a5c; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .pipeline-card .role { font-size: 10px; color: #718096; margin-top: 2px; line-height: 1.3; }
+  .pipeline-card .tier-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .add-card-btn { width: 100%; background: none; border: 1.5px dashed #cbd5e0; border-radius: 7px; padding: 6px; font-size: 10px; color: #a0aec0; cursor: pointer; transition: all 0.1s; }
+  .add-card-btn:hover { border-color: #2e75b6; color: #2e75b6; background: #ebf4ff; }
+
+  /* Quick-stage buttons */
+  .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; gap: 4px; }
+  .stage-btn { border: none; border-radius: 4px; font-size: 9px; font-weight: 700; padding: 2px 5px; cursor: pointer; transition: all 0.1s; white-space: nowrap; }
+  .stage-btn-back { background: #f0f4f8; color: #718096; }
+  .stage-btn-back:hover { background: #e2e8f0; color: #1a202c; }
+  .stage-btn-fwd  { background: #ebf4ff; color: #2e75b6; }
+  .stage-btn-fwd:hover  { background: #2e75b6; color: white; }
+  .card-meta { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+
+  /* Col accent colors */
+  .col-tracking .pipeline-col-header  { color: #4a5568; }
+  .col-outreach .pipeline-col-header  { color: #0e7490; }
+  .col-applied .pipeline-col-header   { color: #2e75b6; }
+  .col-screen .pipeline-col-header    { color: #7c3aed; }
+  .col-interview .pipeline-col-header { color: #d97706; }
+  .col-offer .pipeline-col-header     { color: #16a34a; }
+  .col-tracking .pipeline-card  { border-left-color: #a0aec0; }
+  .col-outreach .pipeline-card  { border-left-color: #0e7490; }
+  .col-applied .pipeline-card   { border-left-color: #2e75b6; }
+  .col-screen .pipeline-card    { border-left-color: #7c3aed; }
+  .col-interview .pipeline-card { border-left-color: #d97706; }
+  .col-offer .pipeline-card     { border-left-color: #16a34a; }
+
+  /* ── Tier list / chips ──────────────────────────────── */
+  .tier-section { margin-bottom: 10px; }
+  .tier-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; padding: 3px 7px; border-radius: 5px; display: inline-block; }
+  .tier-1 { background: #1a3a5c; color: white; }
+  .tier-2 { background: #2e75b6; color: white; }
+  .tier-3 { background: #1e7e34; color: white; }
+  .tier-4 { background: #718096; color: white; }
+  .company-chip { display: inline-flex; align-items: center; gap: 3px; margin: 2px; padding: 3px 8px; border-radius: 14px; font-size: 10px; cursor: pointer; border: 1.5px solid transparent; transition: all 0.1s; }
+  .company-chip:hover { transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  .chip-remove { display: none; font-size: 12px; line-height: 1; font-weight: 700; opacity: 0.5; margin-left: 2px; }
+  .chip-remove:hover { opacity: 1; }
+  body.edit-mode .chip-remove { display: inline; }
+  body.edit-mode .company-chip { cursor: default; }
+  .chip-t1 { background: #ebf4ff; color: #1a3a5c; border-color: #bee3f8; }
+  .chip-t2 { background: #e8f4fd; color: #2e75b6; border-color: #90cdf4; }
+  .chip-t3 { background: #f0fdf4; color: #1e7e34; border-color: #9ae6b4; }
+  .chip-t4 { background: #f7fafc; color: #4a5568; border-color: #e2e8f0; }
+  /* Pipeline-status chip overrides */
+  .chip-status-tracking  { background: #f7fafc !important; color: #4a5568 !important; border: 1.5px dashed #a0aec0 !important; }
+  .chip-status-outreach  { background: #ecfeff !important; color: #0e7490 !important; border: 1.5px solid #67e8f9 !important; font-weight: 700; }
+  .chip-status-applied   { background: #ebf4ff !important; color: #1a3a5c !important; border: 1.5px solid #2e75b6 !important; font-weight: 700; }
+  .chip-status-screen    { background: #faf5ff !important; color: #6b21a8 !important; border: 1.5px solid #a78bfa !important; font-weight: 700; }
+  .chip-status-interview { background: #fffbeb !important; color: #92400e !important; border: 1.5px solid #f59e0b !important; font-weight: 700; }
+  .chip-status-offer     { background: #f0fdf4 !important; color: #14532d !important; border: 1.5px solid #16a34a !important; text-decoration: line-through; opacity: 0.6; }
+  .chip-status-badge { font-size: 8px; padding: 1px 4px; border-radius: 7px; margin-left: 2px; font-weight: 700; vertical-align: middle; }
+  /* Chip hidden by search filter */
+  .chip-hidden { display: none !important; }
+
+  /* ── Badges ─────────────────────────────────────────── */
+  .mini-badge { display: inline-block; font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 7px; }
+  .source-inbound  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .source-outbound { background: #ebf4ff; color: #2e75b6; border: 1px solid #bfdbfe; }
+  .contact-email   { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+  .contact-linkedin{ background: #ebf4ff; color: #2e75b6; border: 1px solid #bfdbfe; }
+  .contact-other   { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .referral-badge-referred { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .referral-badge-cold     { background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; }
+
+  /* ── Toggles (source / contact / referral) ──────────── */
+  .toggle-group { display: flex; border: 1.5px solid #e2e8f0; border-radius: 7px; /* no overflow:hidden — lets tooltips escape */ }
+  .toggle-group input[type=radio] { display: none; }
+  .toggle-group label { flex: 1; text-align: center; padding: 6px 7px; font-size: 11px; font-weight: 600; cursor: pointer; color: #718096; background: #f7fafc; transition: all 0.12s; user-select: none; position: relative; }
+  .toggle-group label:first-of-type { border-radius: 5px 0 0 5px; }
+  .toggle-group label:last-of-type  { border-radius: 0 5px 5px 0; }
+  .toggle-group label:not(:last-of-type) { border-right: 1px solid #e2e8f0; }
+  /* CSS tooltip — appears above on hover */
+  .toggle-group label[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 7px);
+    left: 50%; transform: translateX(-50%);
+    background: #1a202c; color: white;
+    padding: 4px 9px; border-radius: 5px;
+    font-size: 10px; font-weight: 500; white-space: nowrap;
+    pointer-events: none; z-index: 300;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .toggle-group label[data-tip]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%; transform: translateX(-50%);
+    border: 4px solid transparent; border-top-color: #1a202c;
+    pointer-events: none; z-index: 300;
+  }
+  /* All checked states: bold + bottom accent bar */
+  .toggle-group input:checked + label { font-weight: 700; box-shadow: inset 0 -2px 0 currentColor; }
+  .toggle-group input[value=""]:checked      + label { background: #f0f4f8; color: #4a5568; }
+  .toggle-group input[value=inbound]:checked  + label { background: #f0fdf4; color: #16a34a; }
+  .toggle-group input[value=outbound]:checked + label { background: #ebf4ff; color: #2e75b6; }
+  .toggle-group input[value=email]:checked    + label { background: #faf5ff; color: #7c3aed; }
+  .toggle-group input[value=linkedin]:checked + label { background: #dbeafe; color: #1d4ed8; }
+  .toggle-group input[value=other]:checked    + label { background: #fffbeb; color: #d97706; }
+  .toggle-group input[value=referred]:checked + label { background: #f0fdf4; color: #16a34a; }
+  .toggle-group input[value=cold]:checked     + label { background: #f0f9ff; color: #0284c7; }
+
+  /* ── Networking nudges ──────────────────────────────── */
+  .nudge-card { border: 1.5px solid #ebf4ff; border-radius: 9px; padding: 12px; margin-bottom: 8px; }
+  .nudge-name { font-size: 12px; font-weight: 700; color: #1a3a5c; }
+  .nudge-co   { font-size: 11px; color: #2e75b6; }
+  .nudge-why  { font-size: 11px; color: #718096; margin-top: 3px; }
+  .nudge-btn  { margin-top: 7px; padding: 4px 12px; background: #2e75b6; color: white; border: none; border-radius: 5px; font-size: 10px; font-weight: 600; cursor: pointer; }
+  .nudge-btn:hover { background: #1a3a5c; }
+
+  /* ── Quick check ────────────────────────────────────── */
+  .check-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f4f8; }
+  .check-row:last-child { border-bottom: none; }
+  .check-row input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; accent-color: #2e75b6; flex-shrink: 0; }
+  .check-row label { font-size: 11px; color: #4a5568; cursor: pointer; flex: 1; }
+  .check-row input:checked + label { text-decoration: line-through; color: #a0aec0; }
+
+  /* ── Contact Log ────────────────────────────────────── */
+  .contact-log-row  { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f0f4f8; cursor: pointer; }
+  .contact-log-row:last-child { border-bottom: none; }
+  .contact-log-row:hover { background: #f7fafc; margin: 0 -4px; padding: 7px 4px; border-radius: 6px; }
+  .contact-log-co   { font-size: 12px; font-weight: 700; color: #1a3a5c; min-width: 120px; }
+  .contact-log-role { font-size: 11px; color: #718096; flex: 1; min-width: 0; }
+  .contact-log-date { font-size: 10px; color: #a0aec0; }
+  .contact-stale    { color: #dc2626 !important; font-weight: 700; }
+  .contact-log-applied { font-size: 10px; color: #718096; white-space: nowrap; }
+  .contact-log-applied strong { color: #2e75b6; }
+  .contact-log-never { font-size: 10px; color: #cbd5e0; font-style: italic; }
+
+  /* ── Stage history timeline ─────────────────────────── */
+  .stage-history { margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f4f8; }
+  .stage-history-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #a0aec0; margin-bottom: 6px; }
+  .stage-history-items { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .sh-item { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: #4a5568; }
+  .sh-item .sh-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .sh-item .sh-date { color: #a0aec0; }
+  .sh-arrow { color: #cbd5e0; font-size: 9px; }
+
+  /* ── Company manager ────────────────────────────────── */
+  .co-mgr-row { display: flex; align-items: center; gap: 7px; padding: 5px 0; border-bottom: 1px solid #f0f4f8; }
+  .co-mgr-row:last-child { border-bottom: none; }
+  .co-mgr-name { flex: 1; font-size: 12px; color: #1a202c; }
+  .co-mgr-tier { padding: 3px 7px; border: 1.5px solid #e2e8f0; border-radius: 5px; font-size: 11px; color: #4a5568; cursor: pointer; }
+  .co-mgr-del  { padding: 3px 7px; background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 5px; font-size: 11px; cursor: pointer; flex-shrink: 0; }
+  .co-mgr-del:hover { background: #dc2626; color: white; }
+  .co-mgr-section { margin-bottom: 10px; }
+  .co-mgr-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .add-co-form { display: flex; gap: 7px; margin-top: 10px; padding-top: 10px; border-top: 1.5px solid #e2e8f0; }
+  .add-co-form input  { flex: 1; padding: 6px 9px; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 12px; }
+  .add-co-form select { padding: 6px 9px; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 12px; }
+  .mgr-modal { max-width: 520px; max-height: 80vh; overflow-y: auto; }
+
+  /* ── Modal ──────────────────────────────────────────── */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 14px; padding: 22px 24px; width: 480px; max-width: 96vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.18); }
+  .modal h3 { font-size: 15px; font-weight: 700; color: #1a3a5c; margin-bottom: 14px; }
+  /* 2-col form grid for basic fields */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-row { margin-bottom: 10px; }
+  .form-row.full { grid-column: 1 / -1; }
+  .form-row > label { display: block; font-size: 11px; font-weight: 600; color: #4a5568; margin-bottom: 3px; }
+  .form-row > input, .form-row > select, .form-row > textarea { width: 100%; padding: 7px 9px; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 12px; color: #1a202c; }
+  .form-row > input:focus, .form-row > select:focus { outline: none; border-color: #2e75b6; }
+  .form-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #a0aec0; margin: 12px 0 8px; padding-top: 10px; border-top: 1px solid #f0f4f8; }
+  .modal-btns { display: flex; gap: 7px; justify-content: flex-end; margin-top: 14px; }
+  .btn-primary   { padding: 7px 18px; background: #2e75b6; color: white; border: none; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-primary:hover { background: #1a3a5c; }
+  .btn-secondary { padding: 7px 18px; background: #f7fafc; color: #4a5568; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 12px; cursor: pointer; }
+  .btn-danger    { padding: 5px 12px; background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 6px; font-size: 11px; cursor: pointer; }
+  /* Research button */
+  .btn-research { padding: 3px 8px; background: #faf5ff; color: #7c3aed; border: 1.5px solid #e9d5ff; border-radius: 5px; font-size: 9px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.12s; }
+  .btn-research:hover { background: #7c3aed; color: white; }
+  /* Research modal */
+  .research-prompt-box { background: #f7fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; font-size: 12px; color: #1a202c; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow-y: auto; margin-bottom: 10px; font-family: inherit; }
+  .copy-success { display: none; color: #16a34a; font-size: 12px; font-weight: 600; }
+  .copy-success.show { display: inline; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>🎯 Job Search Dashboard</h1>
+      <div class="header-sub" id="todayLabel"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+      <button onclick="openResearchModal()" style="padding:7px 16px;background:rgba(255,255,255,0.15);color:white;border:1.5px solid rgba(255,255,255,0.35);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;backdrop-filter:blur(4px);transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">🔬 Research a Company</button>
+    <div class="header-stats">
+      <div class="stat-box"><div class="num" id="statTracking">0</div><div class="lbl">Tracking</div></div>
+      <div class="stat-box"><div class="num" id="statOutreach" style="color:#67e8f9">0</div><div class="lbl">📨 Outreach</div></div>
+      <div class="stat-box"><div class="num" id="statApplied">0</div><div class="lbl">Applied</div></div>
+      <div class="stat-box"><div class="num" id="statActive">0</div><div class="lbl">In Process</div></div>
+      <div class="stat-box"><div class="num" id="statInbound" style="color:#86efac">0</div><div class="lbl">📥 Inbound</div></div>
+      <div class="stat-box"><div class="num" id="statOutbound" style="color:#93c5fd">0</div><div class="lbl">📤 Outbound</div></div>
+    </div>
+    </div><!-- /header-right -->
+  </div>
+
+  <!-- TODAY'S ACTIONS + QUICK CHECK -->
+  <div class="grid2">
+    <div class="card today-card">
+      <div class="card-title"><span class="dot" style="background:#2e75b6"></span>Today's Action Items</div>
+      <div id="todayActions"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#16a34a"></span>Role Fit Quick-Check</div>
+      <div id="quickCheck"></div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title" style="margin-bottom:10px">
+      <span class="dot" style="background:#d97706"></span>Application Pipeline
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <div class="search-bar-wrap" style="margin:0">
+          <input class="search-bar" id="pipelineSearch" placeholder="Filter companies…" oninput="applyFilter(this.value)" style="width:180px">
+          <button class="search-clear" id="searchClearBtn" onclick="clearFilter()">✕ Clear</button>
+          <span class="filter-count" id="filterCount" style="display:none"></span>
+        </div>
+        <button onclick="openAddModal()" style="padding:5px 13px;background:#2e75b6;color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">+ Add Role</button>
+      </div>
+    </div>
+    <div class="pipeline">
+      <div class="pipeline-col col-tracking" id="col-tracking">
+        <div class="pipeline-col-header"><span style="color:#4a5568">👀 Tracking</span> <span class="pipeline-col-count" id="cnt-tracking">0</span></div>
+      </div>
+      <div class="pipeline-col col-outreach" id="col-outreach">
+        <div class="pipeline-col-header"><span style="color:#0e7490">📨 Outreach</span> <span class="pipeline-col-count" id="cnt-outreach">0</span></div>
+      </div>
+      <div class="pipeline-col col-applied" id="col-applied">
+        <div class="pipeline-col-header"><span style="color:#2e75b6">📤 Applied</span> <span class="pipeline-col-count" id="cnt-applied">0</span></div>
+      </div>
+      <div class="pipeline-col col-screen" id="col-screen">
+        <div class="pipeline-col-header"><span style="color:#7c3aed">📞 Screen</span> <span class="pipeline-col-count" id="cnt-screen">0</span></div>
+      </div>
+      <div class="pipeline-col col-interview" id="col-interview">
+        <div class="pipeline-col-header"><span style="color:#d97706">🎯 Interview</span> <span class="pipeline-col-count" id="cnt-interview">0</span></div>
+      </div>
+      <div class="pipeline-col col-offer" id="col-offer">
+        <div class="pipeline-col-header"><span style="color:#16a34a">🎉 Offer/Done</span> <span class="pipeline-col-count" id="cnt-offer">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT LOG -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">
+      <span class="dot" style="background:#7c3aed"></span>Contact Log
+      <span style="margin-left:6px;font-size:10px;color:#a0aec0;font-weight:400;text-transform:none;letter-spacing:0">outreach & applications — click any row to edit</span>
+      <button onclick="renderContactLog()" style="margin-left:auto;padding:3px 10px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:5px;font-size:10px;color:#4a5568;cursor:pointer">↻</button>
+    </div>
+    <div id="contactLog"></div>
+  </div>
+
+  <div class="grid2">
+    <!-- TARGET COMPANIES -->
+    <div class="card">
+      <div class="card-title">
+        <span class="dot" style="background:#1a3a5c"></span>Target Company List
+        <div style="margin-left:auto;display:flex;gap:5px">
+          <button id="editModeBtn" onclick="toggleEditMode()" style="padding:3px 10px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:5px;font-size:10px;color:#4a5568;cursor:pointer">✏️ Edit</button>
+          <button onclick="openCoManager()" style="padding:3px 10px;background:#2e75b6;color:white;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer">+ Add/Remove</button>
+        </div>
+      </div>
+      <div id="tierList"></div>
+    </div>
+
+    <!-- NETWORKING NUDGES -->
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#7c3aed"></span>Today's Networking Nudges</div>
+      <div id="networkNudges"></div>
+      <button onclick="refreshNudges()" style="width:100%;padding:7px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:7px;font-size:11px;color:#4a5568;cursor:pointer;margin-top:7px">↻ Refresh nudges</button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ══ RESEARCH MODAL ════════════════════════════════════════ -->
+<div class="modal-overlay" id="researchModal">
+  <div class="modal" style="width:480px">
+    <h3>🔬 Generate Research Brief</h3>
+    <p style="font-size:12px;color:#718096;margin-bottom:14px">Creates an interactive interview prep page that opens immediately in a new tab — with notes, checkboxes, and progress tracking.</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="form-row" style="flex:1;margin:0">
+        <label style="font-size:11px;font-weight:600;color:#4a5568;display:block;margin-bottom:3px">Company</label>
+        <input type="text" id="rm-company" placeholder="e.g. The Trade Desk" style="width:100%;padding:7px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px">
+      </div>
+      <div class="form-row" style="flex:1;margin:0">
+        <label style="font-size:11px;font-weight:600;color:#4a5568;display:block;margin-bottom:3px">Role Title</label>
+        <input type="text" id="rm-role" placeholder="e.g. Staff PM, Data Platform" style="width:100%;padding:7px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px">
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:10px">
+      <label style="font-size:11px;font-weight:600;color:#4a5568;display:block;margin-bottom:3px">Job Posting URL <span style="font-weight:400;color:#a0aec0">(optional)</span></label>
+      <input type="url" id="rm-url" placeholder="https://..." style="width:100%;padding:7px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px">
+    </div>
+    <div class="form-row" style="margin-bottom:14px">
+      <label style="font-size:11px;font-weight:600;color:#4a5568;display:block;margin-bottom:3px">Interviewers <span style="font-weight:400;color:#a0aec0">(optional, comma-separated)</span></label>
+      <input type="text" id="rm-interviewers" placeholder="e.g. Jane Smith – Eng Manager, Bob Lee – CTO" style="width:100%;padding:7px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px">
+    </div>
+    <div class="modal-btns" style="justify-content:flex-start;gap:10px">
+      <button class="btn-primary" onclick="generateResearchBrief()" style="gap:6px;display:flex;align-items:center">🚀 Generate &amp; Open Brief</button>
+      <button class="btn-secondary" onclick="closeResearchModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COMPANY MANAGER MODAL ══════════════════════════════════ -->
+<div class="modal-overlay" id="coManagerModal">
+  <div class="modal mgr-modal">
+    <h3>Manage Target Companies</h3>
+    <p style="font-size:11px;color:#718096;margin-bottom:12px">Add, remove, or reassign tiers. Changes save instantly.</p>
+    <div id="coManagerList"></div>
+    <div class="add-co-form">
+      <input type="text" id="new-co-name" placeholder="Company name…">
+      <select id="new-co-tier">
+        <option value="1">Tier 1 — Dream</option>
+        <option value="2">Tier 2 — High Prob</option>
+        <option value="3">Tier 3 — Big Tech</option>
+        <option value="4">Tier 4 — Monitor</option>
+      </select>
+      <button class="btn-primary" onclick="addCompany()">Add</button>
+    </div>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn-secondary" onclick="closeCoManager()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD ROLE MODAL ════════════════════════════════════════ -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Add Role to Pipeline</h3>
+
+    <!-- Basic info: 2-col grid -->
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Company</label>
+        <input type="text" id="f-company" placeholder="e.g. Plaid" list="companyList">
+        <datalist id="companyList"></datalist>
+      </div>
+      <div class="form-row">
+        <label>Stage</label>
+        <select id="f-stage">
+          <option value="tracking">👀 Tracking</option>
+          <option value="outreach">📨 Outreach</option>
+          <option value="applied">📤 Applied</option>
+          <option value="screen">📞 Phone Screen</option>
+          <option value="interview">🎯 Interviewing</option>
+          <option value="offer">🎉 Offer / Done</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Role Title</label>
+        <input type="text" id="f-role" placeholder="e.g. Staff PM, AI Foundations">
+      </div>
+      <div class="form-row">
+        <label>Tier</label>
+        <select id="f-tier">
+          <option value="1">Tier 1 — Dream</option>
+          <option value="2">Tier 2 — High Prob</option>
+          <option value="3">Tier 3 — Big Tech</option>
+          <option value="4">Tier 4 — Monitor</option>
+        </select>
+      </div>
+      <div class="form-row full">
+        <label>Job URL (optional)</label>
+        <input type="url" id="f-url" placeholder="https://...">
+      </div>
+    </div>
+
+    <div class="form-section-label">Source & Contact</div>
+    <div class="form-row">
+      <label>How did this come to you?</label>
+      <div class="toggle-group">
+        <input type="radio" name="f-source" id="f-src-out" value="outbound" checked>
+        <label for="f-src-out">📤 Outbound — I found it</label>
+        <input type="radio" name="f-source" id="f-src-in" value="inbound">
+        <label for="f-src-in">📥 Inbound — they reached out</label>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>How did you get in?</label>
+      <div class="toggle-group">
+        <input type="radio" name="f-referral" id="f-ref-none" value="" checked>
+        <label for="f-ref-none">— not set</label>
+        <input type="radio" name="f-referral" id="f-ref-referred" value="referred">
+        <label for="f-ref-referred">🤝 Referred</label>
+        <input type="radio" name="f-referral" id="f-ref-cold" value="cold">
+        <label for="f-ref-cold">🧊 Cold</label>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Last Contacted</label>
+        <input type="date" id="f-last-contacted">
+      </div>
+      <div class="form-row">
+        <label>Outreach via <span style="font-weight:400;color:#a0aec0">(direct contact, not the application)</span></label>
+        <div class="toggle-group">
+          <input type="radio" name="f-contact-method" id="f-cm-none" value="" checked>
+          <label for="f-cm-none" data-tip="No direct outreach yet">—</label>
+          <input type="radio" name="f-contact-method" id="f-cm-email" value="email">
+          <label for="f-cm-email" data-tip="Email">✉️ Email</label>
+          <input type="radio" name="f-contact-method" id="f-cm-linkedin" value="linkedin">
+          <label for="f-cm-linkedin" data-tip="LinkedIn message or InMail">💼 LinkedIn</label>
+          <input type="radio" name="f-contact-method" id="f-cm-other" value="other">
+          <label for="f-cm-other" data-tip="Phone, intro through referral, event, etc.">💬 Other</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Notes</label>
+      <textarea id="f-notes" rows="2" style="resize:vertical" placeholder="Referral contact, fit notes…"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveRole()">Save Role</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT ROLE MODAL ═══════════════════════════════════════ -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>Edit Role</h3>
+    <input type="hidden" id="ef-id">
+
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Company</label>
+        <input type="text" id="ef-company">
+      </div>
+      <div class="form-row">
+        <label>Stage</label>
+        <select id="ef-stage">
+          <option value="tracking">👀 Tracking</option>
+          <option value="outreach">📨 Outreach</option>
+          <option value="applied">📤 Applied</option>
+          <option value="screen">📞 Phone Screen</option>
+          <option value="interview">🎯 Interviewing</option>
+          <option value="offer">🎉 Offer / Done</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Role Title</label>
+        <input type="text" id="ef-role">
+      </div>
+      <div class="form-row">
+        <label>Tier</label>
+        <select id="ef-tier">
+          <option value="1">Tier 1</option><option value="2">Tier 2</option>
+          <option value="3">Tier 3</option><option value="4">Tier 4</option>
+        </select>
+      </div>
+      <div class="form-row full">
+        <label>Job URL</label>
+        <input type="url" id="ef-url">
+      </div>
+    </div>
+
+    <div class="form-section-label">Source & Contact</div>
+    <div class="form-row">
+      <label>How did this come to you?</label>
+      <div class="toggle-group">
+        <input type="radio" name="ef-source" id="ef-src-out" value="outbound" checked>
+        <label for="ef-src-out">📤 Outbound — I found it</label>
+        <input type="radio" name="ef-source" id="ef-src-in" value="inbound">
+        <label for="ef-src-in">📥 Inbound — they reached out</label>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>How did you get in?</label>
+      <div class="toggle-group">
+        <input type="radio" name="ef-referral" id="ef-ref-none" value="" checked>
+        <label for="ef-ref-none">— not set</label>
+        <input type="radio" name="ef-referral" id="ef-ref-referred" value="referred">
+        <label for="ef-ref-referred">🤝 Referred</label>
+        <input type="radio" name="ef-referral" id="ef-ref-cold" value="cold">
+        <label for="ef-ref-cold">🧊 Cold</label>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Last Contacted</label>
+        <input type="date" id="ef-last-contacted">
+      </div>
+      <div class="form-row">
+        <label>Outreach via <span style="font-weight:400;color:#a0aec0">(direct contact, not the application)</span></label>
+        <div class="toggle-group">
+          <input type="radio" name="ef-contact-method" id="ef-cm-none" value="" checked>
+          <label for="ef-cm-none" data-tip="No direct outreach yet">—</label>
+          <input type="radio" name="ef-contact-method" id="ef-cm-email" value="email">
+          <label for="ef-cm-email" data-tip="Email">✉️ Email</label>
+          <input type="radio" name="ef-contact-method" id="ef-cm-linkedin" value="linkedin">
+          <label for="ef-cm-linkedin" data-tip="LinkedIn message or InMail">💼 LinkedIn</label>
+          <input type="radio" name="ef-contact-method" id="ef-cm-other" value="other">
+          <label for="ef-cm-other" data-tip="Phone, intro through referral, event, etc.">💬 Other</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Notes</label>
+      <textarea id="ef-notes" rows="2" style="resize:vertical"></textarea>
+    </div>
+
+    <!-- Stage history timeline -->
+    <div class="stage-history" id="ef-stage-history" style="display:none">
+      <div class="stage-history-title">Stage History</div>
+      <div class="stage-history-items" id="ef-history-items"></div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn-danger" onclick="deleteRole()">Delete</button>
+      <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-primary" onclick="updateRole()">Update</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────────────
+const STAGES = ['tracking','outreach','applied','screen','interview','offer'];
+const STAGE_LABELS = { tracking:'Tracking', outreach:'Outreach', applied:'Applied', screen:'Screen', interview:'Interview', offer:'Offer/Done' };
+const STAGE_ICONS  = { tracking:'👀', outreach:'📨', applied:'📤', screen:'📞', interview:'🎯', offer:'🎉' };
+const STAGE_COLORS = { tracking:'#a0aec0', outreach:'#0e7490', applied:'#2e75b6', screen:'#7c3aed', interview:'#d97706', offer:'#16a34a' };
+
+const TIER_COLORS = { "1":"#1a3a5c", "2":"#2e75b6", "3":"#1e7e34", "4":"#718096" };
+const TIER_NAMES  = { "1":"Tier 1 — Dream", "2":"Tier 2 — High Prob", "3":"Tier 3 — Big Tech", "4":"Tier 4 — Monitor" };
+const TIER_HDR_COLORS = TIER_COLORS;
+
+const STAGE_BADGE = {
+  tracking:  { label:'👀',          title:'Tracking',     cls:'chip-status-tracking'  },
+  outreach:  { label:'📨 Outreach', title:'Outreach',     cls:'chip-status-outreach'  },
+  applied:   { label:'📤 Applied',  title:'Applied',      cls:'chip-status-applied'   },
+  screen:    { label:'📞 Screen',   title:'Phone Screen', cls:'chip-status-screen'    },
+  interview: { label:'🎯 Live',     title:'Interviewing', cls:'chip-status-interview' },
+  offer:     { label:'🎉 Done',     title:'Offer/Done',   cls:'chip-status-offer'     },
+};
+
+const DEFAULT_COMPANIES = {
+  1: ["Company A","Company B","Company C","Company D","Company E"],
+  2: ["Company F","Company G","Company H","Company I","Company J"],
+  3: ["Company K","Company L","Company M","Company N","Company O"],
+  4: ["Company P","Company Q","Company R","Company S","Company T"]
+};
+
+// Edit these nudges to reflect YOUR network and target companies
+const NETWORK_NUDGES = [
+  { name:"Former employer alumni",      co:"→ Target Company 1, Target Company 2",     why:"Your former colleagues are your warmest network. Search LinkedIn for people from past roles now at your target companies." },
+  { name:"School / community network",  co:"→ Target Company 3, Target Company 4",     why:"Alumni networks are underutilized. Reach out to classmates or community members at companies you're targeting." },
+  { name:"Online community contacts",   co:"→ Target Company 5, Target Company 6",     why:"Slack communities, Discord servers, and Twitter/X connections can open unexpected doors." },
+  { name:"Type 3 outreach example",     co:"Role Title at Target Company (open role)", why:"Find 15–20 contacts — hiring managers, team leads, recruiters. Target: 20 messages → 2 conversations → 1 referral." },
+];
+
+// Edit these criteria to match YOUR job search filters
+const CHECK_ITEMS = [
+  "Does the role match my target title / seniority level?",
+  "Is the location or remote policy compatible with my needs?",
+  "Does the company have the stage / size I'm looking for?",
+  "Does the role align with my target domain or industry?",
+  "Is this an IC role with end-to-end ownership?",
+  "Does the JD mention specific outcomes / metrics (not just features)?",
+];
+
+// ─── STORAGE ─────────────────────────────────────────────────────────────
+function loadRoles()    { try { return JSON.parse(localStorage.getItem('ili_roles')    || '[]'); } catch { return []; } }
+function saveRoles(r)   { localStorage.setItem('ili_roles', JSON.stringify(r)); }
+function getCompanies() {
+  try { const s = localStorage.getItem('ili_companies'); if (s) return JSON.parse(s); } catch {}
+  return JSON.parse(JSON.stringify(DEFAULT_COMPANIES));
+}
+function saveCompaniesData(c) { localStorage.setItem('ili_companies', JSON.stringify(c)); }
+if (!localStorage.getItem('ili_companies')) saveCompaniesData(DEFAULT_COMPANIES);
+
+// ─── STAGE HISTORY ────────────────────────────────────────────────────────
+function pushStageHistory(role, newStage) {
+  if (role.stage === newStage) return role;
+  if (!role.stageHistory) role.stageHistory = [{ stage: role.stage || 'tracking', ts: role.date || new Date().toISOString() }];
+  role.stageHistory.push({ stage: newStage, ts: new Date().toISOString() });
+  role.stage = newStage;
+  return role;
+}
+
+// ─── FILTER STATE ─────────────────────────────────────────────────────────
+let filterQuery = '';
+function applyFilter(val) {
+  filterQuery = val.trim().toLowerCase();
+  document.getElementById('searchClearBtn').classList.toggle('visible', filterQuery.length > 0);
+  renderPipeline();
+  renderTierList();
+}
+function clearFilter() {
+  filterQuery = '';
+  document.getElementById('pipelineSearch').value = '';
+  document.getElementById('searchClearBtn').classList.remove('visible');
+  document.getElementById('filterCount').style.display = 'none';
+  renderPipeline();
+  renderTierList();
+}
+
+// ─── STREAK ───────────────────────────────────────────────────────────────
+function updateStreak() {
+  const today = new Date().toDateString();
+  try {
+    const s = JSON.parse(localStorage.getItem('ili_streak') || '{"lastVisit":null,"streak":0}');
+    if (s.lastVisit !== today) {
+      const yest = new Date(Date.now() - 86400000).toDateString();
+      localStorage.setItem('ili_streak', JSON.stringify({ lastVisit: today, streak: s.lastVisit === yest ? s.streak + 1 : 1 }));
+    }
+  } catch {}
+}
+
+// ─── TODAY'S ACTIONS ─────────────────────────────────────────────────────
+function renderTodayActions() {
+  const d   = new Date();
+  const day = d.getDay();
+  document.getElementById('todayLabel').textContent = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  const actions = [];
+
+  if ([1,3,5].includes(day)) actions.push({
+    icon:'🏆', bg:'#ebf4ff',
+    title:'Check Tier 1 company job boards',
+    sub:'Visit career pages for your Tier 1 companies and scan for new openings',
+    badge:'badge-blue', badgeText:'Apply same day'
+  });
+  if (day === 1) {
+    actions.push({ icon:'📋', bg:'#f0fdf4', title:'Monday sweep: Tier 2 & 3 job boards', sub:'Check career pages for your Tier 2 and 3 companies — most postings go live Monday morning', badge:'badge-green', badgeText:'Apply within 3 days' });
+    actions.push({ icon:'🔔', bg:'#faf5ff', title:'Check LinkedIn saved search alerts', sub:'Review saved job search alerts — most new roles post on Monday mornings', badge:'badge-purple', badgeText:'Most jobs post today' });
+  }
+
+  const nudgeIdx = d.getDate() % NETWORK_NUDGES.length;
+  actions.push({ icon:'🤝', bg:'#fffbeb', title:'Networking: ' + NETWORK_NUDGES[nudgeIdx].name, sub:NETWORK_NUDGES[nudgeIdx].co, badge:'badge-amber', badgeText:'Daily nudge' });
+
+  const roles = loadRoles();
+  const twoWeeksAgo = Date.now() - 14 * 86400000;
+  const stale = roles.filter(r => ['outreach','applied'].includes(r.stage) && new Date(r.date).getTime() < twoWeeksAgo);
+  if (stale.length) actions.push({ icon:'⏰', bg:'#fef2f2', title:`${stale.length} outreach/application(s) — no movement in 2+ weeks`, sub:stale.map(r=>r.company).join(' · '), badge:'badge-red', badgeText:'Follow up or move on' });
+
+  if ([0,6].includes(day)) actions.push({ icon:'📚', bg:'#f7fafc', title:'Weekend: prep & practice', sub:'Good time for resume tailoring, interview prep, or warm outreach.', badge:'badge-blue', badgeText:'No new postings today' });
+
+  document.getElementById('todayActions').innerHTML = actions.map(a => `
+    <div class="action-item">
+      <div class="action-icon" style="background:${a.bg}">${a.icon}</div>
+      <div class="action-text" style="flex:1"><strong>${a.title}</strong><span>${a.sub}</span></div>
+      <span class="badge ${a.badge}">${a.badgeText}</span>
+    </div>`).join('');
+}
+
+// ─── QUICK CHECK ─────────────────────────────────────────────────────────
+function renderQuickCheck() {
+  const key   = 'ili_qcheck_' + new Date().toDateString();
+  const saved = JSON.parse(localStorage.getItem(key) || '{}');
+  document.getElementById('quickCheck').innerHTML =
+    CHECK_ITEMS.map((item, i) => `
+      <div class="check-row">
+        <input type="checkbox" id="qc${i}" ${saved[i]?'checked':''} onchange="saveCheck(${i},this.checked,'${key}')">
+        <label for="qc${i}">${item}</label>
+      </div>`).join('') +
+    `<div style="margin-top:8px;font-size:10px;color:#718096">5 of 6 ✓ = apply. 4 or fewer = skip unless Tier 1 + referral.</div>`;
+}
+function saveCheck(i, val, key) {
+  const saved = JSON.parse(localStorage.getItem(key) || '{}');
+  saved[i] = val;
+  localStorage.setItem(key, JSON.stringify(saved));
+}
+
+// ─── PIPELINE ────────────────────────────────────────────────────────────
+function renderPipeline() {
+  const roles  = loadRoles();
+  const counts = {};
+  STAGES.forEach(s => { counts[s] = 0; });
+
+  // Clear cards (preserve column headers)
+  STAGES.forEach(s => {
+    Array.from(document.getElementById('col-'+s).querySelectorAll('.pipeline-card,.add-card-btn')).forEach(el=>el.remove());
+  });
+
+  // Filter
+  const visible = filterQuery
+    ? roles.filter(r => r.company.toLowerCase().includes(filterQuery) || (r.roleTitle||'').toLowerCase().includes(filterQuery))
+    : roles;
+
+  if (filterQuery) {
+    const fc = document.getElementById('filterCount');
+    fc.textContent = `${visible.length} of ${roles.length}`;
+    fc.style.display = 'inline';
+  } else {
+    document.getElementById('filterCount').style.display = 'none';
+  }
+
+  const cmLabel = { email:'✉️', linkedin:'💼', other:'💬' };
+
+  visible.forEach(role => {
+    const col = document.getElementById('col-'+role.stage);
+    if (!col) return;
+    counts[role.stage] = (counts[role.stage]||0) + 1;
+
+    const card = document.createElement('div');
+    card.className = 'pipeline-card';
+    card.setAttribute('draggable','true');
+    card.dataset.id = role.id;
+
+    const stageIdx = STAGES.indexOf(role.stage);
+    const prevStage = stageIdx > 0 ? STAGES[stageIdx-1] : null;
+    const nextStage = stageIdx < STAGES.length-1 ? STAGES[stageIdx+1] : null;
+
+    const refBadge = role.referral === 'referred' ? `<span class="mini-badge referral-badge-referred">🤝</span>`
+      : role.referral === 'cold' ? `<span class="mini-badge referral-badge-cold">🧊</span>` : '';
+    const srcBadge = role.source === 'inbound'
+      ? `<span class="mini-badge source-inbound">📥</span>`
+      : `<span class="mini-badge source-outbound">📤</span>`;
+    const contactBadge = role.lastContactedMethod
+      ? `<span class="mini-badge contact-${role.lastContactedMethod}">${cmLabel[role.lastContactedMethod]}</span>` : '';
+    const contactDateStr = role.lastContactedDate
+      ? new Date(role.lastContactedDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})
+      : null;
+
+    card.innerHTML = `
+      <div class="co">
+        <span class="tier-dot" style="background:${TIER_COLORS[role.tier]}"></span>
+        ${role.company}
+        ${refBadge}
+      </div>
+      <div class="role">${role.roleTitle}</div>
+      ${role.url ? `<div style="margin-top:2px"><a href="${role.url}" target="_blank" style="font-size:9px;color:#2e75b6;text-decoration:none" onclick="event.stopPropagation()">🔗 posting</a></div>` : ''}
+      <div class="card-footer">
+        <div class="card-meta">
+          ${srcBadge}${contactBadge}
+          ${contactDateStr ? `<span style="font-size:9px;color:#a0aec0">${contactDateStr}</span>` : ''}
+        </div>
+        <div style="display:flex;gap:3px;align-items:center">
+          <button class="btn-research" title="Research this company" onclick="event.stopPropagation();openResearchModal('${role.company.replace(/'/g,"\\'")}','${(role.roleTitle||'').replace(/'/g,"\\'")}','${role.url||''}')">🔬</button>
+          ${prevStage ? `<button class="stage-btn stage-btn-back" title="← ${STAGE_LABELS[prevStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${prevStage}')">←</button>` : ''}
+          ${nextStage ? `<button class="stage-btn stage-btn-fwd" title="→ ${STAGE_LABELS[nextStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${nextStage}')">→ ${STAGE_LABELS[nextStage]}</button>` : ''}
+        </div>
+      </div>`;
+
+    card.addEventListener('click', () => openEditModal(role.id));
+
+    // Drag events
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('roleId', role.id);
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => card.classList.add('dragging'), 0);
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+    col.appendChild(card);
+  });
+
+  // Add buttons + drop zones per column
+  STAGES.forEach(s => {
+    const col = document.getElementById('col-'+s);
+    const btn = document.createElement('button');
+    btn.className = 'add-card-btn';
+    btn.textContent = '+ Add here';
+    btn.onclick = e => { e.stopPropagation(); openAddModal(s); };
+    col.appendChild(btn);
+    document.getElementById('cnt-'+s).textContent = counts[s]||0;
+
+    // Drop zone handlers
+    col.ondragover  = e => { e.preventDefault(); col.classList.add('drag-over'); };
+    col.ondragleave = e => { if (!col.contains(e.relatedTarget)) col.classList.remove('drag-over'); };
+    col.ondrop      = e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('roleId');
+      if (!id) return;
+      const allRoles = loadRoles();
+      const idx = allRoles.findIndex(r => r.id === id);
+      if (idx !== -1 && allRoles[idx].stage !== s) {
+        allRoles[idx] = pushStageHistory(allRoles[idx], s);
+        saveRoles(allRoles);
+        renderAll();
+      }
+    };
+  });
+
+  // Header stats
+  document.getElementById('statTracking').textContent  = roles.filter(r=>r.stage==='tracking').length;
+  document.getElementById('statOutreach').textContent  = roles.filter(r=>r.stage==='outreach').length;
+  document.getElementById('statApplied').textContent   = roles.filter(r=>r.stage==='applied').length;
+  document.getElementById('statActive').textContent    = roles.filter(r=>['screen','interview'].includes(r.stage)).length;
+  document.getElementById('statInbound').textContent   = roles.filter(r=>r.source==='inbound').length;
+  document.getElementById('statOutbound').textContent  = roles.filter(r=>r.source!=='inbound').length;
+}
+
+// Quick stage move
+function moveStage(id, newStage) {
+  const roles = loadRoles();
+  const idx = roles.findIndex(r => r.id === id);
+  if (idx === -1) return;
+  roles[idx] = pushStageHistory(roles[idx], newStage);
+  saveRoles(roles);
+  renderAll();
+}
+
+// ─── TIER LIST ────────────────────────────────────────────────────────────
+let editModeActive = false;
+function toggleEditMode() {
+  editModeActive = !editModeActive;
+  document.body.classList.toggle('edit-mode', editModeActive);
+  const btn = document.getElementById('editModeBtn');
+  btn.textContent = editModeActive ? '✅ Done' : '✏️ Edit';
+  btn.style.background   = editModeActive ? '#f0fdf4' : '#f7fafc';
+  btn.style.borderColor  = editModeActive ? '#9ae6b4' : '#e2e8f0';
+  btn.style.color        = editModeActive ? '#16a34a' : '#4a5568';
+}
+function removeCompanyFromTier(co, tier) {
+  const cos = getCompanies(); cos[tier] = cos[tier].filter(c=>c!==co);
+  saveCompaniesData(cos); renderTierList();
+}
+function renderTierList() {
+  const COMPANIES = getCompanies();
+  const roles = loadRoles();
+  const stagePriority = ['offer','interview','screen','applied','outreach','tracking'];
+  const coStage = {};
+  roles.forEach(r => {
+    const key = r.company.toLowerCase();
+    if (!coStage[key] || stagePriority.indexOf(r.stage) < stagePriority.indexOf(coStage[key])) coStage[key] = r.stage;
+  });
+
+  document.getElementById('tierList').innerHTML = Object.entries(COMPANIES).map(([tier, cos]) => `
+    <div class="tier-section">
+      <span class="tier-label tier-${tier}">Tier ${tier}</span><br>
+      <div style="margin-top:3px">
+        ${cos.map(co => {
+          const q = filterQuery;
+          const hidden = q && !co.toLowerCase().includes(q) ? ' chip-hidden' : '';
+          const stage = coStage[co.toLowerCase()];
+          const sb = stage ? STAGE_BADGE[stage] : null;
+          const safeId = co.replace(/['"\\]/g,'');
+          const cls = `company-chip chip-t${tier}${sb?' '+sb.cls:''}${hidden}`;
+          const badge = sb ? `<span class="chip-status-badge" style="background:rgba(0,0,0,0.08)">${sb.label}</span>` : '';
+          return `<span class="${cls}" title="${sb?sb.title:'Click to add to pipeline'}" onclick="if(!editModeActive)openAddModalCo('${safeId}','${tier}')">${co}${badge}<span class="chip-remove" onclick="event.stopPropagation();removeCompanyFromTier('${safeId}','${tier}')" title="Remove">×</span></span>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+
+  // Populate datalist
+  document.getElementById('companyList').innerHTML = Object.values(COMPANIES).flat().map(c=>`<option value="${c}">`).join('');
+}
+
+// ─── COMPANY MANAGER ──────────────────────────────────────────────────────
+function openCoManager()   { renderCoManagerList(); document.getElementById('coManagerModal').classList.add('open'); }
+function closeCoManager()  { document.getElementById('coManagerModal').classList.remove('open'); renderTierList(); }
+function renderCoManagerList() {
+  const COMPANIES = getCompanies();
+  document.getElementById('coManagerList').innerHTML = Object.entries(COMPANIES).map(([tier,cos]) => `
+    <div class="co-mgr-section">
+      <div class="co-mgr-section-title" style="color:${TIER_HDR_COLORS[tier]}">${TIER_NAMES[tier]}</div>
+      ${cos.length===0?'<div style="font-size:11px;color:#a0aec0;padding:3px 0">No companies</div>':''}
+      ${cos.map(co=>`<div class="co-mgr-row">
+        <span class="co-mgr-name">${co}</span>
+        <select class="co-mgr-tier" onchange="recheckCompany('${co.replace(/'/g,"\\'")}',this.value)">
+          ${[1,2,3,4].map(t=>`<option value="${t}" ${t==tier?'selected':''}>${TIER_NAMES[t]}</option>`).join('')}
+        </select>
+        <button class="co-mgr-del" onclick="deleteCompany('${co.replace(/'/g,"\\'")}','${tier}')">✕</button>
+      </div>`).join('')}
+    </div>`).join('');
+}
+function recheckCompany(co, newTier) {
+  const cos = getCompanies();
+  [1,2,3,4].forEach(t=>{ cos[t]=(cos[t]||[]).filter(c=>c!==co); });
+  if (!cos[newTier]) cos[newTier]=[];
+  cos[newTier].push(co);
+  saveCompaniesData(cos); renderCoManagerList();
+}
+function deleteCompany(co, tier) {
+  const cos = getCompanies(); cos[tier]=cos[tier].filter(c=>c!==co);
+  saveCompaniesData(cos); renderCoManagerList();
+}
+function addCompany() {
+  const name = document.getElementById('new-co-name').value.trim();
+  const tier = document.getElementById('new-co-tier').value;
+  if (!name) return;
+  const cos = getCompanies();
+  if (!cos[tier]) cos[tier]=[];
+  if (!cos[tier].includes(name)) cos[tier].push(name);
+  saveCompaniesData(cos);
+  document.getElementById('new-co-name').value = '';
+  renderCoManagerList();
+}
+document.getElementById('new-co-name').addEventListener('keydown', e => { if(e.key==='Enter') addCompany(); });
+document.getElementById('coManagerModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeCoManager(); });
+
+// ─── NETWORKING NUDGES ────────────────────────────────────────────────────
+let nudgeOffset = 0;
+function renderNudges() {
+  const seed = new Date().getDate() + nudgeOffset;
+  const shown = [seed % NETWORK_NUDGES.length, (seed+1) % NETWORK_NUDGES.length];
+  document.getElementById('networkNudges').innerHTML = shown.map(i => {
+    const n = NETWORK_NUDGES[i];
+    return `<div class="nudge-card">
+      <div class="nudge-name">${n.name}</div>
+      <div class="nudge-co">${n.co}</div>
+      <div class="nudge-why">${n.why}</div>
+      <button class="nudge-btn" onclick="markNudgeDone(this)">✓ Done for today</button>
+    </div>`;
+  }).join('');
+}
+function refreshNudges()      { nudgeOffset += 2; renderNudges(); }
+function markNudgeDone(btn)   { btn.closest('.nudge-card').style.opacity='0.4'; btn.textContent='✓ Done'; btn.disabled=true; }
+
+// ─── ADD MODAL ────────────────────────────────────────────────────────────
+let currentStageForAdd = 'tracking';
+function openAddModal(stage) {
+  currentStageForAdd = stage || 'tracking';
+  document.getElementById('f-stage').value = currentStageForAdd;
+  ['f-company','f-role','f-url','f-notes'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('f-tier').value = '1';
+  document.getElementById('f-last-contacted').value = '';
+  document.getElementById('f-src-out').checked    = true;
+  document.getElementById('f-cm-none').checked    = true;
+  document.getElementById('f-ref-none').checked   = true;
+  document.getElementById('addModal').classList.add('open');
+}
+function openAddModalCo(company, tier) {
+  openAddModal('tracking');
+  document.getElementById('f-company').value = company;
+  document.getElementById('f-tier').value    = tier;
+}
+function closeModal() { document.getElementById('addModal').classList.remove('open'); }
+function saveRole() {
+  const stage = document.getElementById('f-stage').value;
+  const newRole = {
+    id: Date.now().toString(),
+    company: document.getElementById('f-company').value,
+    roleTitle: document.getElementById('f-role').value,
+    stage,
+    tier: document.getElementById('f-tier').value,
+    url: document.getElementById('f-url').value,
+    notes: document.getElementById('f-notes').value,
+    source: document.querySelector('input[name="f-source"]:checked').value,
+    lastContactedDate:   document.getElementById('f-last-contacted').value || '',
+    lastContactedMethod: document.querySelector('input[name="f-contact-method"]:checked').value || '',
+    referral: document.querySelector('input[name="f-referral"]:checked').value || '',
+    stageHistory: [{ stage, ts: new Date().toISOString() }],
+    date: new Date().toISOString()
+  };
+  const roles = loadRoles();
+  roles.push(newRole);
+  saveRoles(roles);
+  closeModal();
+  renderAll();
+}
+
+// ─── EDIT MODAL ───────────────────────────────────────────────────────────
+function openEditModal(id) {
+  const r = loadRoles().find(x => x.id===id);
+  if (!r) return;
+  document.getElementById('ef-id').value      = id;
+  document.getElementById('ef-company').value  = r.company;
+  document.getElementById('ef-role').value     = r.roleTitle;
+  document.getElementById('ef-stage').value    = r.stage;
+  document.getElementById('ef-tier').value     = r.tier;
+  document.getElementById('ef-url').value      = r.url||'';
+  document.getElementById('ef-notes').value    = r.notes||'';
+  document.getElementById('ef-last-contacted').value = r.lastContactedDate||'';
+  const src = r.source||'outbound';
+  document.getElementById(src==='inbound'?'ef-src-in':'ef-src-out').checked = true;
+  const cm = r.lastContactedMethod||'';
+  const cmEl = document.querySelector(`input[name="ef-contact-method"][value="${cm}"]`);
+  if (cmEl) cmEl.checked=true; else document.getElementById('ef-cm-none').checked=true;
+  const ref = r.referral||'';
+  const refEl = document.querySelector(`input[name="ef-referral"][value="${ref}"]`);
+  if (refEl) refEl.checked=true; else document.getElementById('ef-ref-none').checked=true;
+
+  // Stage history
+  const histEl = document.getElementById('ef-stage-history');
+  const itemsEl = document.getElementById('ef-history-items');
+  if (r.stageHistory && r.stageHistory.length > 0) {
+    histEl.style.display = 'block';
+    itemsEl.innerHTML = r.stageHistory.map((h,i) => {
+      const d = new Date(h.ts);
+      const dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      return `${i>0?'<span class="sh-arrow">→</span>':''}<span class="sh-item"><span class="sh-dot" style="background:${STAGE_COLORS[h.stage]||'#a0aec0'}"></span>${STAGE_ICONS[h.stage]||''} ${STAGE_LABELS[h.stage]||h.stage} <span class="sh-date">${dateStr}</span></span>`;
+    }).join('');
+  } else {
+    histEl.style.display = 'none';
+  }
+
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); }
+function updateRole() {
+  const id    = document.getElementById('ef-id').value;
+  const roles = loadRoles();
+  const idx   = roles.findIndex(x => x.id===id);
+  if (idx===-1) return;
+  const newStage = document.getElementById('ef-stage').value;
+  let updated = { ...roles[idx],
+    company:    document.getElementById('ef-company').value,
+    roleTitle:  document.getElementById('ef-role').value,
+    tier:       document.getElementById('ef-tier').value,
+    url:        document.getElementById('ef-url').value,
+    notes:      document.getElementById('ef-notes').value,
+    source:     document.querySelector('input[name="ef-source"]:checked').value,
+    lastContactedDate:   document.getElementById('ef-last-contacted').value||'',
+    lastContactedMethod: document.querySelector('input[name="ef-contact-method"]:checked').value||'',
+    referral:   document.querySelector('input[name="ef-referral"]:checked').value||'',
+  };
+  if (updated.stage !== newStage) updated = pushStageHistory(updated, newStage);
+  roles[idx] = updated;
+  saveRoles(roles);
+  closeEditModal();
+  renderAll();
+}
+function deleteRole() {
+  if (!confirm('Remove this role from your pipeline?')) return;
+  const id = document.getElementById('ef-id').value;
+  saveRoles(loadRoles().filter(x=>x.id!==id));
+  closeEditModal();
+  renderAll();
+}
+document.getElementById('addModal').addEventListener('click',  e => { if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('editModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeEditModal(); });
+
+// ─── CONTACT LOG ──────────────────────────────────────────────────────────
+function renderContactLog() {
+  const roles = loadRoles();
+  const container = document.getElementById('contactLog');
+  const appliedStages = new Set(['applied','screen','interview','offer']);
+  const activeStages  = new Set(['outreach','applied','screen','interview','offer']);
+  const activeRoles   = roles.filter(r => activeStages.has(r.stage));
+
+  if (!activeRoles.length) {
+    container.innerHTML = '<div style="font-size:11px;color:#a0aec0;padding:6px 0">No outreach or applications yet. Move a role to Outreach or beyond to start tracking here.</div>';
+    return;
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cmLabel = { email:'✉️ Email', linkedin:'💼 LinkedIn', other:'💬 Other' };
+
+  function mostRecent(r) {
+    const ds = [];
+    if (r.lastContactedDate) ds.push(new Date(r.lastContactedDate+'T12:00:00'));
+    if (r.date && activeStages.has(r.stage)) ds.push(new Date(r.date));
+    return ds.length ? new Date(Math.max(...ds.map(d=>d.getTime()))) : null;
+  }
+
+  const sorted = [...activeRoles].sort((a,b) => {
+    const ma=mostRecent(a), mb=mostRecent(b);
+    if (ma&&mb) return mb-ma; if (ma) return -1; if (mb) return 1;
+    return a.company.localeCompare(b.company);
+  });
+
+  container.innerHTML = sorted.map(r => {
+    let stageEventHtml = '';
+    if (r.stage==='outreach' && r.date) {
+      stageEventHtml = `<span class="contact-log-applied">📨 Outreach <strong>${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</strong></span>`;
+    } else if (appliedStages.has(r.stage) && r.date) {
+      stageEventHtml = `<span class="contact-log-applied">📤 Applied <strong>${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</strong></span>`;
+    }
+    let contactHtml = '';
+    if (r.lastContactedDate) {
+      const d = new Date(r.lastContactedDate+'T12:00:00');
+      const days = Math.floor((today-d)/86400000);
+      const stale = days>=7;
+      const label = days===0?'today':days===1?'1d ago':`${days}d ago`;
+      const mb = r.lastContactedMethod ? `<span class="mini-badge contact-${r.lastContactedMethod}">${cmLabel[r.lastContactedMethod]}</span> ` : '';
+      contactHtml = `<span class="${stale?'contact-stale':'contact-log-date'}">${mb}${stale?'⚠️ ':''}${label}</span>`;
+    } else {
+      contactHtml = `<span class="contact-log-never">no outreach logged</span>`;
+    }
+    const refBadge = r.referral==='referred' ? `<span class="mini-badge referral-badge-referred">🤝</span> `
+      : r.referral==='cold' ? `<span class="mini-badge referral-badge-cold">🧊</span> ` : '';
+    const stageBadge = STAGE_BADGE[r.stage]
+      ? `<span style="font-size:9px;background:#f0f4f8;padding:1px 5px;border-radius:6px;color:#4a5568">${STAGE_BADGE[r.stage].title}</span>` : '';
+
+    return `<div class="contact-log-row" onclick="openEditModal('${r.id}')" title="Click to edit">
+      <div class="contact-log-co">${r.company}</div>
+      <div class="contact-log-role">${r.roleTitle} ${stageBadge}</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        ${refBadge}${stageEventHtml}
+        ${stageEventHtml&&contactHtml?'<span style="color:#e2e8f0;font-size:9px">·</span>':''}
+        ${contactHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── RENDER ALL ───────────────────────────────────────────────────────────
+function renderAll() {
+  renderPipeline();
+  renderTierList();
+  renderContactLog();
+}
+
+// ─── MIGRATION ────────────────────────────────────────────────────────────
+// Ensures roles saved by older dashboard versions are compatible with new schema.
+function migrateData() {
+  const roles = loadRoles();
+  if (!roles.length) return 0;
+  let changed = false;
+  roles.forEach(r => {
+    // Back-fill stageHistory (new field — old roles don't have it)
+    if (!r.stageHistory) {
+      r.stageHistory = [{ stage: r.stage || 'tracking', ts: r.date || new Date().toISOString() }];
+      changed = true;
+    }
+    // Back-fill source (default outbound)
+    if (!r.source) { r.source = 'outbound'; changed = true; }
+    // Back-fill contact / referral fields
+    if (r.lastContactedDate   === undefined) { r.lastContactedDate   = ''; changed = true; }
+    if (r.lastContactedMethod === undefined) { r.lastContactedMethod = ''; changed = true; }
+    if (r.referral            === undefined) { r.referral            = ''; changed = true; }
+    // Ensure stage is one of the known STAGES values
+    if (!STAGES.includes(r.stage)) { r.stage = 'tracking'; changed = true; }
+    // Ensure tier is a string (old data sometimes stored as number)
+    if (typeof r.tier === 'number') { r.tier = String(r.tier); changed = true; }
+  });
+  if (changed) {
+    saveRoles(roles);
+    console.log(`[Dashboard] Migrated ${roles.length} role(s) to current schema.`);
+  }
+  return roles.length;
+}
+
+// ─── RESEARCH MODAL ───────────────────────────────────────────────────────
+function openResearchModal(company, roleTitle, url) {
+  document.getElementById('rm-company').value      = company   || '';
+  document.getElementById('rm-role').value         = roleTitle || '';
+  document.getElementById('rm-url').value          = url       || '';
+  const iv = document.getElementById('rm-interviewers');
+  if (iv) iv.value = '';
+  document.getElementById('researchModal').classList.add('open');
+  setTimeout(() => document.getElementById('rm-company').focus(), 80);
+}
+
+function closeResearchModal() {
+  document.getElementById('researchModal').classList.remove('open');
+}
+
+// Close research modal on overlay click
+document.getElementById('researchModal').addEventListener('click', function(e) {
+  if (e.target === this) closeResearchModal();
+});
+
+function generateResearchBrief() {
+  const company      = (document.getElementById('rm-company').value.trim()      || 'Unknown Company');
+  const role         = (document.getElementById('rm-role').value.trim()         || 'Unknown Role');
+  const jdUrl        = document.getElementById('rm-url').value.trim()           || '';
+  const ivEl         = document.getElementById('rm-interviewers');
+  const interviewers = ivEl ? ivEl.value.trim() : '';
+  const storageKey   = 'research_' + (company + '_' + role).replace(/\W+/g,'_').toLowerCase();
+  const createdDate  = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  // Build the Claude request message
+  const claudeMsg = 'Research ' + company + ' for the ' + role + ' role'
+    + (jdUrl ? ' — job posting: ' + jdUrl : '')
+    + (interviewers ? ' — interviewers: ' + interviewers : '')
+    + ' and generate my interview prep brief.';
+
+  const sectionDefs = [
+    {id:'s1',emoji:'🏢',title:'Company Snapshot',       hint:'Mission, size, stage, business model, recent news, investors, culture.'},
+    {id:'s2',emoji:'📋',title:'Role Breakdown',          hint:'Key responsibilities, must-have skills, day-1 priorities, success metrics.'},
+    {id:'s3',emoji:'🛍️',title:'Product & Problem Space', hint:'Core products, target customers, differentiators, competitors, market trends.'},
+    {id:'s4',emoji:'⚠️',title:'Key Concerns & Pre-emptions', hint:'Likely tough questions with strong answers.'},
+    {id:'s5',emoji:'👤',title:'Interviewer Insights',    hint:'Research each person — background, focus areas, good topics to reference.'},
+    {id:'s6',emoji:'🎤',title:'Tell Me About Yourself',  hint:'A tailored 90-second opener connecting your story to this role.'},
+    {id:'s7',emoji:'📄',title:'Resume Customization',    hint:'Top bullets to emphasize or rephrase to match this role.'},
+    {id:'s8',emoji:'❓',title:'Questions to Ask Them',   hint:'Strategic questions about roadmap, team, success definition.'},
+  ];
+
+  const sectionsHtml = sectionDefs.map(function(s) {
+    return '<section class="sec" id="' + s.id + '">'
+      + '<div class="sec-hd"><span class="sec-em">' + s.emoji + '</span><h2>' + s.title + '</h2></div>'
+      + '<p class="sec-hint">' + s.hint + '</p>'
+      + '<div class="sec-content" id="content-' + s.id + '">'
+      + '<p class="empty-msg">Waiting for Claude to research this…</p>'
+      + '</div>'
+      + '<div class="notes-wrap">'
+      + '<div class="notes-label">My Notes</div>'
+      + '<textarea class="notes-ta" data-key="' + storageKey + '_note_' + s.id + '" placeholder="Add your own notes here…"></textarea>'
+      + '</div>'
+      + '</section>';
+  }).join('');
+
+  const navHtml = sectionDefs.map(function(s) {
+    return '<a class="nav-item" href="#' + s.id + '" onclick="return navScroll(\'' + s.id + '\')">'
+      + s.emoji + ' ' + s.title + '</a>';
+  }).join('');
+
+  const pageJs = [
+    'function restoreNotes(){',
+    '  document.querySelectorAll("[data-key]").forEach(function(el){',
+    '    const v=localStorage.getItem(el.dataset.key);if(v)el.value=v;',
+    '  });',
+    '  document.querySelectorAll(".notes-ta").forEach(function(ta){',
+    '    ta.addEventListener("input",function(){localStorage.setItem(ta.dataset.key,ta.value);});',
+    '  });',
+    '}',
+    'function copyRequest(){',
+    '  const msg=document.getElementById("claude-msg").textContent;',
+    '  navigator.clipboard.writeText(msg).then(function(){',
+    '    const btn=document.getElementById("copy-btn");',
+    '    btn.textContent="✓ Copied!";',
+    '    setTimeout(function(){btn.textContent="📋 Copy message";},2500);',
+    '  });',
+    '}',
+    'function navScroll(id){document.getElementById(id).scrollIntoView({behavior:"smooth",block:"start"});return false;}',
+    'const obs=new IntersectionObserver(function(entries){',
+    '  entries.forEach(function(e){',
+    '    if(!e.isIntersecting)return;',
+    '    document.querySelectorAll(".nav-item").forEach(function(a){a.classList.remove("active");});',
+    '    const a=document.querySelector(\'.nav-item[href="#\'+e.target.id+\'"]\');',
+    '    if(a)a.classList.add("active");',
+    '  });',
+    '},{threshold:0.25});',
+    'document.querySelectorAll("section.sec").forEach(function(s){obs.observe(s);});',
+    'restoreNotes();',
+  ].join('\n');
+
+  const css = [
+    '*{box-sizing:border-box;margin:0;padding:0}',
+    'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f0f4f8;color:#1a202c;display:flex;min-height:100vh}',
+    '.sidebar{width:240px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;background:#1a3a5c;color:white;display:flex;flex-direction:column;overflow-y:auto;z-index:10}',
+    '.sb-head{padding:18px 16px 12px;border-bottom:1px solid rgba(255,255,255,.12)}',
+    '.sb-co{font-size:14px;font-weight:800;color:#fff;line-height:1.3}',
+    '.sb-role{font-size:11px;opacity:.6;margin-top:3px}',
+    '.sb-date{font-size:10px;opacity:.4;margin-top:5px}',
+    '.claude-box{padding:14px 16px;background:rgba(46,117,182,.35);border-bottom:1px solid rgba(255,255,255,.1)}',
+    '.claude-box .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#90cdf4;margin-bottom:8px}',
+    '.claude-msg{font-size:11px;color:white;line-height:1.5;background:rgba(0,0,0,.2);border-radius:6px;padding:8px 10px;margin-bottom:8px;font-style:italic}',
+    '.btn-copy{width:100%;padding:7px;background:#2e75b6;border:none;border-radius:6px;color:white;font-size:11px;font-weight:700;cursor:pointer;transition:background .15s}',
+    '.btn-copy:hover{background:#1a5ca0}',
+    '.claude-note{font-size:9px;opacity:.45;margin-top:6px;line-height:1.4}',
+    'nav{padding:6px 0;flex:1}',
+    '.nav-item{display:flex;align-items:flex-start;gap:7px;padding:7px 16px;font-size:11px;opacity:.65;cursor:pointer;transition:all .12s;line-height:1.3;text-decoration:none;color:white}',
+    '.nav-item:hover,.nav-item.active{background:rgba(255,255,255,.1);opacity:1}',
+    '.sb-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:6px}',
+    '.btn-print{padding:7px 0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;text-align:center}',
+    '.btn-print:hover{background:rgba(255,255,255,.22)}',
+    '.jd-lnk{font-size:10px;opacity:.5;word-break:break-all;line-height:1.4}',
+    '.jd-lnk a{color:#90cdf4;text-decoration:underline}',
+    '.main{margin-left:240px;flex:1;padding:28px 32px 60px;max-width:860px}',
+    '.pg-head{margin-bottom:22px}',
+    '.pg-head h2{font-size:22px;font-weight:800;color:#1a3a5c}',
+    '.pg-head .sub{font-size:13px;color:#718096;margin-top:4px}',
+    '.sec{background:white;border-radius:12px;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:14px;border-left:4px solid #e2e8f0}',
+    '.sec.done{border-left-color:#48bb78}',
+    '.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}',
+    '.sec-em{font-size:20px;line-height:1}',
+    '.sec-hd h2{font-size:15px;font-weight:700;color:#1a3a5c}',
+    '.sec-hint{font-size:11px;color:#a0aec0;margin-bottom:10px;line-height:1.4}',
+    '.sec-content{font-size:13px;line-height:1.75;color:#2d3748;min-height:40px}',
+    '.empty-msg{color:#cbd5e0;font-style:italic;font-size:12px}',
+    '.sec-content h3{font-size:14px;font-weight:700;margin:14px 0 5px;color:#1a3a5c}',
+    '.sec-content h4{font-size:13px;font-weight:700;margin:11px 0 3px}',
+    '.sec-content p{margin:5px 0}',
+    '.sec-content ul{margin:6px 0 6px 20px}',
+    '.sec-content li{margin:3px 0}',
+    '.sec-content strong{color:#1a3a5c}',
+    '.notes-wrap{margin-top:14px;border-top:1px dashed #e2e8f0;padding-top:12px}',
+    '.notes-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#a0aec0;margin-bottom:5px}',
+    '.notes-ta{width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;color:#1a202c;font-family:inherit;resize:vertical;min-height:60px;line-height:1.5}',
+    '.notes-ta:focus{outline:none;border-color:#2e75b6}',
+    '@media print{.sidebar,.notes-wrap{display:none}.main{margin-left:0;padding:16px}.sec{break-inside:avoid;box-shadow:none;border:1px solid #e2e8f0}}',
+  ].join('\n');
+
+  const jdLinkHtml = jdUrl ? '    <div class="jd-lnk">📎 <a href="' + jdUrl + '" target="_blank">Job Posting</a></div>\n' : '';
+  const jdSubHtml  = jdUrl ? ' · <a href="' + jdUrl + '" target="_blank" style="color:#2e75b6">Job Posting ↗</a>' : '';
+
+  const html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+    + '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n'
+    + '<title>Research: ' + company + ' – ' + role + '</title>\n'
+    + '<style>\n' + css + '\n</style>\n'
+    + '</head>\n<body>\n'
+    + '<aside class="sidebar">\n'
+    + '  <div class="sb-head">\n'
+    + '    <div class="sb-co">' + company + '</div>\n'
+    + '    <div class="sb-role">' + role + '</div>\n'
+    + '    <div class="sb-date">Created ' + createdDate + '</div>\n'
+    + '  </div>\n'
+    + '  <div class="claude-box">\n'
+    + '    <div class="lbl">⚡ Get AI Research</div>\n'
+    + '    <div class="claude-msg" id="claude-msg">' + claudeMsg + '</div>\n'
+    + '    <button class="btn-copy" id="copy-btn" onclick="copyRequest()">📋 Copy message</button>\n'
+    + '    <div class="claude-note">Paste into the Claude sidebar → Claude will research and fill these sections automatically.</div>\n'
+    + '  </div>\n'
+    + '  <nav>\n' + navHtml + '\n  </nav>\n'
+    + '  <div class="sb-foot">\n'
+    + '    <button class="btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>\n'
+    + jdLinkHtml
+    + '  </div>\n'
+    + '</aside>\n'
+    + '<main class="main">\n'
+    + '  <div class="pg-head">\n'
+    + '    <h2>🔬 ' + company + '</h2>\n'
+    + '    <div class="sub">' + role + jdSubHtml + '</div>\n'
+    + '  </div>\n'
+    + sectionsHtml + '\n'
+    + '</main>\n'
+    + '<script>\n' + pageJs + '\n<\/script>\n'
+    + '</body>\n</html>';
+
+  const newWin = window.open('', '_blank');
+  if (newWin) {
+    newWin.document.open();
+    newWin.document.write(html);
+    newWin.document.close();
+  } else {
+    const blob = new Blob([html], {type:'text/html'});
+    window.open(URL.createObjectURL(blob), '_blank');
+  }
+  closeResearchModal();
+}
+// ─── INIT ─────────────────────────────────────────────────────────────────
+migrateData();
+updateStreak();
+renderTodayActions();
+renderQuickCheck();
+renderAll();
+renderNudges();
+</script>
+</body>
+</html>
