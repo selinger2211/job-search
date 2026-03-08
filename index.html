@@ -364,6 +364,18 @@
       <label style="font-size:11px;font-weight:600;color:#4a5568;display:block;margin-bottom:3px">Interviewers <span style="font-weight:400;color:#a0aec0">(optional, comma-separated)</span></label>
       <input type="text" id="rm-interviewers" placeholder="e.g. Jane Smith – Eng Manager, Bob Lee – CTO" style="width:100%;padding:7px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px">
     </div>
+    <div style="background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="font-size:13px">⚡</span>
+        <label style="font-size:11px;font-weight:700;color:#1a3a5c">Auto-Fill with AI</label>
+        <span style="font-size:10px;color:#a0aec0;margin-left:auto">optional</span>
+      </div>
+      <p style="font-size:10px;color:#718096;margin-bottom:8px;line-height:1.5">Paste your Anthropic API key to auto-research and fill all sections. Key is stored only in your browser — never sent anywhere except api.anthropic.com.</p>
+      <input type="password" id="rm-apikey" placeholder="sk-ant-api03-..." style="width:100%;padding:7px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px;font-family:monospace;margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:#718096;cursor:pointer;user-select:none">
+        <input type="checkbox" id="rm-savekey" checked> Remember key in this browser
+      </label>
+    </div>
     <div class="modal-btns" style="justify-content:flex-start;gap:10px">
       <button class="btn-primary" onclick="generateResearchBrief()" style="gap:6px;display:flex;align-items:center">🚀 Generate &amp; Open Brief</button>
       <button class="btn-secondary" onclick="closeResearchModal()">Cancel</button>
@@ -1191,6 +1203,12 @@ function openResearchModal(company, roleTitle, url) {
   document.getElementById('rm-url').value          = url       || '';
   const iv = document.getElementById('rm-interviewers');
   if (iv) iv.value = '';
+  // Restore saved API key
+  const savedKey = localStorage.getItem('ili_anthropic_key');
+  if (savedKey) {
+    document.getElementById('rm-apikey').value = savedKey;
+    document.getElementById('rm-savekey').checked = true;
+  }
   document.getElementById('researchModal').classList.add('open');
   setTimeout(() => document.getElementById('rm-company').focus(), 80);
 }
@@ -1210,10 +1228,16 @@ function generateResearchBrief() {
   const jdUrl        = document.getElementById('rm-url').value.trim()           || '';
   const ivEl         = document.getElementById('rm-interviewers');
   const interviewers = ivEl ? ivEl.value.trim() : '';
+  const apiKey       = document.getElementById('rm-apikey').value.trim()        || '';
+  const saveKey      = document.getElementById('rm-savekey').checked;
   const storageKey   = 'research_' + (company + '_' + role).replace(/\W+/g,'_').toLowerCase();
   const createdDate  = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
-  // Build the Claude request message
+  // Save or clear API key
+  if (apiKey && saveKey) localStorage.setItem('ili_anthropic_key', apiKey);
+  else if (!saveKey) localStorage.removeItem('ili_anthropic_key');
+
+  // Build the Claude request message (fallback for manual copy-paste)
   const claudeMsg = 'Research ' + company + ' for the ' + role + ' role'
     + (jdUrl ? ' — job posting: ' + jdUrl : '')
     + (interviewers ? ' — interviewers: ' + interviewers : '')
@@ -1235,7 +1259,7 @@ function generateResearchBrief() {
       + '<div class="sec-hd"><span class="sec-em">' + s.emoji + '</span><h2>' + s.title + '</h2></div>'
       + '<p class="sec-hint">' + s.hint + '</p>'
       + '<div class="sec-content" id="content-' + s.id + '">'
-      + '<p class="empty-msg">Waiting for Claude to research this…</p>'
+      + (apiKey ? '<p class="streaming-msg">⏳ Researching…</p>' : '<p class="empty-msg">Waiting for Claude to research this…</p>')
       + '</div>'
       + '<div class="notes-wrap">'
       + '<div class="notes-label">My Notes</div>'
@@ -1249,7 +1273,134 @@ function generateResearchBrief() {
       + s.emoji + ' ' + s.title + '</a>';
   }).join('');
 
+  // Markdown-to-HTML converter (lightweight, no dependencies)
+  const mdToHtmlFn = `function mdToHtml(md){
+    return md
+      .replace(/^#### (.+)$/gm,'<h4>$1</h4>')
+      .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+      .replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')
+      .replace(/\\*(.+?)\\*/g,'<em>$1</em>')
+      .replace(/^- (.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>.*<\\/li>)/gs,function(m){return '<ul>'+m+'</ul>';})
+      .replace(/<\\/ul>\\s*<ul>/g,'')
+      .replace(/^(?!<[hul]|<li)(\\S.+)$/gm,'<p>$1</p>')
+      .replace(/\\n{2,}/g,'\\n');
+  }`;
+
+  // Streaming API call function
+  const streamFn = apiKey ? `
+  async function streamResearch(){
+    const statusEl=document.getElementById('stream-status');
+    statusEl.textContent='🔄 Connecting to Claude…';
+    statusEl.style.display='block';
+    const SECTION_MARKERS=['## 1:','## 2:','## 3:','## 4:','## 5:','## 6:','## 7:','## 8:'];
+    const SECTION_IDS=['s1','s2','s3','s4','s5','s6','s7','s8'];
+    try{
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':'${apiKey.replace(/'/g,"\\'")}',
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-sonnet-4-6',
+          max_tokens:8000,
+          stream:true,
+          system:\`You are generating an interview prep research brief for Ili Selinger, a Senior/Staff/Principal PM candidate with 15+ years experience:
+- JPMorgan Chase: AI/LLM products, RAG pipelines, agentic systems, search ranking
+- Yahoo/Verizon Media (5 yrs): AdTech — 20B+ daily ads, targeting, ranking, fraud detection, GDPR
+- New Relic: SaaS observability, billing platform
+- Conversant: Mobile attribution, SDK products
+- Published arXiv paper on LLM applications
+- Target: IC Principal/Staff PM at Series B+ or public companies in AdTech, AI/ML, or data platforms
+
+Output your research in EXACTLY this format with these section markers. Each section MUST start with the marker on its own line:
+
+## 1: Company Snapshot
+## 2: Role Breakdown
+## 3: Product & Problem Space
+## 4: Key Concerns & Pre-emptions
+## 5: Interviewer Insights
+## 6: Tell Me About Yourself
+## 7: Resume Customization
+## 8: Questions to Ask Them
+
+Be specific, opinionated, and direct. No filler. Write as if advising a senior PM colleague.\`,
+          messages:[{role:'user',content:'Research ' + ${JSON.stringify(company)} + ' for the ' + ${JSON.stringify(role)} + ' role' + ${jdUrl ? JSON.stringify(' — job posting: '+jdUrl) : "''"} + ${interviewers ? JSON.stringify(' — interviewers: '+interviewers) : "''"} + '. Generate a complete interview prep brief covering all 8 sections.'}]
+        })
+      });
+      if(!resp.ok){
+        const err=await resp.text();
+        throw new Error('API error '+resp.status+': '+err);
+      }
+      const reader=resp.body.getReader();
+      const decoder=new TextDecoder();
+      let fullText='';
+      let buffer='';
+      statusEl.textContent='🔄 Streaming research…';
+      while(true){
+        const{done,value}=await reader.read();
+        if(done)break;
+        buffer+=decoder.decode(value,{stream:true});
+        const lines=buffer.split('\\n');
+        buffer=lines.pop()||'';
+        for(const line of lines){
+          if(!line.startsWith('data: '))continue;
+          const data=line.slice(6);
+          if(data==='[DONE]')continue;
+          try{
+            const evt=JSON.parse(data);
+            if(evt.type==='content_block_delta'&&evt.delta&&evt.delta.text){
+              fullText+=evt.delta.text;
+              renderSections(fullText);
+            }
+          }catch(e){}
+        }
+      }
+      renderSections(fullText);
+      // Save to localStorage
+      localStorage.setItem('${storageKey}_ai_research',fullText);
+      statusEl.textContent='✅ Research complete';
+      setTimeout(function(){statusEl.style.display='none';},3000);
+      // Mark all sections done
+      document.querySelectorAll('.sec').forEach(function(s){s.classList.add('done');});
+    }catch(err){
+      statusEl.textContent='❌ '+err.message;
+      statusEl.style.background='rgba(220,38,38,.15)';
+      statusEl.style.color='#dc2626';
+      console.error('Stream error:',err);
+      // Show retry button
+      statusEl.innerHTML+=' <button onclick="streamResearch()" style="margin-left:8px;padding:3px 10px;border-radius:5px;border:1px solid #dc2626;background:white;color:#dc2626;font-size:11px;cursor:pointer">Retry</button>';
+    }
+  }
+  function renderSections(text){
+    const MARKERS=[/^## 1:/m,/^## 2:/m,/^## 3:/m,/^## 4:/m,/^## 5:/m,/^## 6:/m,/^## 7:/m,/^## 8:/m];
+    const IDS=['s1','s2','s3','s4','s5','s6','s7','s8'];
+    const positions=MARKERS.map(function(m){const match=text.match(m);return match?text.indexOf(match[0]):-1;});
+    for(let i=0;i<8;i++){
+      if(positions[i]===-1)continue;
+      const start=text.indexOf('\\n',positions[i]);
+      if(start===-1)continue;
+      const end=(i<7&&positions[i+1]!==-1)?positions[i+1]:text.length;
+      const content=text.slice(start+1,end).trim();
+      if(content){
+        const el=document.getElementById('content-'+IDS[i]);
+        if(el)el.innerHTML=mdToHtml(content);
+        const sec=document.getElementById(IDS[i]);
+        if(sec)sec.classList.add('done');
+      }
+    }
+  }
+  // Check for cached research first
+  const cached=localStorage.getItem('${storageKey}_ai_research');
+  if(cached){renderSections(cached);document.querySelectorAll('.sec').forEach(function(s){s.classList.add('done');});document.getElementById('stream-status').textContent='📦 Loaded from cache';document.getElementById('stream-status').style.display='block';setTimeout(function(){document.getElementById('stream-status').style.display='none';},2000);}
+  else{streamResearch();}
+  ` : '';
+
   const pageJs = [
+    mdToHtmlFn,
     'function restoreNotes(){',
     '  document.querySelectorAll("[data-key]").forEach(function(el){',
     '    const v=localStorage.getItem(el.dataset.key);if(v)el.value=v;',
@@ -1305,7 +1456,10 @@ function generateResearchBrief() {
     '.pg-head{margin-bottom:22px}',
     '.pg-head h2{font-size:22px;font-weight:800;color:#1a3a5c}',
     '.pg-head .sub{font-size:13px;color:#718096;margin-top:4px}',
-    '.sec{background:white;border-radius:12px;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:14px;border-left:4px solid #e2e8f0}',
+    '#stream-status{display:none;background:rgba(46,117,182,.1);border:1px solid rgba(46,117,182,.25);border-radius:8px;padding:10px 16px;margin-bottom:14px;font-size:12px;font-weight:600;color:#2e75b6;transition:all .2s}',
+    '.streaming-msg{color:#2e75b6;font-style:italic;font-size:12px;animation:pulse 1.5s ease-in-out infinite}',
+    '@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}',
+    '.sec{background:white;border-radius:12px;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:14px;border-left:4px solid #e2e8f0;transition:border-color .3s}',
     '.sec.done{border-left-color:#48bb78}',
     '.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}',
     '.sec-em{font-size:20px;line-height:1}',
@@ -1323,11 +1477,26 @@ function generateResearchBrief() {
     '.notes-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#a0aec0;margin-bottom:5px}',
     '.notes-ta{width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;color:#1a202c;font-family:inherit;resize:vertical;min-height:60px;line-height:1.5}',
     '.notes-ta:focus{outline:none;border-color:#2e75b6}',
-    '@media print{.sidebar,.notes-wrap{display:none}.main{margin-left:0;padding:16px}.sec{break-inside:avoid;box-shadow:none;border:1px solid #e2e8f0}}',
+    '@media print{.sidebar,.notes-wrap,#stream-status{display:none!important}.main{margin-left:0;padding:16px}.sec{break-inside:avoid;box-shadow:none;border:1px solid #e2e8f0}}',
   ].join('\n');
 
   const jdLinkHtml = jdUrl ? '    <div class="jd-lnk">📎 <a href="' + jdUrl + '" target="_blank">Job Posting</a></div>\n' : '';
   const jdSubHtml  = jdUrl ? ' · <a href="' + jdUrl + '" target="_blank" style="color:#2e75b6">Job Posting ↗</a>' : '';
+
+  // In sidebar: show API status if key provided, else show manual copy-paste
+  const sidebarAiHtml = apiKey
+    ? '  <div class="claude-box">\n'
+      + '    <div class="lbl">⚡ AI Auto-Research</div>\n'
+      + '    <div style="font-size:11px;color:rgba(255,255,255,.7);line-height:1.5;margin-bottom:6px">Streaming research from Claude…</div>\n'
+      + '    <button class="btn-copy" onclick="streamResearch()">🔄 Re-run Research</button>\n'
+      + '    <div class="claude-note" style="margin-top:6px">Results are cached locally. Re-run to refresh.</div>\n'
+      + '  </div>\n'
+    : '  <div class="claude-box">\n'
+      + '    <div class="lbl">⚡ Get AI Research</div>\n'
+      + '    <div class="claude-msg" id="claude-msg">' + claudeMsg + '</div>\n'
+      + '    <button class="btn-copy" id="copy-btn" onclick="copyRequest()">📋 Copy message</button>\n'
+      + '    <div class="claude-note">Paste into the Claude sidebar → Claude will research and fill these sections automatically.</div>\n'
+      + '  </div>\n';
 
   const html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
     + '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n'
@@ -1340,12 +1509,7 @@ function generateResearchBrief() {
     + '    <div class="sb-role">' + role + '</div>\n'
     + '    <div class="sb-date">Created ' + createdDate + '</div>\n'
     + '  </div>\n'
-    + '  <div class="claude-box">\n'
-    + '    <div class="lbl">⚡ Get AI Research</div>\n'
-    + '    <div class="claude-msg" id="claude-msg">' + claudeMsg + '</div>\n'
-    + '    <button class="btn-copy" id="copy-btn" onclick="copyRequest()">📋 Copy message</button>\n'
-    + '    <div class="claude-note">Paste into the Claude sidebar → Claude will research and fill these sections automatically.</div>\n'
-    + '  </div>\n'
+    + sidebarAiHtml
     + '  <nav>\n' + navHtml + '\n  </nav>\n'
     + '  <div class="sb-foot">\n'
     + '    <button class="btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>\n'
@@ -1357,9 +1521,10 @@ function generateResearchBrief() {
     + '    <h2>🔬 ' + company + '</h2>\n'
     + '    <div class="sub">' + role + jdSubHtml + '</div>\n'
     + '  </div>\n'
+    + '  <div id="stream-status"></div>\n'
     + sectionsHtml + '\n'
     + '</main>\n'
-    + '<script>\n' + pageJs + '\n<\/script>\n'
+    + '<script>\n' + pageJs + '\n' + streamFn + '\n<\/script>\n'
     + '</body>\n</html>';
 
   const newWin = window.open('', '_blank');
