@@ -308,6 +308,16 @@
     </div>
   </div>
 
+  <!-- RECENT BRIEFS -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">
+      <span class="dot" style="background:#2e75b6"></span>Recent Research Briefs
+      <span style="margin-left:6px;font-size:10px;color:#a0aec0;font-weight:400;text-transform:none;letter-spacing:0">interview prep — saved locally</span>
+      <button onclick="openResearchModal()" style="margin-left:auto;padding:3px 10px;background:#2e75b6;border:none;border-radius:5px;font-size:10px;color:white;cursor:pointer;font-weight:600">+ New Brief</button>
+    </div>
+    <div id="recentBriefs"></div>
+  </div>
+
   <!-- CONTACT LOG -->
   <div class="card" style="margin-bottom:14px">
     <div class="card-title">
@@ -364,15 +374,11 @@
       <label style="font-size:11px;font-weight:600;color:#4a5568;display:block;margin-bottom:3px">Interviewers <span style="font-weight:400;color:#a0aec0">(optional, comma-separated)</span></label>
       <input type="text" id="rm-interviewers" placeholder="e.g. Jane Smith – Eng Manager, Bob Lee – CTO" style="width:100%;padding:7px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px">
     </div>
-    <div style="background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-        <span style="font-size:13px">⚡</span>
-        <label style="font-size:11px;font-weight:700;color:#1a3a5c">Auto-Fill with AI</label>
-        <span style="font-size:10px;color:#a0aec0;margin-left:auto">optional</span>
-      </div>
+    <div class="form-row full" style="background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-bottom:14px">
+      <label style="font-size:11px;font-weight:700;color:#1a3a5c;margin-bottom:8px">⚡ Auto-Fill with AI <span style="font-size:10px;font-weight:400;color:#a0aec0;margin-left:6px">optional</span></label>
       <p style="font-size:10px;color:#718096;margin-bottom:8px;line-height:1.5">Paste your Anthropic API key to auto-research and fill all sections. Key is stored only in your browser — never sent anywhere except api.anthropic.com.</p>
-      <input type="password" id="rm-apikey" placeholder="sk-ant-api03-..." style="width:100%;padding:7px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px;font-family:monospace;margin-bottom:6px">
-      <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:#718096;cursor:pointer;user-select:none">
+      <textarea id="rm-apikey" rows="1" placeholder="sk-ant-api03-..." style="width:100%;padding:7px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:12px;font-family:monospace;margin-bottom:6px;resize:none;overflow:hidden"></textarea>
+      <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:#718096;cursor:pointer">
         <input type="checkbox" id="rm-savekey" checked> Remember key in this browser
       </label>
     </div>
@@ -1527,16 +1533,79 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
     + '<script>\n' + pageJs + '\n' + streamFn + '\n<\/script>\n'
     + '</body>\n</html>';
 
-  const newWin = window.open('', '_blank');
-  if (newWin) {
-    newWin.document.open();
-    newWin.document.write(html);
-    newWin.document.close();
-  } else {
-    const blob = new Blob([html], {type:'text/html'});
-    window.open(URL.createObjectURL(blob), '_blank');
-  }
+  // Save brief as a downloadable HTML file AND open it
+  const fileName = 'brief_' + company.replace(/\W+/g,'_').toLowerCase() + '_' + role.replace(/\W+/g,'_').toLowerCase() + '.html';
+  const blob = new Blob([html], {type:'text/html'});
+  const blobUrl = URL.createObjectURL(blob);
+
+  // Save the file via download so it persists on disk
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Also open the brief in a new tab immediately
+  window.open(blobUrl, '_blank');
+
+  // Track this brief in localStorage for the Recent Briefs list
+  const briefs = JSON.parse(localStorage.getItem('ili_research_briefs') || '[]');
+  const existing = briefs.findIndex(b => b.storageKey === storageKey);
+  const briefMeta = { company, role, jdUrl, interviewers, storageKey, fileName, created: new Date().toISOString() };
+  if (existing >= 0) briefs[existing] = briefMeta;
+  else briefs.unshift(briefMeta);
+  localStorage.setItem('ili_research_briefs', JSON.stringify(briefs));
+
   closeResearchModal();
+  renderRecentBriefs();
+}
+
+// ─── RECENT BRIEFS ──────────────────────────────────────────────────────
+function renderRecentBriefs() {
+  const container = document.getElementById('recentBriefs');
+  if (!container) return;
+  const briefs = JSON.parse(localStorage.getItem('ili_research_briefs') || '[]');
+  if (briefs.length === 0) {
+    container.innerHTML = '<div style="color:#a0aec0;font-size:12px;font-style:italic;padding:6px 0">No briefs generated yet. Click "Research a Company" to create one.</div>';
+    return;
+  }
+  container.innerHTML = briefs.map(function(b) {
+    const date = new Date(b.created).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const hasCache = !!localStorage.getItem(b.storageKey + '_ai_research');
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f4f8">'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:13px;font-weight:600;color:#1a3a5c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + b.company + '</div>'
+      + '<div style="font-size:11px;color:#718096;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + b.role + '</div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:#a0aec0;white-space:nowrap">' + date + '</div>'
+      + (hasCache ? '<button onclick="reopenBrief(\'' + b.storageKey.replace(/'/g,"\\'") + '\')" style="padding:4px 10px;background:#2e75b6;color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">Open</button>' : '<span style="font-size:10px;color:#cbd5e0">no cache</span>')
+      + '<button onclick="rerunBrief(\'' + encodeURIComponent(JSON.stringify(b)).replace(/'/g,"\\'") + '\')" style="padding:4px 10px;background:white;color:#2e75b6;border:1.5px solid #2e75b6;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap" title="Re-generate with API">🔄</button>'
+      + '</div>';
+  }).join('');
+}
+
+function reopenBrief(storageKey) {
+  const briefs = JSON.parse(localStorage.getItem('ili_research_briefs') || '[]');
+  const b = briefs.find(x => x.storageKey === storageKey);
+  if (!b) return;
+  document.getElementById('rm-company').value = b.company || '';
+  document.getElementById('rm-role').value = b.role || '';
+  document.getElementById('rm-url').value = b.jdUrl || '';
+  const iv = document.getElementById('rm-interviewers');
+  if (iv) iv.value = b.interviewers || '';
+  generateResearchBrief();
+}
+
+function rerunBrief(encoded) {
+  const b = JSON.parse(decodeURIComponent(encoded));
+  localStorage.removeItem(b.storageKey + '_ai_research');
+  document.getElementById('rm-company').value = b.company || '';
+  document.getElementById('rm-role').value = b.role || '';
+  document.getElementById('rm-url').value = b.jdUrl || '';
+  const iv = document.getElementById('rm-interviewers');
+  if (iv) iv.value = b.interviewers || '';
+  generateResearchBrief();
 }
 // ─── INIT ─────────────────────────────────────────────────────────────────
 migrateData();
@@ -1545,6 +1614,7 @@ renderTodayActions();
 renderQuickCheck();
 renderAll();
 renderNudges();
+renderRecentBriefs();
 </script>
 </body>
 </html>
