@@ -2828,58 +2828,72 @@ Output your research in EXACTLY this format with these section markers. Each sec
 ## 5: Interviewer Insights
 ## 6: Tell Me About Yourself
 ## 7: Tailored Resume
-Output EXACTLY this JSON structure for the tailored resume (inside a JSON code block).
+Output EXACTLY the JSON structure below (inside a JSON code block).
 
-CRITICAL RULES — READ CAREFULLY:
-1. NEVER FABRICATE. Every bullet, metric, and claim must come from the BASE RESUME below. You may reword for flow but never invent achievements, numbers, or skills that don't exist.
-2. BE SUBTLE. The resume should read as a strong general resume that naturally aligns with this domain — NOT an obvious keyword-match to the JD. A hiring manager should think "this person has relevant experience" not "this was clearly rewritten for my job."
-3. WHAT YOU CAN CHANGE:
-   - Summary: Reframe the angle/lens (e.g., "AI/ML platform leader" vs "addressability infrastructure leader") using ONLY real experience
-   - Skills line: Reorder and select from Ili's actual skill areas to lead with the most relevant
-   - Bullet wording: Lightly rephrase to emphasize the relevant angle of real achievements (e.g., "enabling addressable audience activation at scale" is a valid reframe of the targeting work)
-   - Bullet selection/ordering: Choose which bullets to include or combine; put most relevant first
-   - Role subtitles: Adjust the italic one-liner to frame the role relevantly
-   - Drop older roles: Mindjet can be dropped if space is needed
-4. WHAT YOU CANNOT CHANGE: Company names, job titles, dates, metrics/numbers, core facts of what was built
+YOU ARE A RESUME REFRAMING ENGINE, NOT A RESUME WRITER.
+Your job: select, reorder, and lightly rephrase Ili's REAL experience to put the best foot forward for this role. You do NOT invent anything.
 
-BASE RESUME (source of truth — all content must originate from here):
-Name: Ili Selinger
-Contact: ilan.selinger@gmail.com · 510-332-0543 · Walnut Creek, CA · linkedin.com/in/ilan-selinger
+STRICT RULES:
+1. TITLES: Use EXACTLY these titles — no variations, no upgrades, no creative rewording:
+   - "Product Director, AI & LLM" with level "(Executive Director)"
+   - "Principal PM → Director → Sr. Director"
+   - "Product Manager → Sr. Manager, Product"
+   - "Product Manager" (Conversant)
+2. SKILLS LINE: Pick 5-8 from ONLY this pool, reorder by relevance to the role:
+   [Addressability & Identity Resolution, First-Party Data Activation, Data Collaboration, Programmatic & RTB, Privacy Law (GDPR / CCPA), Publisher Monetization, Real-Time Decisioning, Audience Segmentation, AI/ML Platforms, Agentic Systems & RAG, Search & Ranking, Ad Quality & Trust, Cross-Functional Leadership, Platform Infrastructure]
+   Do NOT invent skills. Do NOT pull keywords from the JD as skills.
+3. SUMMARY: 3-4 sentences reframing the same real experience through a lens relevant to this role. You MUST include "Sr. Director-level Product leader with 10+ years" and mention "$500M+ revenue products at Yahoo" and "20B+ daily ads scale". Do NOT add capabilities or experience Ili doesn't have.
+4. BULLETS: Choose from the BULLET BANK below. You may lightly rephrase for flow (see examples) but every metric, every number, every claim must match the original. You may combine two related bullets into one. You may reorder bullets within a role. Bold the key metrics with **.
+5. DO NOT add JD-specific keywords, technologies, or frameworks that don't appear in the bullet bank. The resume should feel naturally relevant, not keyword-stuffed.
+6. Mindjet role: include ONLY if relevant, otherwise omit entirely.
+7. JPMC bullets 3 and 4 can be combined into one bullet (see bullet bank).
 
-JPMorgan Chase | Product Director, AI & LLM (Executive Director) | 2021-2026
-- Built keyword search and ranking platform — 99% top-5 accuracy / 80%+ precision, reducing analyst time-to-insight 40-60% across 7,000+ users
-- Designed agentic RAG pipeline over 45M+ documents, enabling large-scale retrieval and synthesis, replacing manual research workflows
-- Built agentic reporting system generating 300+ structured outputs/week, eliminating 90%+ manual work
-- Orchestrated agentic onboarding workflows reducing client turnaround to <24 hours for 85%+ of cases
+GOOD vs BAD examples:
+GOOD reframe: "Owned $500M+ annual revenue across targeting infrastructure; led migration from batch to real-time decisioning, improving advertiser CPA 25% and enabling addressable audience activation at scale" ← adds "enabling addressable audience activation at scale" which is a true description of what the system did
+BAD fabrication: "Defined AI product strategy across LLM orchestration and retrieval-augmented generation" ← Ili never "defined AI product strategy across LLM orchestration" — this is invented
+GOOD reframe: "Drove publisher monetization and brand safety: rolled out IAB taxonomy audiences protecting ~$50M+ revenue across 900M monthly users" ← combines two real bullets naturally
+BAD keyword gaming: "directly applicable to sponsored ads quality scoring" ← shoehorns JD language into a bullet
 
-Yahoo (Verizon Media / Oath) | Principal PM → Director → Sr. Director | 2016-2021
-Subtitle options: "5-year progression across targeting, optimization, and ad integrity — 20B+ daily ads scale" OR "5-year progression across addressability, targeting, optimization, and ad integrity — 20B+ daily ads scale"
-- $500M+ annual revenue owned across targeting infrastructure — migrated batch systems to real-time decisioning, improving advertiser CPA 25%
-- Built and scaled audience addressability systems for brands, publishers, and DSPs/SSPs; rebuilt ranking models driving 50% revenue increase and $100M+ growth via search and mail retargeting
-- Led GDPR and CCPA compliance across targeting and identity systems; designed consent-aware data pipelines and high-performance data warehouse improving audience modeling accuracy
-- As Sr. Director, Trust & Verification: reduced ad fraud 90% via cloaking detection and enforcement systems at 20B+ daily ads scale; implemented ads.txt and sellers.json protocols reducing counterfeit inventory 30%
-- Rolled out IAB taxonomy audiences protecting ~$50M+ revenue across 900M monthly users
-- Reduced storage and compute costs 30% through data lifecycle optimization across targeting infrastructure
+BULLET BANK — choose from these (you may lightly rephrase but preserve all facts and numbers):
 
-New Relic | Product Manager → Sr. Manager, Product | 2014-2016
-- Accelerated SaaS product integration into billing platform supporting $100M+ ARR, reducing time-to-market ~80%; cut new product integration from 6 engineer-months to 3 engineer-weeks
-- Stabilized financial services infrastructure to 99.99% uptime; rebuilt e-commerce and partnership portals
-- Built data analysis platform normalizing data across internal databases, CRM (Salesforce), and customer data warehouse
+JPMC (pick 3, or combine bullets 3+4 into one and pick 3 total):
+B1: "Built keyword search and ranking platform for company, investor, and contact search — 99% top-5 accuracy / 80%+ precision, reducing analyst time-to-insight 40–60% across 7,000+ users"
+B2: "Designed agentic RAG pipeline over 45M+ documents enabling large-scale retrieval and synthesis, replacing manual research workflows"
+B3: "Built agentic reporting system generating 300+ structured outputs/week, eliminating 90%+ manual work"
+B4: "Orchestrated agentic onboarding workflows reducing client turnaround to <24 hours for 85%+ of cases"
+B3+B4 combined: "Automated reporting and onboarding workflows: 300+ structured outputs/week eliminating 90%+ manual work; client turnaround reduced to <24 hrs for 85%+ of cases"
 
-Conversant | Product Manager | 2011-2014
-- Launched Tag Manager with 50+ partner integrations in ~6 months
-- Developed unified mobile SDK; improved conversion tracking via server-to-server integration, ~3% revenue lift
+Yahoo (pick 4-6):
+Y1: "Owned $500M+ annual revenue across targeting infrastructure; led migration from batch to real-time decisioning, improving advertiser CPA 25% and enabling addressable audience activation at scale"
+Y2: "Built and scaled audience addressability systems for brands, publishers, and DSPs/SSPs; rebuilt ranking models driving 50% revenue increase and $100M+ growth via search and mail retargeting"
+Y3: "Led GDPR and CCPA compliance across targeting and identity systems; designed consent-aware data pipelines and high-performance data warehouse improving audience modeling accuracy while staying ahead of regulatory requirements"
+Y4: "As Sr. Director, Trust & Verification: reduced ad fraud 90% via cloaking detection and enforcement systems at 20B+ daily ads scale, protecting addressable inventory quality across the ecosystem"
+Y5: "Drove publisher monetization and brand safety: rolled out IAB taxonomy audiences protecting ~$50M+ revenue across 900M monthly users; implemented ads.txt and sellers.json protocols reducing counterfeit inventory 30%"
+Y6: "Reduced storage and compute costs 30% through data lifecycle optimization across targeting infrastructure"
 
-Mindjet | Project Manager & Manager of User Support | 2005-2011 (OPTIONAL — drop if not relevant)
-- Established PMO; pioneered multi-vendor bidding saving 40% in IT expenditures
-- Led remote engineering team building Mac product with 3-language localization
+New Relic (pick 2):
+N1: "Accelerated SaaS product integration into billing platform supporting $100M+ ARR, reducing time-to-market ~80%; cut new product integration from 6 engineer-months to 3 engineer-weeks"
+N2: "Stabilized financial services infrastructure to 99.99% uptime, eliminating recurring incidents; rebuilt e-commerce and partnership portals improving scalability"
 
-Publication: MetaCon: Unified Predictive Segments System with Trillion Concept Meta-Learning | arXiv, 2022 · Co-author
-Certs: PMP · CSM · B.S., UC Santa Barbara
+Conversant (pick 2):
+C1: "Launched Tag Manager with 50+ partner integrations in ~6 months, enabling seamless cross-product deployment at scale"
+C2: "Developed unified mobile SDK; improved conversion tracking via server-to-server integration, delivering ~3% revenue lift"
+
+Mindjet (OPTIONAL — only if relevant):
+M1: "Established PMO; pioneered multi-vendor bidding saving 40% in IT expenditures"
+M2: "Led remote engineering team building Mac product with 3-language localization"
+
+FIXED BLOCKS (do not modify):
+Publication: {"title":"MetaCon: Unified Predictive Segments System with Trillion Concept Meta-Learning","venue":"arXiv, 2022 · Co-author","description":"AI system predicting user interests across 68+ tasks simultaneously; improved targeting accuracy 15.4% over prior production system at 20B+ daily ads scale"}
+Certs: "Project Management Professional (PMP) · Certified Scrum Master (CSM) · B.S., University of California, Santa Barbara"
+
+Yahoo subtitle options (pick one or lightly adapt):
+- "5-year progression across targeting, optimization, and ad integrity — 20B+ daily ads scale"
+- "5-year progression across addressability, targeting, optimization, and ad integrity — 20B+ daily ads scale"
 
 JSON FORMAT:
 \\\`\\\`\\\`json
-{"summary":"Reframed 3-4 sentence summary using ONLY real experience...","skills":"Skill1 · Skill2 · Skill3 · ... (reordered from real skills)","experience":[{"company":"Company Name","title":"Exact Real Title","level":"(optional level if exists)","dates":"YYYY – YYYY","subtitle":"One-line italic framing","bullets":["Real bullet lightly reworded with **bold metrics**","Another real bullet..."]}],"certs":"Project Management Professional (PMP) · Certified Scrum Master (CSM) · B.S., University of California, Santa Barbara","publication":{"title":"MetaCon: Unified Predictive Segments System with Trillion Concept Meta-Learning","venue":"arXiv, 2022 · Co-author","description":"AI system predicting user interests across 68+ tasks simultaneously; improved targeting accuracy 15.4% over prior production system at 20B+ daily ads scale"}}
+{"summary":"...","skills":"Skill1 · Skill2 · ...","experience":[{"company":"JPMorgan Chase","title":"Product Director, AI & LLM","level":"(Executive Director)","dates":"2021 – 2026","subtitle":"AI-powered search, retrieval, and decisioning platforms for investment banking workflows","bullets":["..."]},{"company":"Yahoo (Verizon Media / Oath)","title":"Principal PM → Director → Sr. Director","dates":"2016 – 2021","subtitle":"...","bullets":["..."]},{"company":"New Relic","title":"Product Manager → Sr. Manager, Product","dates":"2014 – 2016","subtitle":"Billing, provisioning, and packaging systems during hypergrowth","bullets":["..."]},{"company":"Conversant","title":"Product Manager","dates":"2011 – 2014","subtitle":"Tag management, mobile measurement, and conversion tracking","bullets":["..."]}],"certs":"Project Management Professional (PMP) · Certified Scrum Master (CSM) · B.S., University of California, Santa Barbara","publication":{"title":"MetaCon: Unified Predictive Segments System with Trillion Concept Meta-Learning","venue":"arXiv, 2022 · Co-author","description":"AI system predicting user interests across 68+ tasks simultaneously; improved targeting accuracy 15.4% over prior production system at 20B+ daily ads scale"}}
 \\\`\\\`\\\`
 ## 8: Questions to Ask Them
 
