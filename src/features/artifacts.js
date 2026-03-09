@@ -9,7 +9,7 @@ let _artifactDirHandle = null;
 let _artifactReady = false;
 let _artifactUploadCompany = null;
 
-// ─── IndexedDB helpers ──────────────────────────────────────────────────
+// \u2500\u2500\u2500 IndexedDB helpers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 function openArtifactDB() {
   return new Promise((resolve, reject) => {
@@ -40,7 +40,7 @@ async function getHandleFromDB() {
   });
 }
 
-// ─── Folder selection & permission ──────────────────────────────────────
+// \u2500\u2500\u2500 Folder selection & permission \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export async function selectArtifactsFolder() {
   if (!window.showDirectoryPicker) {
@@ -85,7 +85,7 @@ async function ensureCompanyFolder(company) {
   }
 }
 
-// ─── File operations ────────────────────────────────────────────────────
+// \u2500\u2500\u2500 File operations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export async function saveArtifactFile(company, fileName, blob) {
   const dir = await ensureCompanyFolder(company);
@@ -138,7 +138,7 @@ export async function openArtifactFile(company, fileName) {
   } catch (e) { console.error('Open artifact failed:', e); }
 }
 
-// ─── Sync ───────────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Sync \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 async function syncFolderToIndex() {
   const root = await getArtifactsHandle(false);
@@ -172,7 +172,7 @@ async function syncFolderToIndex() {
   } catch (e) { console.error('Sync failed:', e); }
 }
 
-// ─── UI helpers ─────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 UI helpers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 function updateArtifactFolderStatus() {
   const el = document.getElementById('artifactFolderStatus');
@@ -180,12 +180,12 @@ function updateArtifactFolderStatus() {
   if (!el || !btn) return;
   const folderName = localStorage.getItem('ili_artifacts_folder');
   if (_artifactReady && folderName) {
-    el.textContent = '📂 ' + folderName;
-    btn.textContent = '🔄 Sync';
+    el.textContent = '\u{1F4C2} ' + folderName;
+    btn.textContent = '\u{1F504} Sync';
     btn.onclick = async function() { await syncFolderToIndex(); renderArtifactManager(); window.renderPipeline && window.renderPipeline(); showArtifactToast('Artifacts synced!'); };
   } else {
     el.textContent = '';
-    btn.textContent = '📁 Set Folder';
+    btn.textContent = '\u{1F4C1} Set Folder';
     btn.onclick = selectArtifactsFolder;
   }
 }
@@ -216,7 +216,7 @@ export function uploadArtifactFor(company) {
   document.getElementById('artifactFileInput').click();
 }
 
-// ─── Artifact Manager ───────────────────────────────────────────────────
+// \u2500\u2500\u2500 Artifact Manager \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export async function renderArtifactManager() {
   const container = document.getElementById('artifactManager');
@@ -225,9 +225,9 @@ export async function renderArtifactManager() {
 
   if (!handle) {
     container.innerHTML = '<div class="artifact-empty">'
-      + '<div style="font-size:24px;margin-bottom:6px">📁</div>'
+      + '<div style="font-size:24px;margin-bottom:6px">\u{1F4C1}</div>'
       + 'Select a folder to store company-specific files<br>'
-      + '<span style="font-size:10px;color:var(--text-faintest)">Resumes, research briefs, slides, interview notes — organized by company</span>'
+      + '<span style="font-size:10px;color:var(--text-faintest)">Resumes, research briefs, slides, interview notes \u2014 organized by company</span>'
       + '</div>';
     updateArtifactFolderStatus();
     return;
@@ -254,7 +254,7 @@ export async function renderArtifactManager() {
 
   allCo.forEach(co => {
     const arts = index.artifacts.filter(a => a.company === co);
-    const chevron = arts.length > 0 ? '▾' : '▸';
+    const chevron = arts.length > 0 ? '\u25BE' : '\u25B8';
     html += '<div class="artifact-company">';
     html += '<div class="artifact-company-header" onclick="this.nextElementSibling.classList.toggle(\'open\')">';
     html += '<span>' + chevron + '</span> ' + co;
@@ -272,7 +272,7 @@ export async function renderArtifactManager() {
       html += '<span class="a-size">' + formatFileSize(a.size) + '</span>';
       html += '<span class="a-date">' + dateStr + '</span>';
       html += '<button class="a-btn" onclick="openArtifactFile(\'' + a.company.replace(/'/g, "\\'") + '\',\'' + a.fileName.replace(/'/g, "\\'") + '\')">Open</button>';
-      html += '<button class="a-btn a-btn-del" onclick="if(confirm(\'Delete ' + a.fileName.replace(/'/g, "\\'") + '?\'))deleteArtifactFile(\'' + a.company.replace(/'/g, "\\'") + '\',\'' + a.fileName.replace(/'/g, "\\'") + '\').then(()=>{renderArtifactManager();renderPipeline();})">×</button>';
+      html += '<button class="a-btn a-btn-del" onclick="if(confirm(\'Delete ' + a.fileName.replace(/'/g, "\\'") + '?\'))deleteArtifactFile(\'' + a.company.replace(/'/g, "\\'") + '\',\'' + a.fileName.replace(/'/g, "\\'") + '\').then(()=>{renderArtifactManager();renderPipeline();})">\u00D7</button>';
       html += '</div>';
     });
     html += '<div class="artifact-upload-row">';
@@ -284,7 +284,7 @@ export async function renderArtifactManager() {
   container.innerHTML = html;
 }
 
-// ─── Auto-save research brief ───────────────────────────────────────────
+// \u2500\u2500\u2500 Auto-save research brief \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export async function autoSaveResearchBrief(company, role, htmlContent) {
   if (!_artifactReady) return;
@@ -297,7 +297,7 @@ export async function autoSaveResearchBrief(company, role, htmlContent) {
   }
 }
 
-// ─── Init ───────────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Init \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export async function initArtifacts() {
   if (!window.showDirectoryPicker) {
@@ -313,7 +313,7 @@ export async function initArtifacts() {
   renderArtifactManager();
 }
 
-// ─── Company Profile Artifacts (for company-profile view) ───────────────
+// \u2500\u2500\u2500 Company Profile Artifacts (for company-profile view) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export async function renderCompanyProfileArtifacts(companyName, artifacts) {
   const mgr = document.getElementById('artifactManager');
@@ -328,7 +328,7 @@ export async function renderCompanyProfileArtifacts(companyName, artifacts) {
   if (!handle) {
     mgr.innerHTML = `<div class="artifact-empty">
       <div style="font-size:13px;margin-bottom:6px">No artifacts folder configured</div>
-      <button onclick="selectArtifactsFolder().then(()=>switchView('company-profile','${companyName.replace(/'/g, "\\'")}'))" style="padding:6px 14px;background:#d97706;color:white;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">📁 Set Folder</button>
+      <button onclick="selectArtifactsFolder().then(()=>switchView('company-profile','${companyName.replace(/'/g, "\\'")}'))" style="padding:6px 14px;background:#d97706;color:white;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">\u{1F4C1} Set Folder</button>
     </div>`;
     return;
   }
