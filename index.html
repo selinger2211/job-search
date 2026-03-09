@@ -174,6 +174,9 @@
   .cp-contact-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 12px; }
   .cp-contact-item:last-child { border-bottom: none; }
   .cp-empty { color: var(--text-faint); font-size: 12px; font-style: italic; padding: 8px 0; }
+  .cp-profile-grid { display: grid; gap: 12px; }
+  .cp-profile-item { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.6; color: var(--text-primary); }
+  .cp-profile-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-faint); margin-bottom: 4px; }
   .cp-add-btn { padding: 5px 12px; background: var(--bg-surface); border: 1.5px dashed var(--border-medium); border-radius: 7px; font-size: 11px; color: var(--text-muted); cursor: pointer; margin-top: 8px; transition: all 0.12s; }
   .cp-add-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
 
@@ -1125,24 +1128,34 @@ function openConnPanel(companyName) {
   if (!conns.length) {
     body.innerHTML = '<div class="conn-panel-empty">No LinkedIn connections found at ' + companyName + '.<br><br>Consider cold outreach or finding warm intros through mutual connections.</div>';
   } else {
-    // Score connections by influence (title keywords)
+    // Score connections by influence — prioritize Product/Eng/Design + seniority
     const scored = conns.map(function(c) {
       let score = 0;
       const t = (c.position || '').toLowerCase();
-      // C-suite / VP / Director = highest
-      if (/\b(ceo|cto|cfo|coo|cpo|cmo|chief|president)\b/.test(t)) score += 50;
-      if (/\b(vp|vice president|svp|evp)\b/.test(t)) score += 40;
-      if (/\bdir(ector)?\b/.test(t)) score += 35;
-      if (/\b(head of|head,)\b/.test(t)) score += 33;
-      // Senior / Lead / Staff / Principal
-      if (/\b(senior|sr\.?|staff|principal|lead)\b/.test(t)) score += 25;
-      // Manager
-      if (/\bmanager\b/.test(t)) score += 20;
+      // ── Function relevance (Product/Eng/Design get big boost) ──
+      const isProduct = /\b(product|pm\b|program)/.test(t);
+      const isEng = /\b(engineer|software|developer|swe|platform|infrastructure|architect|technical|tech lead|cto|sre)/.test(t);
+      const isDesign = /\b(design|ux|ui|creative|brand)/.test(t);
+      const isData = /\b(data|analytics|machine learning|ml\b|ai\b|science)/.test(t);
+      const isRelevant = isProduct || isEng || isDesign || isData;
+      if (isProduct) score += 30;
+      else if (isEng) score += 25;
+      else if (isDesign) score += 22;
+      else if (isData) score += 22;
       // Recruiter / Talent = can directly refer
-      if (/\b(recruiter|recruiting|talent|hr|people)\b/.test(t)) score += 30;
-      // Engineering / Product / relevant
-      if (/\b(engineer|product|design|data|software|platform)\b/.test(t)) score += 5;
-      return { conn: c, score: score };
+      if (/\b(recruiter|recruiting|talent|hr|people)\b/.test(t)) score += 28;
+      // ── Seniority (stacks with function) ──
+      if (/\b(ceo|cto|cfo|coo|cpo|cmo|chief|president)\b/.test(t)) score += 60;
+      else if (/\b(svp|senior vice president|evp|executive vice president)\b/.test(t)) score += 55;
+      else if (/\b(vp|vice president)\b/.test(t)) score += 50;
+      else if (/\bdir(ector)?\b/.test(t)) score += 40;
+      else if (/\b(head of|head,)\b/.test(t)) score += 38;
+      else if (/\b(principal|staff|fellow)\b/.test(t)) score += 30;
+      else if (/\b(senior|sr\.?|lead)\b/.test(t)) score += 25;
+      else if (/\bmanager\b/.test(t)) score += 20;
+      // Small boost for having any title at all
+      if (t && t.length > 2) score += 2;
+      return { conn: c, score: score, isRelevant: isRelevant };
     });
     scored.sort(function(a, b) { return b.score - a.score; });
 
@@ -1152,9 +1165,11 @@ function openConnPanel(companyName) {
       var connDate = c.connectedOn ? 'Connected ' + c.connectedOn : '';
       var profileLink = c.url ? '<a href="' + c.url + '" target="_blank">' + c.fullName + '</a>' : c.fullName;
       var influence = '';
-      if (item.score >= 40) influence = '<span style="background:#f0fdf4;color:#16a34a;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px">Key Contact</span>';
-      else if (item.score >= 25) influence = '<span style="background:#ebf4ff;color:#2e75b6;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px">Senior</span>';
+      if (item.score >= 70) influence = '<span style="background:#f0fdf4;color:#16a34a;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px">Top Contact</span>';
+      else if (item.score >= 50) influence = '<span style="background:#f0fdf4;color:#16a34a;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px">Key Contact</span>';
+      else if (item.score >= 35) influence = '<span style="background:#ebf4ff;color:#2e75b6;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px">Senior</span>';
       else if (item.score >= 20) influence = '<span style="background:#fffbeb;color:#d97706;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px">Manager</span>';
+      if (item.isRelevant) { var fn = ((c.position||'').toLowerCase().match(/product|engineer|design|data|software|ux|ml\b|ai\b/)||['relevant'])[0]; influence += '<span style="background:#faf5ff;color:#7c3aed;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:4px">' + fn + '</span>'; }
       return '<div class="conn-panel-item">'
         + '<div class="conn-panel-avatar">' + initials + '</div>'
         + '<div class="conn-panel-info">'
@@ -2318,9 +2333,12 @@ function renderCompaniesListView(container) {
           </div>`;
         }).join('') : '';
 
+        const coLogoDomain = co.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com';
+        const coAltLogos = {'jpmorgan chase':'jpmorganchase.com','jp morgan':'jpmorganchase.com','meta':'meta.com','trade desk':'thetradedesk.com','the trade desk':'thetradedesk.com','new relic':'newrelic.com','yahoo':'yahoo.com','datadog':'datadoghq.com','notion':'notion.so','block':'block.xyz','scale ai':'scale.com','snap':'snap.com','snapchat':'snap.com'};
+        const coLogoFinal = 'https://logo.clearbit.com/' + (coAltLogos[co.name.toLowerCase()] || coLogoDomain) + '?size=40';
         return `<div class="company-card" data-company="${co.name.toLowerCase()}" data-tier="${co.tier || ''}" data-roles="${co.roles.length}" data-conns="${co.connections.length}" onclick="switchView('company-profile','${safeName}')">
           <div class="company-card-name">
-            <span class="tier-dot" style="background:${TIER_COLORS[co.tier] || '#a0aec0'}"></span>
+            <img src="${coLogoFinal}" alt="" style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border-light);object-fit:contain;background:white;flex-shrink:0" onerror="this.style.display='none'">
             ${co.name}
             <span class="company-card-tier ${tierClass}" style="margin-left:auto">${tierLabel}</span>
           </div>
@@ -2391,6 +2409,29 @@ function renderCompanyProfileView(container, companyName) {
   const activeStages = new Set(['outreach', 'applied', 'screen', 'interview', 'offer']);
   const contactRoles = roles.filter(r => activeStages.has(r.stage) || r.lastContactedDate);
 
+  // Company profile data (stored in localStorage)
+  const profileKey = 'ili_company_profile_' + companyName.replace(/\W+/g, '_').toLowerCase();
+  const savedProfile = JSON.parse(localStorage.getItem(profileKey) || 'null');
+  const logoDomain = companyName.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com';
+  const logoUrl = 'https://logo.clearbit.com/' + logoDomain + '?size=80';
+  const altLogos = {
+    'jpmorgan chase': 'jpmorganchase.com', 'jp morgan': 'jpmorganchase.com', 'meta': 'meta.com',
+    'trade desk': 'thetradedesk.com', 'the trade desk': 'thetradedesk.com', 'new relic': 'newrelic.com',
+    'verizon media': 'verizonmedia.com', 'yahoo': 'yahoo.com', 'google': 'google.com',
+    'amazon': 'amazon.com', 'apple': 'apple.com', 'microsoft': 'microsoft.com', 'netflix': 'netflix.com',
+    'nvidia': 'nvidia.com', 'salesforce': 'salesforce.com', 'stripe': 'stripe.com', 'openai': 'openai.com',
+    'anthropic': 'anthropic.com', 'snap': 'snap.com', 'snapchat': 'snap.com', 'pinterest': 'pinterest.com',
+    'uber': 'uber.com', 'lyft': 'lyft.com', 'airbnb': 'airbnb.com', 'doordash': 'doordash.com',
+    'instacart': 'instacart.com', 'spotify': 'spotify.com', 'databricks': 'databricks.com',
+    'snowflake': 'snowflake.com', 'datadog': 'datadoghq.com', 'mongodb': 'mongodb.com',
+    'twilio': 'twilio.com', 'cloudflare': 'cloudflare.com', 'palantir': 'palantir.com',
+    'coinbase': 'coinbase.com', 'robinhood': 'robinhood.com', 'square': 'squareup.com',
+    'block': 'block.xyz', 'figma': 'figma.com', 'notion': 'notion.so', 'vercel': 'vercel.com',
+    'plaid': 'plaid.com', 'brex': 'brex.com', 'ramp': 'ramp.com', 'scale ai': 'scale.com'
+  };
+  const domainOverride = altLogos[companyName.toLowerCase()];
+  const finalLogoUrl = 'https://logo.clearbit.com/' + (domainOverride || logoDomain) + '?size=80';
+
   container.innerHTML = `
     <div class="cp-breadcrumb">
       <a onclick="switchView('companies')">All Companies</a> &rsaquo;
@@ -2399,9 +2440,12 @@ function renderCompanyProfileView(container, companyName) {
     </div>
 
     <div class="cp-header">
-      <div class="cp-header-top">
-        <h2>${companyName}</h2>
-        ${tierLabel}
+      <div class="cp-header-top" style="display:flex;align-items:center;gap:14px">
+        <img src="${finalLogoUrl}" alt="${companyName}" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border-light);object-fit:contain;background:white" onerror="this.style.display='none'">
+        <div>
+          <h2>${companyName}</h2>
+          ${tierLabel}
+        </div>
       </div>
       <div class="cp-metrics">
         <div class="cp-metric"><strong>${roles.length}</strong> roles in pipeline</div>
@@ -2414,6 +2458,27 @@ function renderCompanyProfileView(container, companyName) {
         <button onclick="openResearchModal('${safeName}','','')">🔬 Research</button>
         <button onclick="uploadArtifactFor('${safeName}')">📎 Upload File</button>
         <button onclick="switchView('${localStorage.getItem('ili_prevView') || 'companies'}')">← Back</button>
+      </div>
+    </div>
+
+    <div class="cp-section" id="companyProfileSection">
+      <h3>🏢 Company Profile</h3>
+      <div id="companyProfileContent">
+        ${savedProfile ? `
+          <div class="cp-profile-grid">
+            <div class="cp-profile-item"><div class="cp-profile-label">Mission</div><div>${savedProfile.mission || 'Not available'}</div></div>
+            <div class="cp-profile-item"><div class="cp-profile-label">Approach Strategy</div><div>${savedProfile.approach || 'Not available'}</div></div>
+            <div class="cp-profile-item"><div class="cp-profile-label">Fit Analysis</div><div>${savedProfile.fit || 'Not available'}</div></div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button onclick="generateCompanyProfile('${safeName}')" style="padding:5px 12px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:6px;font-size:11px;color:var(--text-secondary);cursor:pointer">🔄 Refresh Profile</button>
+          </div>
+        ` : `
+          <div style="padding:12px 0;color:var(--text-muted);font-size:12px">
+            <p>Generate an AI-powered company profile with mission, approach strategy, and fit analysis.</p>
+            <button onclick="generateCompanyProfile('${safeName}')" style="margin-top:8px;padding:7px 16px;background:var(--accent-blue);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">🏢 Generate Company Profile</button>
+          </div>
+        `}
       </div>
     </div>
 
@@ -2589,6 +2654,51 @@ document.getElementById('researchModal').addEventListener('click', function(e) {
   if (e.target === this) closeResearchModal();
 });
 
+async function generateCompanyProfile(companyName) {
+  const profileKey = 'ili_company_profile_' + companyName.replace(/\W+/g, '_').toLowerCase();
+  const contentEl = document.getElementById('companyProfileContent');
+  if (!contentEl) return;
+  const apiKey = localStorage.getItem('ili_anthropic_key') || '';
+  if (!apiKey) {
+    contentEl.innerHTML = '<div style="padding:12px;background:#fff5f5;border:1px solid #fed7d7;border-radius:8px;font-size:12px;color:#c53030">API key required. Generate a Research Brief first and save your API key, then try again.</div>';
+    return;
+  }
+  contentEl.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--accent-blue);font-weight:600">🔄 Generating company profile…</div>';
+  try {
+    const roles = loadRoles().filter(r => r.company.toLowerCase() === companyName.toLowerCase());
+    const roleCtx = roles.length ? 'Roles being considered: ' + roles.map(r => r.roleTitle).join(', ') : '';
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        system: 'You are helping Ili Selinger research companies for his job search. He is a Senior/Staff PM with 15+ years experience in AdTech (Yahoo, 20B+ daily ads, $500M+ revenue), AI/ML platforms (JPMorgan Chase, agentic RAG, search ranking), and enterprise SaaS (New Relic). He published a paper on LLM applications (arXiv). Respond in JSON format ONLY — no markdown, no commentary.',
+        messages: [{ role: 'user', content: 'Generate a company profile for ' + companyName + '. ' + roleCtx + '\n\nRespond with ONLY this JSON:\n{"mission":"2-3 sentence company mission/what they do","approach":"2-3 sentences on how Ili should approach this company — what angle, which experience to lead with, who to connect with, what to emphasize","fit":"2-3 sentences analyzing if Ili is a good fit — what matches well and any gaps to address"}' }]
+      })
+    });
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+    const data = await resp.json();
+    const text = data.content[0].text;
+    const profile = JSON.parse(text.match(/\{[\s\S]*\}/)[0]);
+    localStorage.setItem(profileKey, JSON.stringify(profile));
+    contentEl.innerHTML = '<div class="cp-profile-grid">'
+      + '<div class="cp-profile-item"><div class="cp-profile-label">Mission</div><div>' + profile.mission + '</div></div>'
+      + '<div class="cp-profile-item"><div class="cp-profile-label">Approach Strategy</div><div>' + profile.approach + '</div></div>'
+      + '<div class="cp-profile-item"><div class="cp-profile-label">Fit Analysis</div><div>' + profile.fit + '</div></div>'
+      + '</div>'
+      + '<div style="margin-top:10px"><button onclick="generateCompanyProfile(\'' + companyName.replace(/'/g, "\\'") + '\')" style="padding:5px 12px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:6px;font-size:11px;color:var(--text-secondary);cursor:pointer">🔄 Refresh Profile</button></div>';
+  } catch (e) {
+    console.error('[Company Profile error]', e);
+    contentEl.innerHTML = '<div style="padding:12px;background:#fff5f5;border:1px solid #fed7d7;border-radius:8px;font-size:12px;color:#c53030">Error generating profile: ' + e.message + '</div>';
+  }
+}
+
 function generateResearchBrief() {
   try {
   const company      = (document.getElementById('rm-company').value.trim()      || 'Unknown Company');
@@ -2601,10 +2711,27 @@ function generateResearchBrief() {
   const storageKey   = 'research_' + (company + '_' + role).replace(/\W+/g,'_').toLowerCase();
   const createdDate  = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
-  // LinkedIn connection context for research brief
+  // LinkedIn connection context for research brief — sorted by relevance (Product/Eng/Design + seniority)
   const briefConns = getConnectionsForCompany(company);
-  const networkCtx = briefConns.length
-    ? '\n\nNETWORKING CONTEXT: You have ' + briefConns.length + ' 1st-degree LinkedIn connection(s) at ' + company + ':\n' + briefConns.slice(0,10).map(c => '- ' + c.fullName + (c.position ? ', ' + c.position : '')).join('\n') + '\nIncorporate this into Section 5 (Interviewer Insights) and suggest how to leverage these connections for a warm introduction.'
+  const scoredConns = briefConns.map(function(c) {
+    let s = 0; const t = (c.position || '').toLowerCase();
+    if (/\b(product|pm\b|program)/.test(t)) s += 30;
+    else if (/\b(engineer|software|developer|platform|architect|technical|cto|sre)/.test(t)) s += 25;
+    else if (/\b(design|ux|ui|creative)/.test(t)) s += 22;
+    else if (/\b(data|analytics|machine learning|ml\b|ai\b|science)/.test(t)) s += 22;
+    if (/\b(recruiter|recruiting|talent|hr|people)\b/.test(t)) s += 28;
+    if (/\b(ceo|cto|cfo|coo|cpo|cmo|chief|president)\b/.test(t)) s += 60;
+    else if (/\b(svp|senior vice president|evp)\b/.test(t)) s += 55;
+    else if (/\b(vp|vice president)\b/.test(t)) s += 50;
+    else if (/\bdir(ector)?\b/.test(t)) s += 40;
+    else if (/\b(head of|head,)\b/.test(t)) s += 38;
+    else if (/\b(principal|staff)\b/.test(t)) s += 30;
+    else if (/\b(senior|sr\.?|lead)\b/.test(t)) s += 25;
+    else if (/\bmanager\b/.test(t)) s += 20;
+    return { c: c, s: s };
+  }).sort(function(a,b){ return b.s - a.s; });
+  const networkCtx = scoredConns.length
+    ? '\n\nNETWORKING CONTEXT: You have ' + scoredConns.length + ' 1st-degree LinkedIn connection(s) at ' + company + ' (listed by relevance — Product/Eng/Design and seniority prioritized):\n' + scoredConns.slice(0,15).map(function(x){ return '- ' + x.c.fullName + (x.c.position ? ', ' + x.c.position : '') + ' (score:' + x.s + ')'; }).join('\n') + '\nPRIORITIZE the most senior Product, Engineering, and Design connections in Section 5 (Interviewer Insights). For each top connection, explain how to leverage them for a warm introduction. Put the most influential contacts first.'
     : '\n\nNETWORKING CONTEXT: No direct LinkedIn connections at ' + company + '. Suggest strategies for getting a warm intro (mutual connections, alumni networks, industry events).';
 
   // Save or clear API key
@@ -2624,7 +2751,7 @@ function generateResearchBrief() {
     {id:'s4',emoji:'⚠️',title:'Key Concerns & Pre-emptions', hint:'Likely tough questions with strong answers.'},
     {id:'s5',emoji:'👤',title:'Interviewer Insights',    hint:'Research each person — background, focus areas, good topics to reference.'},
     {id:'s6',emoji:'🎤',title:'Tell Me About Yourself',  hint:'A tailored 90-second opener connecting your story to this role.'},
-    {id:'s7',emoji:'📄',title:'Resume Customization',    hint:'Top bullets to emphasize or rephrase to match this role.'},
+    {id:'s7',emoji:'📄',title:'Tailored Resume',          hint:'AI-generated one-page resume customized to this role. Review the content, then generate DOCX or print PDF.'},
     {id:'s8',emoji:'❓',title:'Questions to Ask Them',   hint:'Strategic questions about roadmap, team, success definition.'},
   ];
 
@@ -2683,11 +2810,13 @@ function generateResearchBrief() {
           max_tokens:8000,
           stream:true,
           system:\`You are generating an interview prep research brief for Ili Selinger, a Senior/Staff/Principal PM candidate with 15+ years experience:
-- JPMorgan Chase: AI/LLM products, RAG pipelines, agentic systems, search ranking
-- Yahoo/Verizon Media (5 yrs): AdTech — 20B+ daily ads, targeting, ranking, fraud detection, GDPR
-- New Relic: SaaS observability, billing platform
-- Conversant: Mobile attribution, SDK products
-- Published arXiv paper on LLM applications
+- JPMorgan Chase (2021-2026): Product Director AI & LLM (Executive Director). Built keyword search/ranking platform (99% top-5 accuracy, 7000+ users), agentic RAG pipeline over 45M+ docs, agentic reporting system (300+ outputs/week, 90%+ manual work eliminated), agentic onboarding (<24hr turnaround for 85%+ of cases)
+- Yahoo/Verizon Media (2016-2021): Principal PM to Sr. Director. 5-year progression. $500M+ annual revenue owned across targeting. Rebuilt ranking models (50% revenue increase), $100M+ growth via retargeting, reduced infrastructure costs 30%. Trust & Verification: reduced ad fraud 90% at 20B+ daily ads scale. IAB taxonomy audiences protecting ~$50M+ revenue across 900M monthly users. GDPR/CCPA compliance lead.
+- New Relic (2014-2016): PM to Sr. Manager. Billing/provisioning for $100M+ ARR SaaS. Reduced new product integration from 6 engineer-months to 3 engineer-weeks. Zero incidents over multiple months.
+- Conversant (2011-2014): PM. Launched Tag Manager in ~6 months with 50+ integrations. Mobile SDK, ~3% revenue lift via server-to-server tracking.
+- Mindjet (2005-2011): Project Manager. Established PMO, 40% IT savings, Mac product with 3-language localization.
+- Certifications: PMP, CSM. B.S. UC Santa Barbara.
+- Publication: MetaCon — Unified Predictive Segments with Trillion Concept Meta-Learning (arXiv 2022). 15.4% targeting accuracy improvement at 20B+ daily ads scale.
 - Target: IC Principal/Staff PM at Series B+ or public companies in AdTech, AI/ML, or data platforms
 
 Output your research in EXACTLY this format with these section markers. Each section MUST start with the marker on its own line:
@@ -2698,7 +2827,11 @@ Output your research in EXACTLY this format with these section markers. Each sec
 ## 4: Key Concerns & Pre-emptions
 ## 5: Interviewer Insights
 ## 6: Tell Me About Yourself
-## 7: Resume Customization
+## 7: Tailored Resume
+Output EXACTLY this JSON structure for the tailored resume (inside a JSON code block). Customize the summary, skills line, and bullet points to match this specific role. Keep the same companies and roles, but rewrite bullets to emphasize the most relevant achievements. MUST fit one page — max 3-4 bullets per role, shorter for older roles. Use this JSON format:
+\\\`\\\`\\\`json
+{"summary":"One paragraph tailored summary...","skills":"Skill1 · Skill2 · Skill3 · ...","experience":[{"company":"Company Name","title":"Role Title","level":"(optional level)","dates":"YYYY – YYYY","subtitle":"One-line italic description","bullets":["Bullet 1 with **bold metrics**","Bullet 2..."]}],"certs":"Certifications & Education line","publication":{"title":"Paper title","venue":"arXiv, 2022 · Co-author","description":"One line description"}}
+\\\`\\\`\\\`
 ## 8: Questions to Ask Them
 
 Be specific, opinionated, and direct. No filler. Write as if advising a senior PM colleague.\`,
@@ -2749,6 +2882,7 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
       statusEl.innerHTML+=' <button onclick="streamResearch()" style="margin-left:8px;padding:3px 10px;border-radius:5px;border:1px solid #dc2626;background:white;color:#dc2626;font-size:11px;cursor:pointer">Retry</button>';
     }
   }
+  let resumeData=null;
   function renderSections(text){
     const MARKERS=[/^## 1:/m,/^## 2:/m,/^## 3:/m,/^## 4:/m,/^## 5:/m,/^## 6:/m,/^## 7:/m,/^## 8:/m];
     const IDS=['s1','s2','s3','s4','s5','s6','s7','s8'];
@@ -2759,12 +2893,193 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
       if(start===-1)continue;
       const end=(i<7&&positions[i+1]!==-1)?positions[i+1]:text.length;
       const content=text.slice(start+1,end).trim();
-      if(content){
-        const el=document.getElementById('content-'+IDS[i]);
-        if(el)el.innerHTML=mdToHtml(content);
-        const sec=document.getElementById(IDS[i]);
-        if(sec)sec.classList.add('done');
+      if(!content)continue;
+      const el=document.getElementById('content-'+IDS[i]);
+      if(!el)continue;
+      // Section 7 = Tailored Resume — parse JSON and show resume preview
+      if(IDS[i]==='s7'){
+        try{
+          const jsonMatch=content.match(/\\\`\\\`\\\`json\\n([\\s\\S]*?)\\\`\\\`\\\`/)||content.match(/\\{[\\s\\S]*"summary"[\\s\\S]*\\}/);
+          const jsonStr=jsonMatch?(jsonMatch[1]||jsonMatch[0]):content;
+          resumeData=JSON.parse(jsonStr);
+          renderResumePreview(el,resumeData);
+        }catch(e){
+          // Still streaming or not JSON yet — show as markdown
+          el.innerHTML=mdToHtml(content);
+        }
+      }else{
+        el.innerHTML=mdToHtml(content);
       }
+      const sec=document.getElementById(IDS[i]);
+      if(sec)sec.classList.add('done');
+    }
+  }
+  function renderResumePreview(el,rd){
+    let h='<div class="resume-preview" style="font-family:Arial,sans-serif;max-width:700px;border:1px solid #e2e8f0;border-radius:8px;padding:24px;background:#fff;margin-bottom:14px">';
+    h+='<div style="font-size:20px;font-weight:bold;color:#1f4e79">Ili Selinger</div>';
+    h+='<div style="font-size:9px;color:#444;margin:3px 0 8px">ilan.selinger@gmail.com · 510-332-0543 · Walnut Creek, CA · linkedin.com/in/ilan-selinger</div>';
+    h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:10px"></div>';
+    h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:4px">SUMMARY</div>';
+    h+='<div style="font-size:9px;color:#1a1a1a;line-height:1.5;margin-bottom:4px">'+rd.summary+'</div>';
+    if(rd.skills) h+='<div style="font-size:8px;color:#444;font-style:italic;margin-bottom:8px">'+rd.skills+'</div>';
+    h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:8px"></div>';
+    h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:6px">EXPERIENCE</div>';
+    (rd.experience||[]).forEach(function(exp){
+      h+='<div style="margin-bottom:8px">';
+      h+='<div style="font-size:10px;color:#1a1a1a"><strong>'+exp.company+'</strong> <span style="color:#999">|</span> <strong>'+exp.title+'</strong>';
+      if(exp.level) h+=' <span style="color:#888;font-weight:normal;font-size:9px">'+exp.level+'</span>';
+      h+=' <span style="color:#999">|</span> <span style="color:#444">'+exp.dates+'</span></div>';
+      if(exp.subtitle) h+='<div style="font-size:8px;color:#444;font-style:italic;margin:2px 0">'+exp.subtitle+'</div>';
+      if(exp.bullets&&exp.bullets.length){
+        h+='<ul style="margin:3px 0 0 16px;padding:0;font-size:8.5px;line-height:1.5;color:#1a1a1a">';
+        exp.bullets.forEach(function(b){ h+='<li style="margin:1px 0">'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>'; });
+        h+='</ul>';
+      }
+      h+='</div>';
+    });
+    if(rd.certs){
+      h+='<div style="border-bottom:2px solid #2e75b6;margin:8px 0"></div>';
+      h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:3px">CERTIFICATIONS & EDUCATION</div>';
+      h+='<div style="font-size:8.5px;color:#1a1a1a">'+rd.certs+'</div>';
+    }
+    if(rd.publication){
+      h+='<div style="border-bottom:2px solid #2e75b6;margin:8px 0"></div>';
+      h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:3px">PUBLICATION</div>';
+      h+='<div style="font-size:8.5px;color:#1a1a1a"><strong>'+rd.publication.title+'</strong> | '+rd.publication.venue+'</div>';
+      if(rd.publication.description) h+='<div style="font-size:8px;color:#1a1a1a;margin-top:2px">'+rd.publication.description+'</div>';
+    }
+    h+='</div>';
+    h+='<div style="display:flex;gap:10px;flex-wrap:wrap">';
+    h+='<button onclick="generateDocx()" style="padding:8px 18px;background:#2e75b6;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">📥 Download Word (.docx)</button>';
+    h+='<button onclick="printResume()" style="padding:8px 18px;background:#1a3a5c;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print / Save PDF</button>';
+    h+='</div>';
+    el.innerHTML=h;
+  }
+  function printResume(){
+    if(!resumeData)return alert('Resume data not ready yet.');
+    const rd=resumeData;
+    let h='<!DOCTYPE html><html><head><style>';
+    h+='@page{size:letter;margin:0.5in 0.625in}*{box-sizing:border-box;margin:0;padding:0}';
+    h+='body{font-family:Arial,sans-serif;color:#1a1a1a;font-size:8.5pt;line-height:1.35}';
+    h+='.name{font-size:20pt;font-weight:bold;color:#1f4e79}.contact{font-size:8.5pt;color:#444;margin:2pt 0 5pt}';
+    h+='.divider{border-bottom:2px solid #2e75b6;margin:4pt 0 6pt}.sec-hdr{font-size:9pt;font-weight:bold;color:#1f4e79;margin:4pt 0 3pt}';
+    h+='.summary{font-size:8.5pt;line-height:1.4;margin-bottom:2pt}.skills{font-size:8pt;color:#444;font-style:italic;margin-bottom:4pt}';
+    h+='.exp-hdr{font-size:10pt;margin:4pt 0 1pt}.exp-sub{font-size:8.5pt;color:#444;font-style:italic;margin:1pt 0}';
+    h+='ul{margin:2pt 0 0 16pt;padding:0}li{margin:1pt 0;font-size:8.5pt;line-height:1.35}';
+    h+='</style></head><body>';
+    h+='<div class="name">Ili Selinger</div>';
+    h+='<div class="contact">ilan.selinger@gmail.com · 510-332-0543 · Walnut Creek, CA · <a href="https://linkedin.com/in/ilan-selinger">linkedin.com/in/ilan-selinger</a></div>';
+    h+='<div class="divider"></div>';
+    h+='<div class="sec-hdr">SUMMARY</div>';
+    h+='<div class="summary">'+rd.summary+'</div>';
+    if(rd.skills) h+='<div class="skills">'+rd.skills+'</div>';
+    h+='<div class="divider"></div>';
+    h+='<div class="sec-hdr">EXPERIENCE</div>';
+    (rd.experience||[]).forEach(function(exp){
+      h+='<div class="exp-hdr"><strong>'+exp.company+'</strong> <span style="color:#999">|</span> <strong>'+exp.title+'</strong>';
+      if(exp.level) h+=' <span style="color:#888;font-weight:normal;font-size:8.5pt">'+exp.level+'</span>';
+      h+=' <span style="color:#999">|</span> <span style="color:#444">'+exp.dates+'</span></div>';
+      if(exp.subtitle) h+='<div class="exp-sub">'+exp.subtitle+'</div>';
+      if(exp.bullets&&exp.bullets.length){
+        h+='<ul>';
+        exp.bullets.forEach(function(b){ h+='<li>'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>'; });
+        h+='</ul>';
+      }
+    });
+    if(rd.certs){h+='<div class="divider"></div><div class="sec-hdr">CERTIFICATIONS & EDUCATION</div><div style="font-size:8.5pt">'+rd.certs+'</div>';}
+    if(rd.publication){h+='<div class="divider"></div><div class="sec-hdr">PUBLICATION</div><div style="font-size:8.5pt"><strong>'+rd.publication.title+'</strong> | '+rd.publication.venue+'</div>';if(rd.publication.description)h+='<div style="font-size:8pt;margin-top:2pt">'+rd.publication.description+'</div>';}
+    h+='</body></html>';
+    const w=window.open('','_blank');
+    if(w){w.document.write(h);w.document.close();setTimeout(function(){w.print();},500);}
+  }
+  async function generateDocx(){
+    if(!resumeData)return alert('Resume data not ready yet.');
+    const statusEl=document.getElementById('stream-status');
+    statusEl.textContent='📄 Generating Word document…';
+    statusEl.style.display='block';
+    try{
+      // Load docx library from CDN
+      if(!window.docx){
+        await new Promise(function(resolve,reject){
+          const s=document.createElement('script');
+          s.src='https://unpkg.com/docx@9.1.1/build/index.umd.js';
+          s.onload=resolve;s.onerror=reject;document.head.appendChild(s);
+        });
+      }
+      const{Document,Packer,Paragraph,TextRun,AlignmentType,LevelFormat,ExternalHyperlink,BorderStyle}=window.docx;
+      const rd=resumeData;
+      // Build document children
+      const children=[];
+      // Name
+      children.push(new Paragraph({spacing:{after:10,before:0},alignment:AlignmentType.LEFT,children:[new TextRun({text:'Ili Selinger',font:'Arial',bold:true,color:'1f4e79',size:40})]}));
+      // Contact
+      children.push(new Paragraph({spacing:{after:60,before:0},children:[new TextRun({text:'ilan.selinger@gmail.com  ·  510-332-0543  ·  Walnut Creek, CA  ·  ',font:'Arial',color:'444444',size:17}),new ExternalHyperlink({children:[new TextRun({text:'linkedin.com/in/ilan-selinger',font:'Arial',color:'1155cc',size:17,style:'Hyperlink'})],link:'https://linkedin.com/in/ilan-selinger'})]}));
+      // Blue divider
+      children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
+      // SUMMARY header
+      children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'SUMMARY',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
+      // Summary text
+      children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.summary,font:'Arial',color:'1a1a1a',size:17})]}));
+      // Skills italic
+      if(rd.skills)children.push(new Paragraph({spacing:{after:60,before:0},children:[new TextRun({text:rd.skills,font:'Arial',italics:true,color:'444444',size:16})]}));
+      // Blue divider
+      children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
+      // EXPERIENCE header
+      children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'EXPERIENCE',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
+      // Experience entries
+      (rd.experience||[]).forEach(function(exp){
+        const titleRuns=[
+          new TextRun({text:exp.company,font:'Arial',bold:true,color:'1a1a1a',size:20}),
+          new TextRun({text:'  |  ',font:'Arial',color:'999999',size:19}),
+          new TextRun({text:exp.title,font:'Arial',bold:true,color:'1a1a1a',size:19})
+        ];
+        if(exp.level)titleRuns.push(new TextRun({text:'  '+exp.level,font:'Arial',color:'888888',size:17}));
+        titleRuns.push(new TextRun({text:'  |  ',font:'Arial',color:'999999',size:19}));
+        titleRuns.push(new TextRun({text:exp.dates,font:'Arial',color:'444444',size:19}));
+        children.push(new Paragraph({spacing:{after:16,before:40},children:titleRuns}));
+        if(exp.subtitle)children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:exp.subtitle,font:'Arial',italics:true,color:'444444',size:17})]}));
+        (exp.bullets||[]).forEach(function(bullet){
+          // Parse **bold** markers
+          const parts=bullet.split(/\\*\\*(.+?)\\*\\*/g);
+          const runs=parts.map(function(p,idx){
+            return new TextRun({text:p,font:'Arial',bold:idx%2===1,color:'1a1a1a',size:17});
+          });
+          children.push(new Paragraph({spacing:{after:18,before:18,line:240,lineRule:'auto'},indent:{left:480,hanging:240},numbering:{reference:'bullets',level:0},children:runs}));
+        });
+      });
+      // CERTS
+      if(rd.certs){
+        children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
+        children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'CERTIFICATIONS & EDUCATION',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
+        children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.certs,font:'Arial',color:'1a1a1a',size:17})]}));
+      }
+      // PUBLICATION
+      if(rd.publication){
+        children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
+        children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'PUBLICATION',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
+        children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.publication.title,font:'Arial',bold:true,color:'1a1a1a',size:17}),new TextRun({text:' | '+rd.publication.venue,font:'Arial',color:'1a1a1a',size:17})]}));
+        if(rd.publication.description)children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.publication.description,font:'Arial',color:'1a1a1a',size:17})]}));
+      }
+      const doc=new Document({
+        numbering:{config:[{reference:'bullets',levels:[{level:0,format:LevelFormat.BULLET,text:'\\u2022',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:480,hanging:240}}}}]}]},
+        sections:[{
+          properties:{page:{size:{width:12240,height:15840},margin:{top:500,bottom:500,left:900,right:900}}},
+          children:children
+        }]
+      });
+      const buffer=await Packer.toBuffer(doc);
+      const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download='Ili_Selinger_Resume_'+${JSON.stringify(company)}.replace(/\\W+/g,'_')+'_'+${JSON.stringify(role)}.replace(/\\W+/g,'_')+'.docx';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+      statusEl.textContent='✅ Resume downloaded!';
+      setTimeout(function(){statusEl.style.display='none';},3000);
+    }catch(err){
+      statusEl.textContent='❌ '+err.message;
+      statusEl.style.background='rgba(220,38,38,.15)';
+      statusEl.style.color='#dc2626';
+      console.error('DOCX generation error:',err);
     }
   }
   // Check for cached research first
