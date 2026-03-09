@@ -97,6 +97,7 @@ export function renderPipeline(filterQuery) {
         <div style="display:flex;gap:3px;align-items:center">
           <button style="padding:2px 6px;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:4px;font-size:9px;cursor:pointer;color:var(--text-muted)" title="Edit role details" onclick="event.stopPropagation();openEditModal('${role.id}')">\u270F\uFE0F</button>
           <button class="btn-research" title="Generate AI research brief for this role" onclick="event.stopPropagation();openResearchModal('${role.company.replace(/'/g,"\\'")}','${(role.roleTitle||'').replace(/'/g,"\\'")}','${role.url||''}')">\u{1F52C}</button>
+          <button class="btn-research" style="background:var(--accent-blue);color:white" title="Generate tailored resume for this role" onclick="event.stopPropagation();generateStandaloneResume('${role.company.replace(/'/g,"\\'")}','${(role.roleTitle||'').replace(/'/g,"\\'")}','${role.url||''}')">\u{1F4C4}</button>
           ${prevStage ? `<button class="stage-btn stage-btn-back" title="Move back to ${STAGE_LABELS[prevStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${prevStage}')">\u2190</button>` : ''}
           ${nextStage ? `<button class="stage-btn stage-btn-fwd" title="Advance to ${STAGE_LABELS[nextStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${nextStage}')">\u2192 ${STAGE_LABELS[nextStage]}</button>` : ''}
         </div>
