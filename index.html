@@ -117,6 +117,72 @@
   .theme-toggle { padding: 5px 10px; background: rgba(255,255,255,0.12); color: white; border: 1.5px solid rgba(255,255,255,0.25); border-radius: 7px; font-size: 14px; cursor: pointer; transition: all 0.15s; line-height: 1; }
   .theme-toggle:hover { background: rgba(255,255,255,0.22); }
 
+  /* ── Navigation Bar ───────────────────────────────────── */
+  .top-nav { display: flex; align-items: center; gap: 16px; padding: 10px 20px; background: linear-gradient(135deg, var(--header-gradient-from) 0%, var(--header-gradient-to) 100%); color: white; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 8px var(--shadow-md); border-radius: 12px; margin-bottom: 14px; }
+  .nav-brand { font-size: 17px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+  .nav-links { display: flex; gap: 6px; margin-left: 12px; }
+  .nav-links button { padding: 6px 14px; background: rgba(255,255,255,0.10); border: 1.5px solid rgba(255,255,255,0.20); color: rgba(255,255,255,0.8); border-radius: 7px; cursor: pointer; font-weight: 600; font-size: 11px; transition: all 0.15s; white-space: nowrap; }
+  .nav-links button:hover { background: rgba(255,255,255,0.18); color: white; }
+  .nav-links button.active { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.45); color: white; }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .nav-stats { display: flex; gap: 10px; margin-left: 16px; }
+  .nav-stat { text-align: center; background: rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 6px; }
+  .nav-stat .num { font-size: 15px; font-weight: 700; }
+  .nav-stat .lbl { font-size: 9px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.4px; }
+
+  /* ── View Container ───────────────────────────────────── */
+  #mainView { min-height: calc(100vh - 80px); }
+
+  /* ── Company Card Grid (All Companies view) ───────────── */
+  .company-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .company-card { background: var(--bg-card); border-radius: 12px; padding: 16px 18px; box-shadow: var(--card-shadow); cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; border: 1.5px solid transparent; }
+  .company-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px var(--shadow-md); border-color: var(--accent-blue); }
+  .company-card-name { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .company-card-tier { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  .company-card-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }
+  .company-card-metric { font-size: 11px; color: var(--text-muted); }
+  .company-card-metric strong { color: var(--text-primary); }
+  .company-card-actions { display: flex; gap: 6px; margin-top: 10px; }
+  .company-filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .company-filter-bar input { padding: 7px 12px; border: 1.5px solid var(--border-medium); border-radius: 8px; font-size: 12px; background: var(--bg-input); color: var(--text-primary); min-width: 200px; }
+  .company-filter-btn { padding: 5px 12px; border: 1.5px solid var(--border-medium); border-radius: 7px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--bg-surface); color: var(--text-secondary); transition: all 0.12s; }
+  .company-filter-btn:hover, .company-filter-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+
+  /* ── Company Profile ──────────────────────────────────── */
+  .cp-breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .cp-breadcrumb a { color: var(--accent-blue); text-decoration: none; cursor: pointer; }
+  .cp-breadcrumb a:hover { text-decoration: underline; }
+  .cp-header { background: var(--bg-card); border-radius: 12px; padding: 20px 22px; box-shadow: var(--card-shadow); margin-bottom: 14px; }
+  .cp-header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .cp-header-top h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0; }
+  .cp-metrics { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+  .cp-metric { font-size: 12px; color: var(--text-muted); }
+  .cp-metric strong { color: var(--text-primary); font-size: 14px; }
+  .cp-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cp-actions button { padding: 6px 14px; border-radius: 7px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border-medium); background: var(--bg-surface); color: var(--text-secondary); transition: all 0.12s; }
+  .cp-actions button:hover { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+  .cp-section { background: var(--bg-card); border-radius: 12px; padding: 16px 18px; box-shadow: var(--card-shadow); margin-bottom: 14px; }
+  .cp-section h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .cp-section h3 .count { font-size: 11px; color: var(--text-muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .cp-role-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--border-light); font-size: 12px; }
+  .cp-role-item:last-child { border-bottom: none; }
+  .cp-role-stage { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; white-space: nowrap; }
+  .cp-conn-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border-light); font-size: 12px; }
+  .cp-conn-item:last-child { border-bottom: none; }
+  .cp-brief-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border-light); font-size: 12px; }
+  .cp-brief-item:last-child { border-bottom: none; }
+  .cp-contact-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 12px; }
+  .cp-contact-item:last-child { border-bottom: none; }
+  .cp-empty { color: var(--text-faint); font-size: 12px; font-style: italic; padding: 8px 0; }
+  .cp-add-btn { padding: 5px 12px; background: var(--bg-surface); border: 1.5px dashed var(--border-medium); border-radius: 7px; font-size: 11px; color: var(--text-muted); cursor: pointer; margin-top: 8px; transition: all 0.12s; }
+  .cp-add-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+
+  /* ── Quick Stats Bar ──────────────────────────────────── */
+  .quick-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .quick-stat-box { flex: 1; min-width: 100px; background: var(--bg-card); border-radius: 10px; padding: 12px 14px; box-shadow: var(--card-shadow); text-align: center; }
+  .quick-stat-box .num { font-size: 22px; font-weight: 700; color: var(--accent-blue); }
+  .quick-stat-box .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: var(--bg-body); color: var(--text-primary); transition: background 0.3s, color 0.3s; }
 
@@ -400,139 +466,29 @@
 <body>
 <div class="app">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div>
-      <h1>🎯 Job Search Dashboard</h1>
-      <div class="header-sub" id="todayLabel"></div>
+  <!-- NAVIGATION BAR -->
+  <nav class="top-nav">
+    <div class="nav-brand" onclick="switchView('dashboard')">🎯 Job Search</div>
+    <div class="nav-links">
+      <button id="nav-dashboard" onclick="switchView('dashboard')" class="active">Dashboard</button>
+      <button id="nav-companies" onclick="switchView('companies')">All Companies</button>
+      <button id="nav-pipeline" onclick="switchView('pipeline')">Pipeline</button>
+      <button id="nav-tierlist" onclick="switchView('tierlist')">Tier List</button>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
-      <div style="display:flex;gap:8px;align-items:center">
-        <button onclick="openResearchModal()" style="padding:7px 16px;background:rgba(255,255,255,0.15);color:white;border:1.5px solid rgba(255,255,255,0.35);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;backdrop-filter:blur(4px);transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">🔬 Research a Company</button>
-        <button class="theme-toggle" id="themeToggle" onclick="cycleTheme()" title="Toggle dark mode">🌙</button>
-      </div>
-    <div class="header-stats">
-      <div class="stat-box"><div class="num" id="statTracking">0</div><div class="lbl">Tracking</div></div>
-      <div class="stat-box"><div class="num" id="statOutreach" style="color:#67e8f9">0</div><div class="lbl">📨 Outreach</div></div>
-      <div class="stat-box"><div class="num" id="statApplied">0</div><div class="lbl">Applied</div></div>
-      <div class="stat-box"><div class="num" id="statActive">0</div><div class="lbl">In Process</div></div>
-      <div class="stat-box"><div class="num" id="statInbound" style="color:#86efac">0</div><div class="lbl">📥 Inbound</div></div>
-      <div class="stat-box"><div class="num" id="statOutbound" style="color:#93c5fd">0</div><div class="lbl">📤 Outbound</div></div>
+    <div class="nav-right">
+      <button onclick="openResearchModal()" style="padding:6px 14px;background:rgba(255,255,255,0.12);color:white;border:1.5px solid rgba(255,255,255,0.25);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">🔬 Research</button>
+      <button class="theme-toggle" id="themeToggle" onclick="cycleTheme()" title="Toggle dark mode">🌙</button>
     </div>
-    </div><!-- /header-right -->
-  </div>
+  </nav>
 
-  <!-- TODAY'S ACTIONS + QUICK CHECK -->
-  <div class="grid2">
-    <div class="card today-card">
-      <div class="card-title"><span class="dot" style="background:#2e75b6"></span>Today's Action Items</div>
-      <div id="todayActions"></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="dot" style="background:#16a34a"></span>Role Fit Quick-Check</div>
-      <div id="quickCheck"></div>
-    </div>
-  </div>
-
-  <!-- PIPELINE -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title" style="margin-bottom:10px">
-      <span class="dot" style="background:#d97706"></span>Application Pipeline
-      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-        <div class="search-bar-wrap" style="margin:0">
-          <input class="search-bar" id="pipelineSearch" placeholder="Filter companies…" oninput="applyFilter(this.value)" style="width:180px">
-          <button class="search-clear" id="searchClearBtn" onclick="clearFilter()">✕ Clear</button>
-          <span class="filter-count" id="filterCount" style="display:none"></span>
-        </div>
-        <button onclick="openAddModal()" style="padding:5px 13px;background:#2e75b6;color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">+ Add Role</button>
-      </div>
-    </div>
-    <div class="pipeline">
-      <div class="pipeline-col col-tracking" id="col-tracking">
-        <div class="pipeline-col-header"><span style="color:#4a5568">👀 Tracking</span> <span class="pipeline-col-count" id="cnt-tracking">0</span></div>
-      </div>
-      <div class="pipeline-col col-outreach" id="col-outreach">
-        <div class="pipeline-col-header"><span style="color:#0e7490">📨 Outreach</span> <span class="pipeline-col-count" id="cnt-outreach">0</span></div>
-      </div>
-      <div class="pipeline-col col-applied" id="col-applied">
-        <div class="pipeline-col-header"><span style="color:#2e75b6">📤 Applied</span> <span class="pipeline-col-count" id="cnt-applied">0</span></div>
-      </div>
-      <div class="pipeline-col col-screen" id="col-screen">
-        <div class="pipeline-col-header"><span style="color:#7c3aed">📞 Screen</span> <span class="pipeline-col-count" id="cnt-screen">0</span></div>
-      </div>
-      <div class="pipeline-col col-interview" id="col-interview">
-        <div class="pipeline-col-header"><span style="color:#d97706">🎯 Interview</span> <span class="pipeline-col-count" id="cnt-interview">0</span></div>
-      </div>
-      <div class="pipeline-col col-offer" id="col-offer">
-        <div class="pipeline-col-header"><span style="color:#16a34a">🎉 Offer/Done</span> <span class="pipeline-col-count" id="cnt-offer">0</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RECENT BRIEFS -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title">
-      <span class="dot" style="background:#2e75b6"></span>Recent Research Briefs
-      <span style="margin-left:6px;font-size:10px;color:#a0aec0;font-weight:400;text-transform:none;letter-spacing:0">interview prep — saved locally</span>
-      <button onclick="openResearchModal()" style="margin-left:auto;padding:3px 10px;background:#2e75b6;border:none;border-radius:5px;font-size:10px;color:white;cursor:pointer;font-weight:600">+ New Brief</button>
-    </div>
-    <div id="recentBriefs"></div>
-  </div>
-
-  <!-- LINKEDIN NETWORK MAP -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title">
-      <span class="dot" style="background:#16a34a"></span>LinkedIn Network Map
-      <span style="margin-left:6px;font-size:10px;color:#a0aec0;font-weight:400;text-transform:none;letter-spacing:0">1st-degree connections mapped to pipeline</span>
-      <input type="file" id="linkedinCsvInput" accept=".csv" style="display:none" onchange="importLinkedInCSV(this)">
-      <button onclick="document.getElementById('linkedinCsvInput').click()" style="margin-left:auto;padding:3px 10px;background:#16a34a;border:none;border-radius:5px;font-size:10px;color:white;cursor:pointer;font-weight:600">📥 Import CSV</button>
-    </div>
-    <div id="networkMap"></div>
-  </div>
-
-  <!-- COMPANY ARTIFACTS -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title">
-      <span class="dot" style="background:#d97706"></span>Company Artifacts
-      <span class="artifact-folder-status" id="artifactFolderStatus"></span>
-      <input type="file" id="artifactFileInput" multiple style="display:none" onchange="handleArtifactUpload(this)">
-      <button id="artifactFolderBtn" onclick="selectArtifactsFolder()" style="margin-left:auto;padding:3px 10px;background:#d97706;border:none;border-radius:5px;font-size:10px;color:white;cursor:pointer;font-weight:600">📁 Set Folder</button>
-    </div>
-    <div id="artifactManager"></div>
-  </div>
-
-  <!-- CONTACT LOG -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title">
-      <span class="dot" style="background:#7c3aed"></span>Contact Log
-      <span style="margin-left:6px;font-size:10px;color:#a0aec0;font-weight:400;text-transform:none;letter-spacing:0">outreach & applications — click any row to edit</span>
-      <button onclick="renderContactLog()" style="margin-left:auto;padding:3px 10px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:5px;font-size:10px;color:#4a5568;cursor:pointer">↻</button>
-    </div>
-    <div id="contactLog"></div>
-  </div>
-
-  <div class="grid2">
-    <!-- TARGET COMPANIES -->
-    <div class="card">
-      <div class="card-title">
-        <span class="dot" style="background:#1a3a5c"></span>Target Company List
-        <div style="margin-left:auto;display:flex;gap:5px">
-          <button id="editModeBtn" onclick="toggleEditMode()" style="padding:3px 10px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:5px;font-size:10px;color:#4a5568;cursor:pointer">✏️ Edit</button>
-          <button onclick="openCoManager()" style="padding:3px 10px;background:#2e75b6;color:white;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer">+ Add/Remove</button>
-        </div>
-      </div>
-      <div id="tierList"></div>
-    </div>
-
-    <!-- NETWORKING NUDGES -->
-    <div class="card">
-      <div class="card-title"><span class="dot" style="background:#7c3aed"></span>Today's Networking Nudges</div>
-      <div id="networkNudges"></div>
-      <button onclick="refreshNudges()" style="width:100%;padding:7px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:7px;font-size:11px;color:#4a5568;cursor:pointer;margin-top:7px">↻ Refresh nudges</button>
-    </div>
-  </div>
+  <!-- MAIN VIEW CONTAINER -->
+  <div id="mainView"></div>
 
 </div><!-- /app -->
+
+<!-- Hidden file inputs (needed globally) -->
+<input type="file" id="linkedinCsvInput" accept=".csv" style="display:none" onchange="importLinkedInCSV(this)">
+<input type="file" id="artifactFileInput" multiple style="display:none" onchange="handleArtifactUpload(this)">
 
 <!-- ══ RESEARCH MODAL ════════════════════════════════════════ -->
 <div class="modal-overlay" id="researchModal">
@@ -882,16 +838,20 @@ function pushStageHistory(role, newStage) {
 let filterQuery = '';
 function applyFilter(val) {
   filterQuery = val.trim().toLowerCase();
-  document.getElementById('searchClearBtn').classList.toggle('visible', filterQuery.length > 0);
+  var scb = document.getElementById('searchClearBtn');
+  if (scb) scb.classList.toggle('visible', filterQuery.length > 0);
   renderPipeline();
   renderTierList();
   renderNetworkMap();
 }
 function clearFilter() {
   filterQuery = '';
-  document.getElementById('pipelineSearch').value = '';
-  document.getElementById('searchClearBtn').classList.remove('visible');
-  document.getElementById('filterCount').style.display = 'none';
+  var ps = document.getElementById('pipelineSearch');
+  if (ps) ps.value = '';
+  var scb = document.getElementById('searchClearBtn');
+  if (scb) scb.classList.remove('visible');
+  var fc = document.getElementById('filterCount');
+  if (fc) fc.style.display = 'none';
   renderPipeline();
   renderTierList();
   renderNetworkMap();
@@ -911,9 +871,12 @@ function updateStreak() {
 
 // ─── TODAY'S ACTIONS ─────────────────────────────────────────────────────
 function renderTodayActions() {
+  const todayActionsEl = document.getElementById('todayActions');
+  if (!todayActionsEl) return;
   const d   = new Date();
   const day = d.getDay();
-  document.getElementById('todayLabel').textContent = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  const todayLabelEl = document.getElementById('todayLabel');
+  if (todayLabelEl) todayLabelEl.textContent = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
   const actions = [];
 
   if ([1,3,5].includes(day)) actions.push({
@@ -937,7 +900,7 @@ function renderTodayActions() {
 
   if ([0,6].includes(day)) actions.push({ icon:'📚', bg:'#f7fafc', title:'Weekend: prep & practice', sub:'Good time for resume tailoring, interview prep, or warm outreach.', badge:'badge-blue', badgeText:'No new postings today' });
 
-  document.getElementById('todayActions').innerHTML = actions.map(a => `
+  todayActionsEl.innerHTML = actions.map(a => `
     <div class="action-item">
       <div class="action-icon" style="background:${a.bg}">${a.icon}</div>
       <div class="action-text" style="flex:1"><strong>${a.title}</strong><span>${a.sub}</span></div>
@@ -947,9 +910,11 @@ function renderTodayActions() {
 
 // ─── QUICK CHECK ─────────────────────────────────────────────────────────
 function renderQuickCheck() {
+  const qcEl = document.getElementById('quickCheck');
+  if (!qcEl) return;
   const key   = 'ili_qcheck_' + new Date().toDateString();
   const saved = JSON.parse(localStorage.getItem(key) || '{}');
-  document.getElementById('quickCheck').innerHTML =
+  qcEl.innerHTML =
     CHECK_ITEMS.map((item, i) => `
       <div class="check-row">
         <input type="checkbox" id="qc${i}" ${saved[i]?'checked':''} onchange="saveCheck(${i},this.checked,'${key}')">
@@ -965,6 +930,7 @@ function saveCheck(i, val, key) {
 
 // ─── PIPELINE ────────────────────────────────────────────────────────────
 function renderPipeline() {
+  if (!document.getElementById('col-tracking')) return;
   const roles  = loadRoles();
   const counts = {};
   STAGES.forEach(s => { counts[s] = 0; });
@@ -981,10 +947,10 @@ function renderPipeline() {
 
   if (filterQuery) {
     const fc = document.getElementById('filterCount');
-    fc.textContent = `${visible.length} of ${roles.length}`;
-    fc.style.display = 'inline';
+    if (fc) { fc.textContent = `${visible.length} of ${roles.length}`; fc.style.display = 'inline'; }
   } else {
-    document.getElementById('filterCount').style.display = 'none';
+    const fc = document.getElementById('filterCount');
+    if (fc) fc.style.display = 'none';
   }
 
   const cmLabel = { email:'✉️', linkedin:'💼', other:'💬' };
@@ -1037,13 +1003,14 @@ function renderPipeline() {
           ${contactDateStr ? `<span style="font-size:9px;color:#a0aec0">${contactDateStr}</span>` : ''}
         </div>
         <div style="display:flex;gap:3px;align-items:center">
+          <button style="padding:2px 6px;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:4px;font-size:9px;cursor:pointer;color:var(--text-muted)" title="Edit role" onclick="event.stopPropagation();openEditModal('${role.id}')">✏️</button>
           <button class="btn-research" title="Research this company" onclick="event.stopPropagation();openResearchModal('${role.company.replace(/'/g,"\\'")}','${(role.roleTitle||'').replace(/'/g,"\\'")}','${role.url||''}')">🔬</button>
           ${prevStage ? `<button class="stage-btn stage-btn-back" title="← ${STAGE_LABELS[prevStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${prevStage}')">←</button>` : ''}
           ${nextStage ? `<button class="stage-btn stage-btn-fwd" title="→ ${STAGE_LABELS[nextStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${nextStage}')">→ ${STAGE_LABELS[nextStage]}</button>` : ''}
         </div>
       </div>`;
 
-    card.addEventListener('click', () => openEditModal(role.id));
+    card.addEventListener('click', () => { localStorage.setItem('ili_prevView', currentView); switchView('company-profile', role.company); });
 
     // Drag events
     card.addEventListener('dragstart', e => {
@@ -1084,13 +1051,14 @@ function renderPipeline() {
     };
   });
 
-  // Header stats
-  document.getElementById('statTracking').textContent  = roles.filter(r=>r.stage==='tracking').length;
-  document.getElementById('statOutreach').textContent  = roles.filter(r=>r.stage==='outreach').length;
-  document.getElementById('statApplied').textContent   = roles.filter(r=>r.stage==='applied').length;
-  document.getElementById('statActive').textContent    = roles.filter(r=>['screen','interview'].includes(r.stage)).length;
-  document.getElementById('statInbound').textContent   = roles.filter(r=>r.source==='inbound').length;
-  document.getElementById('statOutbound').textContent  = roles.filter(r=>r.source!=='inbound').length;
+  // Header stats (only update if elements exist)
+  var el;
+  if ((el = document.getElementById('statTracking'))) el.textContent  = roles.filter(r=>r.stage==='tracking').length;
+  if ((el = document.getElementById('statOutreach'))) el.textContent  = roles.filter(r=>r.stage==='outreach').length;
+  if ((el = document.getElementById('statApplied')))  el.textContent  = roles.filter(r=>r.stage==='applied').length;
+  if ((el = document.getElementById('statActive')))   el.textContent  = roles.filter(r=>['screen','interview'].includes(r.stage)).length;
+  if ((el = document.getElementById('statInbound')))  el.textContent  = roles.filter(r=>r.source==='inbound').length;
+  if ((el = document.getElementById('statOutbound'))) el.textContent  = roles.filter(r=>r.source!=='inbound').length;
 }
 
 // Quick stage move
@@ -1119,6 +1087,8 @@ function removeCompanyFromTier(co, tier) {
   saveCompaniesData(cos); renderTierList();
 }
 function renderTierList() {
+  const tierListEl = document.getElementById('tierList');
+  if (!tierListEl) return;
   const COMPANIES = getCompanies();
   const roles = loadRoles();
   const stagePriority = ['offer','interview','screen','applied','outreach','tracking'];
@@ -1128,7 +1098,7 @@ function renderTierList() {
     if (!coStage[key] || stagePriority.indexOf(r.stage) < stagePriority.indexOf(coStage[key])) coStage[key] = r.stage;
   });
 
-  document.getElementById('tierList').innerHTML = Object.entries(COMPANIES).map(([tier, cos]) => `
+  tierListEl.innerHTML = Object.entries(COMPANIES).map(([tier, cos]) => `
     <div class="tier-section">
       <span class="tier-label tier-${tier}">Tier ${tier}</span><br>
       <div style="margin-top:3px">
@@ -1147,8 +1117,9 @@ function renderTierList() {
       </div>
     </div>`).join('');
 
-  // Populate datalist
-  document.getElementById('companyList').innerHTML = Object.values(COMPANIES).flat().map(c=>`<option value="${c}">`).join('');
+  // Populate datalist (if it exists)
+  var clEl = document.getElementById('companyList');
+  if (clEl) clEl.innerHTML = Object.values(COMPANIES).flat().map(c=>`<option value="${c}">`).join('');
 }
 
 // ─── COMPANY MANAGER ──────────────────────────────────────────────────────
@@ -1197,9 +1168,11 @@ document.getElementById('coManagerModal').addEventListener('click', e => { if(e.
 // ─── NETWORKING NUDGES ────────────────────────────────────────────────────
 let nudgeOffset = 0;
 function renderNudges() {
+  const nudgesEl = document.getElementById('networkNudges');
+  if (!nudgesEl) return;
   const seed = new Date().getDate() + nudgeOffset;
   const shown = [seed % NETWORK_NUDGES.length, (seed+1) % NETWORK_NUDGES.length];
-  document.getElementById('networkNudges').innerHTML = shown.map(i => {
+  nudgesEl.innerHTML = shown.map(i => {
     const n = NETWORK_NUDGES[i];
     return `<div class="nudge-card">
       <div class="nudge-name">${n.name}</div>
@@ -1330,6 +1303,7 @@ document.getElementById('editModal').addEventListener('click', e => { if(e.targe
 function renderContactLog() {
   const roles = loadRoles();
   const container = document.getElementById('contactLog');
+  if (!container) return;
   const appliedStages = new Set(['applied','screen','interview','offer']);
   const activeStages  = new Set(['outreach','applied','screen','interview','offer']);
   const activeRoles   = roles.filter(r => activeStages.has(r.stage));
@@ -1933,13 +1907,488 @@ async function initArtifacts() {
   renderArtifactManager();
 }
 
-// ─── RENDER ALL ───────────────────────────────────────────────────────────
-function renderAll() {
-  renderPipeline();
-  renderTierList();
+// ─── VIEW SWITCHING ENGINE ─────────────────────────────────────────────────
+let currentView = localStorage.getItem('ili_lastView') || 'dashboard';
+let currentCompany = localStorage.getItem('ili_lastCompany') || null;
+
+const STAGE_COLORS_MAP = { tracking:'#4a5568', outreach:'#0e7490', applied:'#2e75b6', screen:'#7c3aed', interview:'#d97706', offer:'#16a34a' };
+const STAGE_ICONS_MAP  = { tracking:'👀', outreach:'📨', applied:'📤', screen:'📞', interview:'🎯', offer:'🎉' };
+
+function switchView(viewName, company) {
+  currentView = viewName;
+  if (viewName === 'company-profile' && company) {
+    currentCompany = company;
+    localStorage.setItem('ili_lastCompany', company);
+  }
+  localStorage.setItem('ili_lastView', viewName);
+
+  // Update nav active state
+  document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+  const navBtn = document.getElementById('nav-' + viewName);
+  if (navBtn) navBtn.classList.add('active');
+
+  renderActiveView();
+}
+
+function renderActiveView() {
+  const container = document.getElementById('mainView');
+  switch (currentView) {
+    case 'dashboard':   renderDashboardView(container); break;
+    case 'companies':   renderCompaniesListView(container); break;
+    case 'pipeline':    renderPipelineView(container); break;
+    case 'tierlist':    renderTierListView(container); break;
+    case 'company-profile': renderCompanyProfileView(container, currentCompany); break;
+    default: renderDashboardView(container);
+  }
+}
+
+// ── Helper: get all unique companies across all data sources ──
+function getAllTrackedCompanies() {
+  const cos = getCompanies();
+  const roles = loadRoles();
+  const connData = getLinkedInData();
+  const artifactIdx = getArtifactIndex();
+  const briefs = JSON.parse(localStorage.getItem('ili_research_briefs') || '[]');
+
+  const companyMap = {}; // name -> { tier, roles, connections, artifacts, briefs, contacts, lastContact }
+
+  // From tier list
+  Object.entries(cos).forEach(([tier, list]) => {
+    list.forEach(name => {
+      const key = name.toLowerCase();
+      if (!companyMap[key]) companyMap[key] = { name, tier: null, roles: [], connections: [], artifacts: [], briefs: [], lastContact: null };
+      companyMap[key].tier = tier;
+      companyMap[key].name = name; // preserve original casing from tier list
+    });
+  });
+
+  // From pipeline roles
+  roles.forEach(r => {
+    const key = r.company.toLowerCase();
+    if (!companyMap[key]) companyMap[key] = { name: r.company, tier: null, roles: [], connections: [], artifacts: [], briefs: [], lastContact: null };
+    companyMap[key].roles.push(r);
+    // Track tier from role if not set from tier list
+    if (!companyMap[key].tier && r.tier) companyMap[key].tier = r.tier;
+    // Track last contact
+    if (r.lastContactedDate) {
+      const d = new Date(r.lastContactedDate + 'T12:00:00');
+      if (!companyMap[key].lastContact || d > companyMap[key].lastContact) companyMap[key].lastContact = d;
+    }
+    if (r.date) {
+      const d = new Date(r.date);
+      if (!companyMap[key].lastContact || d > companyMap[key].lastContact) companyMap[key].lastContact = d;
+    }
+  });
+
+  // Connections
+  if (connData && connData.connections) {
+    connData.connections.forEach(c => {
+      if (!c.company) return;
+      // Find matching company in map
+      const normC = normalizeCompanyName(c.company);
+      const matchKey = Object.keys(companyMap).find(k => normalizeCompanyName(k) === normC);
+      if (matchKey) {
+        companyMap[matchKey].connections.push(c);
+      }
+    });
+  }
+
+  // Artifacts
+  artifactIdx.forEach(a => {
+    const key = a.company.toLowerCase();
+    if (companyMap[key]) companyMap[key].artifacts.push(a);
+  });
+
+  // Briefs
+  briefs.forEach(b => {
+    const key = b.company.toLowerCase();
+    if (companyMap[key]) companyMap[key].briefs.push(b);
+  });
+
+  return companyMap;
+}
+
+function getContactLogForCompany(companyName) {
+  const roles = loadRoles().filter(r => r.company.toLowerCase() === companyName.toLowerCase());
+  return roles;
+}
+
+function getResearchBriefsForCompany(companyName) {
+  const briefs = JSON.parse(localStorage.getItem('ili_research_briefs') || '[]');
+  return briefs.filter(b => b.company.toLowerCase() === companyName.toLowerCase());
+}
+
+// ── Dashboard View ──
+function renderDashboardView(container) {
+  const roles = loadRoles();
+  const stageCounts = {};
+  STAGES.forEach(s => { stageCounts[s] = roles.filter(r => r.stage === s).length; });
+  const totalCompanies = Object.values(getCompanies()).flat().length;
+  const connData = getLinkedInData();
+  const totalConns = connData ? connData.connections.filter(c => {
+    const normC = normalizeCompanyName(c.company);
+    const allCos = [...Object.values(getCompanies()).flat(), ...roles.map(r => r.company)];
+    return allCos.some(co => normalizeCompanyName(co) === normC);
+  }).length : 0;
+
+  container.innerHTML = `
+    <div class="quick-stats">
+      <div class="quick-stat-box"><div class="num">${stageCounts.tracking}</div><div class="lbl">👀 Tracking</div></div>
+      <div class="quick-stat-box"><div class="num" style="color:#0e7490">${stageCounts.outreach}</div><div class="lbl">📨 Outreach</div></div>
+      <div class="quick-stat-box"><div class="num">${stageCounts.applied}</div><div class="lbl">📤 Applied</div></div>
+      <div class="quick-stat-box"><div class="num" style="color:#7c3aed">${stageCounts.screen + stageCounts.interview}</div><div class="lbl">🎯 Active</div></div>
+      <div class="quick-stat-box"><div class="num" style="color:#16a34a">${stageCounts.offer}</div><div class="lbl">🎉 Offers</div></div>
+      <div class="quick-stat-box"><div class="num">${totalCompanies}</div><div class="lbl">🏢 Companies</div></div>
+      <div class="quick-stat-box"><div class="num" style="color:#16a34a">${totalConns}</div><div class="lbl">🔗 Warm Intros</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card today-card">
+        <div class="card-title"><span class="dot" style="background:#2e75b6"></span>Today's Action Items</div>
+        <div id="todayActions"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#16a34a"></span>Role Fit Quick-Check</div>
+        <div id="quickCheck"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">
+        <span class="dot" style="background:#2e75b6"></span>Recent Research Briefs
+        <span style="margin-left:6px;font-size:10px;color:var(--text-faint);font-weight:400;text-transform:none;letter-spacing:0">interview prep — saved locally</span>
+        <button onclick="openResearchModal()" style="margin-left:auto;padding:3px 10px;background:var(--accent-blue);border:none;border-radius:5px;font-size:10px;color:white;cursor:pointer;font-weight:600">+ New Brief</button>
+      </div>
+      <div id="recentBriefs"></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#7c3aed"></span>Today's Networking Nudges</div>
+        <div id="networkNudges"></div>
+        <button onclick="refreshNudges()" style="width:100%;padding:7px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:7px;font-size:11px;color:var(--text-secondary);cursor:pointer;margin-top:7px">↻ Refresh nudges</button>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">
+          <span class="dot" style="background:#7c3aed"></span>Contact Log
+          <span style="margin-left:6px;font-size:10px;color:var(--text-faint);font-weight:400;text-transform:none;letter-spacing:0">outreach & applications</span>
+        </div>
+        <div id="contactLog"></div>
+      </div>
+    </div>
+  `;
+  renderTodayActions();
+  renderQuickCheck();
+  renderRecentBriefs();
+  renderNudges();
   renderContactLog();
+}
+
+// ── Pipeline View ──
+function renderPipelineView(container) {
+  container.innerHTML = `
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:10px">
+        <span class="dot" style="background:#d97706"></span>Application Pipeline
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <div class="search-bar-wrap" style="margin:0">
+            <input class="search-bar" id="pipelineSearch" placeholder="Filter companies…" oninput="applyFilter(this.value)" style="width:180px" value="${filterQuery || ''}">
+            <button class="search-clear" id="searchClearBtn" onclick="clearFilter()" style="${filterQuery ? '' : 'display:none'}">✕ Clear</button>
+            <span class="filter-count" id="filterCount" style="display:none"></span>
+          </div>
+          <button onclick="openAddModal()" style="padding:5px 13px;background:var(--accent-blue);color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">+ Add Role</button>
+        </div>
+      </div>
+      <div class="pipeline">
+        ${STAGES.map(s => `
+          <div class="pipeline-col col-${s}" id="col-${s}">
+            <div class="pipeline-col-header"><span style="color:${STAGE_COLORS_MAP[s]}">${STAGE_ICONS_MAP[s]} ${STAGE_LABELS[s]}</span> <span class="pipeline-col-count" id="cnt-${s}">0</span></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  renderPipeline();
+}
+
+// ── Tier List View ──
+function renderTierListView(container) {
+  container.innerHTML = `
+    <div class="card">
+      <div class="card-title">
+        <span class="dot" style="background:#1a3a5c"></span>Target Company List
+        <div style="margin-left:auto;display:flex;gap:5px">
+          <button id="editModeBtn" onclick="toggleEditMode()" style="padding:3px 10px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:5px;font-size:10px;color:var(--text-secondary);cursor:pointer">✏️ Edit</button>
+          <button onclick="openCoManager()" style="padding:3px 10px;background:var(--accent-blue);color:white;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer">+ Add/Remove</button>
+        </div>
+      </div>
+      <div id="tierList"></div>
+    </div>
+    <div class="card" style="margin-top:14px;margin-bottom:14px">
+      <div class="card-title">
+        <span class="dot" style="background:#16a34a"></span>LinkedIn Network Map
+        <span style="margin-left:6px;font-size:10px;color:var(--text-faint);font-weight:400;text-transform:none;letter-spacing:0">1st-degree connections mapped to pipeline</span>
+        <button onclick="document.getElementById('linkedinCsvInput').click()" style="margin-left:auto;padding:3px 10px;background:#16a34a;border:none;border-radius:5px;font-size:10px;color:white;cursor:pointer;font-weight:600">📥 Import CSV</button>
+      </div>
+      <div id="networkMap"></div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">
+        <span class="dot" style="background:#d97706"></span>Company Artifacts
+        <span class="artifact-folder-status" id="artifactFolderStatus"></span>
+        <button id="artifactFolderBtn" onclick="selectArtifactsFolder()" style="margin-left:auto;padding:3px 10px;background:#d97706;border:none;border-radius:5px;font-size:10px;color:white;cursor:pointer;font-weight:600">📁 Set Folder</button>
+      </div>
+      <div id="artifactManager"></div>
+    </div>
+  `;
+  renderTierList();
   renderNetworkMap();
   renderArtifactManager();
+}
+
+// ── All Companies View ──
+function renderCompaniesListView(container) {
+  const companyMap = getAllTrackedCompanies();
+  const companies = Object.values(companyMap).sort((a, b) => {
+    // Sort by tier (ascending), then by role count (desc), then name
+    const ta = parseInt(a.tier) || 5, tb = parseInt(b.tier) || 5;
+    if (ta !== tb) return ta - tb;
+    if (b.roles.length !== a.roles.length) return b.roles.length - a.roles.length;
+    return a.name.localeCompare(b.name);
+  });
+
+  container.innerHTML = `
+    <div class="company-filter-bar">
+      <input type="text" id="companySearchInput" placeholder="Search companies…" oninput="filterCompanyCards(this.value)">
+      <button class="company-filter-btn" data-tier="all" onclick="filterCompanyByTier('all',this)">All</button>
+      <button class="company-filter-btn" data-tier="1" onclick="filterCompanyByTier('1',this)">Tier 1</button>
+      <button class="company-filter-btn" data-tier="2" onclick="filterCompanyByTier('2',this)">Tier 2</button>
+      <button class="company-filter-btn" data-tier="3" onclick="filterCompanyByTier('3',this)">Tier 3</button>
+      <button class="company-filter-btn" data-tier="4" onclick="filterCompanyByTier('4',this)">Tier 4</button>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted);cursor:pointer;margin-left:8px">
+        <input type="checkbox" id="filterWarmIntros" onchange="filterCompanyCards()"> Has warm intros
+      </label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted);cursor:pointer">
+        <input type="checkbox" id="filterInPipeline" onchange="filterCompanyCards()"> In pipeline
+      </label>
+    </div>
+    <div class="company-card-grid" id="companyCardGrid">
+      ${companies.map(co => {
+        const tierClass = co.tier ? 'chip-t' + co.tier : '';
+        const tierLabel = co.tier ? 'Tier ' + co.tier : 'Untiered';
+        const lastContactStr = co.lastContact
+          ? co.lastContact.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          : 'Never';
+        const safeName = co.name.replace(/'/g, "\\'");
+        return `<div class="company-card" data-company="${co.name.toLowerCase()}" data-tier="${co.tier || ''}" data-roles="${co.roles.length}" data-conns="${co.connections.length}" onclick="switchView('company-profile','${safeName}')">
+          <div class="company-card-name">
+            <span class="tier-dot" style="background:${TIER_COLORS[co.tier] || '#a0aec0'}"></span>
+            ${co.name}
+            <span class="company-card-tier ${tierClass}" style="margin-left:auto">${tierLabel}</span>
+          </div>
+          <div class="company-card-metrics">
+            <div class="company-card-metric"><strong>${co.roles.length}</strong> roles</div>
+            <div class="company-card-metric"><strong>${co.connections.length}</strong> connections</div>
+            <div class="company-card-metric"><strong>${co.artifacts.length}</strong> artifacts</div>
+            <div class="company-card-metric">📨 ${lastContactStr}</div>
+          </div>
+          <div class="company-card-actions">
+            <button onclick="event.stopPropagation();openAddModalCo('${safeName}','${co.tier||1}')" style="padding:4px 10px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:5px;font-size:10px;color:var(--text-secondary);cursor:pointer">+ Add Role</button>
+            <button onclick="event.stopPropagation();openResearchModal('${safeName}','','')" style="padding:4px 10px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:5px;font-size:10px;color:var(--text-secondary);cursor:pointer">🔬 Research</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${companies.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--text-faint)">No companies tracked yet. Add companies via the Tier List or Pipeline.</div>' : ''}
+  `;
+}
+
+let companyTierFilter = 'all';
+function filterCompanyByTier(tier, btn) {
+  companyTierFilter = tier;
+  document.querySelectorAll('.company-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  filterCompanyCards();
+}
+function filterCompanyCards(searchVal) {
+  const search = (searchVal || (document.getElementById('companySearchInput') || {}).value || '').toLowerCase();
+  const warmOnly = document.getElementById('filterWarmIntros') && document.getElementById('filterWarmIntros').checked;
+  const pipelineOnly = document.getElementById('filterInPipeline') && document.getElementById('filterInPipeline').checked;
+
+  document.querySelectorAll('.company-card').forEach(card => {
+    const name = card.dataset.company;
+    const tier = card.dataset.tier;
+    const conns = parseInt(card.dataset.conns) || 0;
+    const roles = parseInt(card.dataset.roles) || 0;
+
+    let show = true;
+    if (search && !name.includes(search)) show = false;
+    if (companyTierFilter !== 'all' && tier !== companyTierFilter) show = false;
+    if (warmOnly && conns === 0) show = false;
+    if (pipelineOnly && roles === 0) show = false;
+
+    card.style.display = show ? '' : 'none';
+  });
+}
+
+// ── Company Profile View ──
+function renderCompanyProfileView(container, companyName) {
+  if (!companyName) { renderDashboardView(container); return; }
+
+  const roles = loadRoles().filter(r => r.company.toLowerCase() === companyName.toLowerCase());
+  const connections = getConnectionsForCompany(companyName);
+  const artifacts = getCompanyArtifacts(companyName);
+  const briefs = getResearchBriefsForCompany(companyName);
+  const companies = getCompanies();
+  let tier = null;
+  Object.entries(companies).forEach(([t, cos]) => {
+    if (cos.some(c => c.toLowerCase() === companyName.toLowerCase())) tier = t;
+  });
+
+  const tierLabel = tier ? `<span class="company-card-tier chip-t${tier}">Tier ${tier}</span>` : '';
+  const safeName = companyName.replace(/'/g, "\\'");
+
+  // Contact log (roles with outreach/application activity)
+  const activeStages = new Set(['outreach', 'applied', 'screen', 'interview', 'offer']);
+  const contactRoles = roles.filter(r => activeStages.has(r.stage) || r.lastContactedDate);
+
+  container.innerHTML = `
+    <div class="cp-breadcrumb">
+      <a onclick="switchView('companies')">All Companies</a> &rsaquo;
+      <strong>${companyName}</strong>
+      ${tier ? ` &rsaquo; Tier ${tier}` : ''}
+    </div>
+
+    <div class="cp-header">
+      <div class="cp-header-top">
+        <h2>${companyName}</h2>
+        ${tierLabel}
+      </div>
+      <div class="cp-metrics">
+        <div class="cp-metric"><strong>${roles.length}</strong> roles in pipeline</div>
+        <div class="cp-metric"><strong>${connections.length}</strong> warm intros</div>
+        <div class="cp-metric"><strong>${artifacts.length}</strong> artifacts</div>
+        <div class="cp-metric"><strong>${briefs.length}</strong> research briefs</div>
+      </div>
+      <div class="cp-actions">
+        <button onclick="openAddModalCo('${safeName}','${tier || 1}')">+ Add Role</button>
+        <button onclick="openResearchModal('${safeName}','','')">🔬 Research</button>
+        <button onclick="uploadArtifactFor('${safeName}')">📎 Upload File</button>
+        <button onclick="switchView('${localStorage.getItem('ili_prevView') || 'companies'}')">← Back</button>
+      </div>
+    </div>
+
+    <div class="cp-section">
+      <h3>🎯 Roles in Pipeline <span class="count">(${roles.length})</span></h3>
+      ${roles.length ? roles.map(r => {
+        const stageColor = STAGE_COLORS_MAP[r.stage] || '#4a5568';
+        const stageLabel = STAGE_LABELS[r.stage] || r.stage;
+        const daysInStage = r.stageHistory && r.stageHistory.length
+          ? Math.floor((Date.now() - new Date(r.stageHistory[r.stageHistory.length - 1].ts).getTime()) / 86400000)
+          : '';
+        return `<div class="cp-role-item">
+          <span class="cp-role-stage" style="background:${stageColor}20;color:${stageColor};border:1px solid ${stageColor}40">${stageLabel}</span>
+          <strong style="flex:1">${r.roleTitle}</strong>
+          ${daysInStage !== '' ? `<span style="font-size:10px;color:var(--text-faint)">${daysInStage}d in stage</span>` : ''}
+          <button class="btn-research" onclick="event.stopPropagation();openResearchModal('${safeName}','${(r.roleTitle||'').replace(/'/g,"\\'")}','${r.url||''}')" title="Research">🔬</button>
+          <button onclick="openEditModal('${r.id}')" style="padding:3px 8px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:5px;font-size:10px;color:var(--text-secondary);cursor:pointer">Edit</button>
+        </div>`;
+      }).join('') : '<div class="cp-empty">No roles tracked yet.</div>'}
+      <button class="cp-add-btn" onclick="openAddModalCo('${safeName}','${tier || 1}')">+ Add another role</button>
+    </div>
+
+    <div class="cp-section">
+      <h3>🔗 Warm Introductions <span class="count">(${connections.length})</span></h3>
+      ${connections.length ? connections.slice(0, 10).map(c => `
+        <div class="cp-conn-item">
+          <strong>${c.fullName}</strong>
+          <span style="color:var(--text-muted);flex:1">${c.position || ''}</span>
+          ${c.url ? `<a href="${c.url}" target="_blank" style="font-size:10px;color:var(--accent-blue);text-decoration:none">🔗 Profile</a>` : ''}
+        </div>
+      `).join('') + (connections.length > 10 ? `<div style="font-size:11px;color:var(--text-faint);padding:6px 0">+ ${connections.length - 10} more connections</div>` : '')
+      : '<div class="cp-empty">No connections found at this company. Consider cold outreach or finding warm intros through mutual connections.</div>'}
+    </div>
+
+    <div class="cp-section">
+      <h3>🔬 Research Briefs <span class="count">(${briefs.length})</span></h3>
+      ${briefs.length ? briefs.map(b => {
+        const date = new Date(b.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const hasCache = !!localStorage.getItem(b.storageKey + '_ai_research');
+        return `<div class="cp-brief-item">
+          <span style="flex:1"><strong>${b.role || 'General'}</strong> <span style="color:var(--text-faint)">${date}</span></span>
+          ${hasCache ? `<button onclick="reopenBrief('${b.storageKey.replace(/'/g, "\\'")}')" style="padding:3px 8px;background:var(--accent-blue);color:white;border:none;border-radius:5px;font-size:10px;cursor:pointer">Open</button>` : ''}
+          <button onclick="rerunBrief('${encodeURIComponent(JSON.stringify(b)).replace(/'/g, "\\'")}')" style="padding:3px 8px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:5px;font-size:10px;color:var(--text-secondary);cursor:pointer">🔄</button>
+        </div>`;
+      }).join('') : '<div class="cp-empty">No research briefs generated yet.</div>'}
+      <button class="cp-add-btn" onclick="openResearchModal('${safeName}','','')">+ Generate new brief</button>
+    </div>
+
+    <div class="cp-section">
+      <h3>📨 Contact History <span class="count">(${contactRoles.length})</span></h3>
+      ${contactRoles.length ? contactRoles.map(r => {
+        const cmLabel = { email: '✉️ Email', linkedin: '💼 LinkedIn', other: '💬 Other' };
+        let events = [];
+        if (r.date && activeStages.has(r.stage)) {
+          const d = new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          events.push(`<span style="color:var(--accent-blue)">${r.stage === 'outreach' ? '📨 Outreach' : '📤 Applied'} ${d}</span>`);
+        }
+        if (r.lastContactedDate) {
+          const d = new Date(r.lastContactedDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const m = r.lastContactedMethod ? cmLabel[r.lastContactedMethod] || '' : '';
+          events.push(`<span>${m} ${d}</span>`);
+        }
+        return `<div class="cp-contact-item" onclick="openEditModal('${r.id}')" style="cursor:pointer" title="Click to edit">
+          <strong style="min-width:120px">${r.roleTitle}</strong>
+          <span style="flex:1;display:flex;gap:8px;flex-wrap:wrap">${events.join('')}</span>
+        </div>`;
+      }).join('') : '<div class="cp-empty">No outreach or applications logged yet.</div>'}
+    </div>
+
+    <div class="cp-section">
+      <h3>📎 Company Artifacts <span class="count">(${artifacts.length})</span></h3>
+      <div id="artifactManager"></div>
+      <div id="artifactFolderStatus" class="artifact-folder-status" style="display:none"></div>
+    </div>
+  `;
+
+  // Render artifacts for this specific company
+  renderCompanyProfileArtifacts(companyName, artifacts);
+}
+
+async function renderCompanyProfileArtifacts(companyName, artifacts) {
+  const mgr = document.getElementById('artifactManager');
+  if (!mgr) return;
+
+  if (!window.showDirectoryPicker) {
+    mgr.innerHTML = '<div class="cp-empty">File System Access API not available in this browser. Use Chrome for full artifact support.</div>';
+    return;
+  }
+
+  const handle = await getArtifactsHandle();
+  if (!handle) {
+    mgr.innerHTML = `<div class="artifact-empty">
+      <div style="font-size:13px;margin-bottom:6px">No artifacts folder configured</div>
+      <button onclick="selectArtifactsFolder().then(()=>switchView('company-profile','${companyName.replace(/'/g, "\\'")}'))" style="padding:6px 14px;background:#d97706;color:white;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">📁 Set Folder</button>
+    </div>`;
+    return;
+  }
+
+  if (artifacts.length) {
+    mgr.innerHTML = artifacts.map(a => `
+      <div class="artifact-row">
+        <span>${artifactTypeIcon(a.type)}</span>
+        <strong style="flex:1;font-size:12px">${a.fileName}</strong>
+        <span style="font-size:10px;color:var(--text-faint)">${formatFileSize(a.size)}</span>
+        <button onclick="openArtifactFile('${companyName.replace(/'/g, "\\'")}','${a.fileName.replace(/'/g, "\\'")}')" style="padding:3px 8px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:5px;font-size:10px;color:var(--text-secondary);cursor:pointer">Open</button>
+        <button onclick="deleteArtifactFile('${companyName.replace(/'/g, "\\'")}','${a.fileName.replace(/'/g, "\\'")}').then(()=>switchView('company-profile','${companyName.replace(/'/g, "\\'")}'))" style="padding:3px 8px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:5px;font-size:10px;cursor:pointer">Delete</button>
+      </div>
+    `).join('');
+  } else {
+    mgr.innerHTML = '<div class="cp-empty">No artifacts for this company yet.</div>';
+  }
+  mgr.innerHTML += `<button class="cp-add-btn" onclick="uploadArtifactFor('${companyName.replace(/'/g, "\\'")}')">+ Upload file</button>`;
+}
+
+// ─── RENDER ALL (legacy compat) ───────────────────────────────────────────
+function renderAll() {
+  renderActiveView();
 }
 
 // ─── MIGRATION ────────────────────────────────────────────────────────────
@@ -2386,12 +2835,9 @@ function rerunBrief(encoded) {
 // ─── INIT ─────────────────────────────────────────────────────────────────
 migrateData();
 updateStreak();
-renderTodayActions();
-renderQuickCheck();
-renderAll();
-renderNudges();
-renderRecentBriefs();
-renderNetworkMap();
+// Initialize view system — renders the last active view
+switchView(currentView, currentCompany);
+// Init artifacts (async, may need to verify handle)
 initArtifacts();
 </script>
 </body>
