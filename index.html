@@ -501,7 +501,6 @@
     <div class="nav-links">
       <button id="nav-dashboard" onclick="switchView('dashboard')" class="active">Dashboard</button>
       <button id="nav-companies" onclick="switchView('companies')">All Companies</button>
-      <button id="nav-pipeline" onclick="switchView('pipeline')">Pipeline</button>
       <button id="nav-tierlist" onclick="switchView('tierlist')">Tier List</button>
     </div>
     <div class="nav-right">
@@ -2066,8 +2065,8 @@ function renderActiveView() {
   const container = document.getElementById('mainView');
   switch (currentView) {
     case 'dashboard':   renderDashboardView(container); break;
+    case 'pipeline':    currentView = 'dashboard'; renderDashboardView(container); break; // merged into dashboard
     case 'companies':   renderCompaniesListView(container); break;
-    case 'pipeline':    renderPipelineView(container); break;
     case 'tierlist':    renderTierListView(container); break;
     case 'company-profile': renderCompanyProfileView(container, currentCompany); break;
     default: renderDashboardView(container);
@@ -2151,7 +2150,7 @@ function getResearchBriefsForCompany(companyName) {
   return briefs.filter(b => b.company.toLowerCase() === companyName.toLowerCase());
 }
 
-// ── Dashboard View ──
+// ── Dashboard View (includes Pipeline) ──
 function renderDashboardView(container) {
   const roles = loadRoles();
   const stageCounts = {};
@@ -2174,6 +2173,30 @@ function renderDashboardView(container) {
       <div class="quick-stat-box"><div class="num">${totalCompanies}</div><div class="lbl">🏢 Companies</div></div>
       <div class="quick-stat-box"><div class="num" style="color:#16a34a">${totalConns}</div><div class="lbl">🔗 Warm Intros</div></div>
     </div>
+
+    <!-- Pipeline (inline) -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:10px">
+        <span class="dot" style="background:#d97706"></span>Application Pipeline
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <div class="search-bar-wrap" style="margin:0">
+            <input class="search-bar" id="pipelineSearch" placeholder="Filter companies…" oninput="applyFilter(this.value)" style="width:180px" value="${filterQuery || ''}">
+            <button class="search-clear" id="searchClearBtn" onclick="clearFilter()" style="${filterQuery ? '' : 'display:none'}">✕ Clear</button>
+            <span class="filter-count" id="filterCount" style="display:none"></span>
+          </div>
+          <button onclick="openAddModal()" style="padding:5px 13px;background:var(--accent-blue);color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">+ Add Role</button>
+        </div>
+      </div>
+      <div class="pipeline">
+        ${STAGES.map(s => `
+          <div class="pipeline-col col-${s}" id="col-${s}">
+            <div class="pipeline-col-header"><span style="color:${STAGE_COLORS_MAP[s]}">${STAGE_ICONS_MAP[s]} ${STAGE_LABELS[s]}</span> <span class="pipeline-col-count" id="cnt-${s}">0</span></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Action items & details -->
     <div class="grid2">
       <div class="card today-card">
         <div class="card-title"><span class="dot" style="background:#2e75b6"></span>Today's Action Items</div>
@@ -2207,38 +2230,12 @@ function renderDashboardView(container) {
       </div>
     </div>
   `;
+  renderPipeline();
   renderTodayActions();
   renderQuickCheck();
   renderRecentBriefs();
   renderNudges();
   renderContactLog();
-}
-
-// ── Pipeline View ──
-function renderPipelineView(container) {
-  container.innerHTML = `
-    <div class="card" style="margin-bottom:14px">
-      <div class="card-title" style="margin-bottom:10px">
-        <span class="dot" style="background:#d97706"></span>Application Pipeline
-        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-          <div class="search-bar-wrap" style="margin:0">
-            <input class="search-bar" id="pipelineSearch" placeholder="Filter companies…" oninput="applyFilter(this.value)" style="width:180px" value="${filterQuery || ''}">
-            <button class="search-clear" id="searchClearBtn" onclick="clearFilter()" style="${filterQuery ? '' : 'display:none'}">✕ Clear</button>
-            <span class="filter-count" id="filterCount" style="display:none"></span>
-          </div>
-          <button onclick="openAddModal()" style="padding:5px 13px;background:var(--accent-blue);color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">+ Add Role</button>
-        </div>
-      </div>
-      <div class="pipeline">
-        ${STAGES.map(s => `
-          <div class="pipeline-col col-${s}" id="col-${s}">
-            <div class="pipeline-col-header"><span style="color:${STAGE_COLORS_MAP[s]}">${STAGE_ICONS_MAP[s]} ${STAGE_LABELS[s]}</span> <span class="pipeline-col-count" id="cnt-${s}">0</span></div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-  renderPipeline();
 }
 
 // ── Tier List View ──
@@ -2310,12 +2307,24 @@ function renderCompaniesListView(container) {
           ? co.lastContact.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
           : 'Never';
         const safeName = co.name.replace(/'/g, "\\'");
+        const rolesHtml = co.roles.length ? co.roles.map(r => {
+          const stageIcon = STAGE_ICONS_MAP[r.stage] || '📋';
+          const stageColor = STAGE_COLORS_MAP[r.stage] || '#4a5568';
+          const postingLink = r.url ? `<a href="${r.url}" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent-blue);font-size:10px;text-decoration:none;margin-left:4px" title="View job posting">📄 Posting</a>` : '';
+          return `<div style="display:flex;align-items:center;gap:5px;padding:2px 0;font-size:11px">
+            <span style="color:${stageColor}" title="${STAGE_LABELS[r.stage] || r.stage}">${stageIcon}</span>
+            <span style="color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${r.roleTitle || 'Untitled'}</span>
+            ${postingLink}
+          </div>`;
+        }).join('') : '';
+
         return `<div class="company-card" data-company="${co.name.toLowerCase()}" data-tier="${co.tier || ''}" data-roles="${co.roles.length}" data-conns="${co.connections.length}" onclick="switchView('company-profile','${safeName}')">
           <div class="company-card-name">
             <span class="tier-dot" style="background:${TIER_COLORS[co.tier] || '#a0aec0'}"></span>
             ${co.name}
             <span class="company-card-tier ${tierClass}" style="margin-left:auto">${tierLabel}</span>
           </div>
+          ${rolesHtml ? `<div style="padding:4px 0 2px;border-top:1px solid var(--border-light);margin-top:4px">${rolesHtml}</div>` : ''}
           <div class="company-card-metrics">
             <div class="company-card-metric"><strong>${co.roles.length}</strong> roles</div>
             <div class="company-card-metric"><strong>${co.connections.length}</strong> connections</div>
