@@ -17,6 +17,6 @@ export function detectArtifactType(fileName) {
 }
 
 export function artifactTypeIcon(type) {
-  const icons = { resume: '📄', research_brief: '🔬', deep_research: '🔍', slides: '📊', notes: '📝', other: '📎' };
-  return icons[type] || '📎';
+  const icons = { resume: '\u{1F4C4}', research_brief: '\u{1F52C}', deep_research: '\u{1F50D}', slides: '\u{1F4CA}', notes: '\u{1F4DD}', other: '\u{1F4CE}' };
+  return icons[type] || '\u{1F4CE}';
 }
