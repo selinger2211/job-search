@@ -54,6 +54,7 @@ function clearFilter() {
   if (fc) fc.style.display = 'none';
   renderPipeline();
   renderTierList();
+}
 
 // Make getRoles available to imported modules
 window._appGetRoles = loadRoles;
