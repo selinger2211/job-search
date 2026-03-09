@@ -9,7 +9,7 @@ const STAGES = _cfg.stages;
 const STAGE_LABELS = _cfg.stageLabels;
 const TIER_COLORS = _cfg.tierColors;
 
-// ─── Stage History ──────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Stage History \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function pushStageHistory(role, newStage) {
   if (role.stage === newStage) return role;
@@ -19,7 +19,7 @@ export function pushStageHistory(role, newStage) {
   return role;
 }
 
-// ─── Render Pipeline ────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Render Pipeline \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function renderPipeline(filterQuery) {
   if (!document.getElementById('col-tracking')) return;
@@ -45,7 +45,7 @@ export function renderPipeline(filterQuery) {
     if (fc) fc.style.display = 'none';
   }
 
-  const cmLabel = { email:'✉️', linkedin:'💼', other:'💬' };
+  const cmLabel = { email:'\u2709\uFE0F', linkedin:'\u{1F4BC}', other:'\u{1F4AC}' };
 
   visible.forEach(role => {
     const col = document.getElementById('col-'+role.stage);
@@ -61,11 +61,11 @@ export function renderPipeline(filterQuery) {
     const prevStage = stageIdx > 0 ? STAGES[stageIdx-1] : null;
     const nextStage = stageIdx < STAGES.length-1 ? STAGES[stageIdx+1] : null;
 
-    const refBadge = role.referral === 'referred' ? `<span class="mini-badge referral-badge-referred" title="Has referral">🤝</span>`
-      : role.referral === 'cold' ? `<span class="mini-badge referral-badge-cold" title="Cold application">🧊</span>` : '';
+    const refBadge = role.referral === 'referred' ? `<span class="mini-badge referral-badge-referred" title="Has referral">\u{1F91D}</span>`
+      : role.referral === 'cold' ? `<span class="mini-badge referral-badge-cold" title="Cold application">\u{1F9CA}</span>` : '';
     const srcBadge = role.source === 'inbound'
-      ? `<span class="mini-badge source-inbound" title="Inbound — recruiter reached out">📥</span>`
-      : `<span class="mini-badge source-outbound" title="Outbound — you applied">📤</span>`;
+      ? `<span class="mini-badge source-inbound" title="Inbound \u2014 recruiter reached out">\u{1F4E5}</span>`
+      : `<span class="mini-badge source-outbound" title="Outbound \u2014 you applied">\u{1F4E4}</span>`;
     const contactBadge = role.lastContactedMethod
       ? `<span class="mini-badge contact-${role.lastContactedMethod}" title="Last contact method: ${role.lastContactedMethod}">${cmLabel[role.lastContactedMethod]}</span>` : '';
     const contactDateStr = role.lastContactedDate
@@ -74,11 +74,11 @@ export function renderPipeline(filterQuery) {
 
     const linkedConns = getConnectionsForCompany(role.company);
     const warmBadge = linkedConns.length
-      ? `<span class="conn-chip-wrap" onclick="event.stopPropagation();openConnPanel('${role.company.replace(/'/g,"\\'")}')" title="View ${linkedConns.length} connections"><span class="warm-intro-badge">🔗 ${linkedConns.length}</span></span>`
+      ? `<span class="conn-chip-wrap" onclick="event.stopPropagation();openConnPanel('${role.company.replace(/'/g,"\\'")}')" title="View ${linkedConns.length} connections"><span class="warm-intro-badge">\u{1F517} ${linkedConns.length}</span></span>`
       : '';
     const coArtifacts = getCompanyArtifacts(role.company);
     const artifactBadge = coArtifacts.length
-      ? `<span class="artifact-badge" title="${coArtifacts.length} file${coArtifacts.length>1?'s':''}: ${coArtifacts.map(a=>a.fileName).join(', ')}">📎 ${coArtifacts.length}</span>`
+      ? `<span class="artifact-badge" title="${coArtifacts.length} file${coArtifacts.length>1?'s':''}: ${coArtifacts.map(a=>a.fileName).join(', ')}">\u{1F4CE} ${coArtifacts.length}</span>`
       : '';
 
     card.innerHTML = `
@@ -88,17 +88,17 @@ export function renderPipeline(filterQuery) {
         ${refBadge}${warmBadge}${artifactBadge}
       </div>
       <div class="role">${role.roleTitle}</div>
-      ${role.url ? `<div style="margin-top:2px"><a href="${role.url}" target="_blank" style="font-size:9px;color:var(--accent-blue);text-decoration:none;background:var(--bg-surface);padding:1px 6px;border-radius:4px;border:1px solid var(--border-medium)" onclick="event.stopPropagation()" title="Open job posting in new tab">📄 View Job Posting</a></div>` : ''}
+      ${role.url ? `<div style="margin-top:2px"><a href="${role.url}" target="_blank" style="font-size:9px;color:var(--accent-blue);text-decoration:none;background:var(--bg-surface);padding:1px 6px;border-radius:4px;border:1px solid var(--border-medium)" onclick="event.stopPropagation()" title="Open job posting in new tab">\u{1F4C4} View Job Posting</a></div>` : ''}
       <div class="card-footer">
         <div class="card-meta">
           ${srcBadge}${contactBadge}
           ${contactDateStr ? `<span style="font-size:9px;color:var(--text-faint)" title="Last contacted">${contactDateStr}</span>` : ''}
         </div>
         <div style="display:flex;gap:3px;align-items:center">
-          <button style="padding:2px 6px;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:4px;font-size:9px;cursor:pointer;color:var(--text-muted)" title="Edit role details" onclick="event.stopPropagation();openEditModal('${role.id}')">✏️</button>
-          <button class="btn-research" title="Generate AI research brief for this role" onclick="event.stopPropagation();openResearchModal('${role.company.replace(/'/g,"\\'")}','${(role.roleTitle||'').replace(/'/g,"\\'")}','${role.url||''}')">🔬</button>
-          ${prevStage ? `<button class="stage-btn stage-btn-back" title="Move back to ${STAGE_LABELS[prevStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${prevStage}')">←</button>` : ''}
-          ${nextStage ? `<button class="stage-btn stage-btn-fwd" title="Advance to ${STAGE_LABELS[nextStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${nextStage}')">→ ${STAGE_LABELS[nextStage]}</button>` : ''}
+          <button style="padding:2px 6px;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:4px;font-size:9px;cursor:pointer;color:var(--text-muted)" title="Edit role details" onclick="event.stopPropagation();openEditModal('${role.id}')">\u270F\uFE0F</button>
+          <button class="btn-research" title="Generate AI research brief for this role" onclick="event.stopPropagation();openResearchModal('${role.company.replace(/'/g,"\\'")}','${(role.roleTitle||'').replace(/'/g,"\\'")}','${role.url||''}')">\u{1F52C}</button>
+          ${prevStage ? `<button class="stage-btn stage-btn-back" title="Move back to ${STAGE_LABELS[prevStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${prevStage}')">\u2190</button>` : ''}
+          ${nextStage ? `<button class="stage-btn stage-btn-fwd" title="Advance to ${STAGE_LABELS[nextStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${nextStage}')">\u2192 ${STAGE_LABELS[nextStage]}</button>` : ''}
         </div>
       </div>`;
 
@@ -151,7 +151,7 @@ export function renderPipeline(filterQuery) {
   if ((el = document.getElementById('statOutbound'))) el.textContent  = roles.filter(r=>r.source!=='inbound').length;
 }
 
-// ─── Stage Move ─────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Stage Move \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function moveStage(id, newStage) {
   const roles = loadRoles();
