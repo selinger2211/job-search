@@ -2590,6 +2590,7 @@ document.getElementById('researchModal').addEventListener('click', function(e) {
 });
 
 function generateResearchBrief() {
+  try {
   const company      = (document.getElementById('rm-company').value.trim()      || 'Unknown Company');
   const role         = (document.getElementById('rm-role').value.trim()         || 'Unknown Role');
   const jdUrl        = document.getElementById('rm-url').value.trim()           || '';
@@ -2900,11 +2901,20 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
     + '<script>\n' + pageJs + '\n' + streamFn + '\n<\/script>\n'
     + '</body>\n</html>';
 
-  // Open brief as HTML in a new tab (no file download)
+  // Open brief as HTML in a new tab
   const fileName = 'brief_' + company.replace(/\W+/g,'_').toLowerCase() + '_' + role.replace(/\W+/g,'_').toLowerCase() + '.html';
-  const blob = new Blob([html], {type:'text/html'});
-  const blobUrl = URL.createObjectURL(blob);
-  window.open(blobUrl, '_blank');
+  const briefWin = window.open('', '_blank');
+  if (briefWin) {
+    briefWin.document.open();
+    briefWin.document.write(html);
+    briefWin.document.close();
+  } else {
+    // Fallback if popup blocked: open in same tab with back button
+    alert('Popup blocked! The brief will open in this tab. Use your browser back button to return.');
+    document.open();
+    document.write(html);
+    document.close();
+  }
 
   // Track this brief in localStorage for the Recent Briefs list
   const briefs = JSON.parse(localStorage.getItem('ili_research_briefs') || '[]');
@@ -2916,6 +2926,7 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
 
   closeResearchModal();
   renderRecentBriefs();
+  } catch(e) { console.error('[Research Brief error]', e); alert('Error generating brief: ' + e.message); }
 }
 
 // ─── RECENT BRIEFS ──────────────────────────────────────────────────────
@@ -2965,10 +2976,12 @@ function rerunBrief(encoded) {
   generateResearchBrief();
 }
 // ─── INIT ─────────────────────────────────────────────────────────────────
-migrateData();
-updateStreak();
-// Initialize view system — renders the last active view
-switchView(currentView, currentCompany);
+try {
+  migrateData();
+  updateStreak();
+  // Initialize view system — renders the last active view
+  switchView(currentView, currentCompany);
+} catch(e) { console.error('[Dashboard INIT error]', e); }
 // Init artifacts (async, may need to verify handle)
 initArtifacts();
 </script>
