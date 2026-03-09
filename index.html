@@ -325,6 +325,37 @@
   .network-cold { font-size: 11px; color: var(--text-faintest); padding: 2px 0; }
   .tier-chip-conn { background: #dcfce7; color: #16a34a; font-size: 8px; font-weight: 700; padding: 0 4px; border-radius: 6px; margin-left: 2px; }
 
+  /* ── Company Artifacts ────────────────────────────────── */
+  .artifact-badge { display: inline-block; background: #fffbeb; color: #d97706; border-radius: 8px; padding: 1px 6px; font-size: 9px; font-weight: 700; cursor: pointer; border: 1px solid #fde68a; }
+  [data-theme="dark"] .artifact-badge { background: #3b2a0a; color: #fbbf24; border-color: #6b4a0a; }
+  .artifact-empty { color: var(--text-faint); font-size: 12px; font-style: italic; padding: 16px 0; text-align: center; }
+  .artifact-summary { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+  .artifact-stat { text-align: center; background: var(--bg-surface); padding: 8px 14px; border-radius: 8px; }
+  .artifact-stat .num { font-size: 18px; font-weight: 700; color: var(--accent-dark); }
+  .artifact-stat .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  .artifact-company { margin-bottom: 10px; border: 1px solid var(--border-medium); border-radius: 8px; overflow: hidden; }
+  .artifact-company-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-surface); cursor: pointer; font-size: 12px; font-weight: 700; color: var(--accent-dark); }
+  .artifact-company-header:hover { background: var(--bg-hover); }
+  .artifact-company-header .count { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-left: auto; }
+  .artifact-company-body { padding: 8px 12px; display: none; }
+  .artifact-company-body.open { display: block; }
+  .artifact-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border-light); font-size: 11px; }
+  .artifact-row:last-child { border-bottom: none; }
+  .artifact-row .a-icon { font-size: 14px; flex-shrink: 0; }
+  .artifact-row .a-name { flex: 1; color: var(--text-primary); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .artifact-row .a-size { color: var(--text-faint); font-size: 10px; }
+  .artifact-row .a-date { color: var(--text-faint); font-size: 10px; }
+  .artifact-row .a-btn { padding: 2px 6px; border: 1px solid var(--border-medium); border-radius: 4px; background: var(--bg-surface); color: var(--text-secondary); font-size: 9px; cursor: pointer; font-weight: 600; }
+  .artifact-row .a-btn:hover { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+  .artifact-row .a-btn-del:hover { background: #dc2626; color: white; border-color: #dc2626; }
+  .artifact-drop-zone { border: 2px dashed var(--border-medium); border-radius: 8px; padding: 12px; text-align: center; font-size: 11px; color: var(--text-faint); margin-top: 6px; transition: all 0.15s; cursor: pointer; }
+  .artifact-drop-zone:hover, .artifact-drop-zone.drag-over { border-color: var(--accent-blue); color: var(--accent-blue); background: var(--pipeline-col-dragover); }
+  .artifact-upload-row { display: flex; gap: 6px; margin-top: 8px; }
+  .artifact-upload-btn { padding: 4px 10px; background: var(--accent-blue); color: white; border: none; border-radius: 5px; font-size: 10px; font-weight: 600; cursor: pointer; }
+  .artifact-upload-btn:hover { opacity: 0.85; }
+  .artifact-toast { position: fixed; bottom: 20px; right: 20px; background: #16a34a; color: white; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; z-index: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: opacity 0.3s; }
+  .artifact-folder-status { font-size: 10px; color: var(--text-faint); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
   /* ── Company manager ────────────────────────────────── */
   .co-mgr-row { display: flex; align-items: center; gap: 7px; padding: 5px 0; border-bottom: 1px solid var(--border-light); }
   .co-mgr-row:last-child { border-bottom: none; }
@@ -457,6 +488,17 @@
       <button onclick="document.getElementById('linkedinCsvInput').click()" style="margin-left:auto;padding:3px 10px;background:#16a34a;border:none;border-radius:5px;font-size:10px;color:white;cursor:pointer;font-weight:600">📥 Import CSV</button>
     </div>
     <div id="networkMap"></div>
+  </div>
+
+  <!-- COMPANY ARTIFACTS -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">
+      <span class="dot" style="background:#d97706"></span>Company Artifacts
+      <span class="artifact-folder-status" id="artifactFolderStatus"></span>
+      <input type="file" id="artifactFileInput" multiple style="display:none" onchange="handleArtifactUpload(this)">
+      <button id="artifactFolderBtn" onclick="selectArtifactsFolder()" style="margin-left:auto;padding:3px 10px;background:#d97706;border:none;border-radius:5px;font-size:10px;color:white;cursor:pointer;font-weight:600">📁 Set Folder</button>
+    </div>
+    <div id="artifactManager"></div>
   </div>
 
   <!-- CONTACT LOG -->
@@ -976,12 +1018,16 @@ function renderPipeline() {
     const warmBadge = linkedConns.length
       ? `<span class="warm-intro-badge" title="${linkedConns.map(c=>c.fullName).join(', ')}">🔗 ${linkedConns.length}</span>`
       : '';
+    const coArtifacts = getCompanyArtifacts(role.company);
+    const artifactBadge = coArtifacts.length
+      ? `<span class="artifact-badge" title="${coArtifacts.map(a=>a.fileName).join(', ')}">📎 ${coArtifacts.length}</span>`
+      : '';
 
     card.innerHTML = `
       <div class="co">
         <span class="tier-dot" style="background:${TIER_COLORS[role.tier]}"></span>
         ${role.company}
-        ${refBadge}${warmBadge}
+        ${refBadge}${warmBadge}${artifactBadge}
       </div>
       <div class="role">${role.roleTitle}</div>
       ${role.url ? `<div style="margin-top:2px"><a href="${role.url}" target="_blank" style="font-size:9px;color:#2e75b6;text-decoration:none" onclick="event.stopPropagation()">🔗 posting</a></div>` : ''}
@@ -1551,12 +1597,349 @@ function renderNetworkMap() {
   container.innerHTML = html;
 }
 
+// ─── COMPANY ARTIFACTS (File System Access API) ──────────────────────────
+const ARTIFACT_DB_NAME = 'ili_artifact_db';
+const ARTIFACT_STORE = 'handles';
+let _artifactDirHandle = null;
+let _artifactReady = false;
+let _artifactUploadCompany = null; // Track which company an upload targets
+
+function openArtifactDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(ARTIFACT_DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(ARTIFACT_STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveHandleToDB(handle) {
+  const db = await openArtifactDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(ARTIFACT_STORE, 'readwrite');
+    tx.objectStore(ARTIFACT_STORE).put(handle, 'rootDir');
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getHandleFromDB() {
+  const db = await openArtifactDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(ARTIFACT_STORE, 'readonly');
+    const req = tx.objectStore(ARTIFACT_STORE).get('rootDir');
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function selectArtifactsFolder() {
+  if (!window.showDirectoryPicker) {
+    alert('Your browser does not support the File System Access API. Please use Chrome or Edge.');
+    return;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    _artifactDirHandle = handle;
+    _artifactReady = true;
+    await saveHandleToDB(handle);
+    localStorage.setItem('ili_artifacts_folder', handle.name);
+    await syncFolderToIndex();
+    renderArtifactManager();
+    updateArtifactFolderStatus();
+  } catch (e) {
+    if (e.name !== 'AbortError') console.error('Folder selection failed:', e);
+  }
+}
+
+async function getArtifactsHandle() {
+  if (_artifactDirHandle) return _artifactDirHandle;
+  try {
+    const handle = await getHandleFromDB();
+    if (!handle) return null;
+    // Verify permission (user must re-grant after browser restart)
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') { _artifactDirHandle = handle; _artifactReady = true; return handle; }
+    const req = await handle.requestPermission({ mode: 'readwrite' });
+    if (req === 'granted') { _artifactDirHandle = handle; _artifactReady = true; return handle; }
+    return null;
+  } catch (e) { return null; }
+}
+
+async function ensureCompanyFolder(company) {
+  const root = await getArtifactsHandle();
+  if (!root) return null;
+  try { return await root.getDirectoryHandle(company, { create: true }); }
+  catch (e) {
+    // Sanitize company name for file system (remove invalid chars)
+    const safe = company.replace(/[<>:"/\\|?*]/g, '_').trim();
+    return await root.getDirectoryHandle(safe, { create: true });
+  }
+}
+
+async function saveArtifactFile(company, fileName, blob) {
+  const dir = await ensureCompanyFolder(company);
+  if (!dir) return false;
+  try {
+    const fileHandle = await dir.getFileHandle(fileName, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    // Update index
+    const index = getArtifactIndex();
+    const existing = index.artifacts.find(a => a.company === company && a.fileName === fileName);
+    if (existing) {
+      existing.modified = new Date().toISOString();
+      existing.size = blob.size;
+    } else {
+      index.artifacts.push({
+        id: 'a_' + Date.now(),
+        company: company,
+        type: detectArtifactType(fileName),
+        fileName: fileName,
+        label: fileName,
+        created: new Date().toISOString(),
+        modified: new Date().toISOString(),
+        size: blob.size
+      });
+    }
+    saveArtifactIndex(index);
+    return true;
+  } catch (e) { console.error('Save artifact failed:', e); return false; }
+}
+
+async function deleteArtifactFile(company, fileName) {
+  const dir = await ensureCompanyFolder(company);
+  if (!dir) return false;
+  try {
+    await dir.removeEntry(fileName);
+    const index = getArtifactIndex();
+    index.artifacts = index.artifacts.filter(a => !(a.company === company && a.fileName === fileName));
+    saveArtifactIndex(index);
+    return true;
+  } catch (e) { console.error('Delete artifact failed:', e); return false; }
+}
+
+async function openArtifactFile(company, fileName) {
+  const dir = await ensureCompanyFolder(company);
+  if (!dir) return;
+  try {
+    const fh = await dir.getFileHandle(fileName);
+    const file = await fh.getFile();
+    const url = URL.createObjectURL(file);
+    window.open(url, '_blank');
+  } catch (e) { console.error('Open artifact failed:', e); }
+}
+
+function detectArtifactType(fileName) {
+  const ext = fileName.split('.').pop().toLowerCase();
+  if (['pdf', 'docx', 'doc'].includes(ext)) return 'resume';
+  if (['pptx', 'ppt', 'key'].includes(ext)) return 'slides';
+  if (ext === 'html' && fileName.includes('research')) return 'research_brief';
+  if (['md', 'txt'].includes(ext)) return 'notes';
+  return 'other';
+}
+
+function artifactTypeIcon(type) {
+  const icons = { resume: '📄', research_brief: '🔬', deep_research: '🔍', slides: '📊', notes: '📝', other: '📎' };
+  return icons[type] || '📎';
+}
+
+function formatFileSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function getArtifactIndex() {
+  try { return JSON.parse(localStorage.getItem('ili_artifacts')) || { artifacts: [] }; }
+  catch { return { artifacts: [] }; }
+}
+function saveArtifactIndex(index) {
+  localStorage.setItem('ili_artifacts', JSON.stringify(index));
+}
+function getCompanyArtifacts(company) {
+  return getArtifactIndex().artifacts.filter(a => a.company === company);
+}
+
+async function syncFolderToIndex() {
+  const root = await getArtifactsHandle();
+  if (!root) return;
+  const index = getArtifactIndex();
+  const found = new Set();
+  try {
+    for await (const [name, handle] of root.entries()) {
+      if (handle.kind !== 'directory') continue;
+      const company = name;
+      for await (const [fname, fhandle] of handle.entries()) {
+        if (fhandle.kind !== 'file') continue;
+        const key = company + '/' + fname;
+        found.add(key);
+        const exists = index.artifacts.find(a => a.company === company && a.fileName === fname);
+        if (!exists) {
+          const file = await fhandle.getFile();
+          index.artifacts.push({
+            id: 'a_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+            company: company,
+            type: detectArtifactType(fname),
+            fileName: fname,
+            label: fname,
+            created: new Date(file.lastModified).toISOString(),
+            modified: new Date(file.lastModified).toISOString(),
+            size: file.size
+          });
+        }
+      }
+    }
+    // Remove stale entries
+    index.artifacts = index.artifacts.filter(a => found.has(a.company + '/' + a.fileName));
+    saveArtifactIndex(index);
+  } catch (e) { console.error('Sync failed:', e); }
+}
+
+function updateArtifactFolderStatus() {
+  const el = document.getElementById('artifactFolderStatus');
+  const btn = document.getElementById('artifactFolderBtn');
+  if (!el || !btn) return;
+  const folderName = localStorage.getItem('ili_artifacts_folder');
+  if (_artifactReady && folderName) {
+    el.textContent = '📂 ' + folderName;
+    btn.textContent = '🔄 Sync';
+    btn.onclick = async function() { await syncFolderToIndex(); renderArtifactManager(); renderPipeline(); showArtifactToast('Artifacts synced!'); };
+  } else {
+    el.textContent = '';
+    btn.textContent = '📁 Set Folder';
+    btn.onclick = selectArtifactsFolder;
+  }
+}
+
+function showArtifactToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'artifact-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2000);
+}
+
+async function handleArtifactUpload(input) {
+  if (!input.files.length || !_artifactUploadCompany) return;
+  const company = _artifactUploadCompany;
+  for (const file of input.files) {
+    await saveArtifactFile(company, file.name, file);
+  }
+  input.value = '';
+  _artifactUploadCompany = null;
+  renderArtifactManager();
+  renderPipeline();
+  showArtifactToast(input.files.length + ' file(s) added to ' + company);
+}
+
+function uploadArtifactFor(company) {
+  _artifactUploadCompany = company;
+  document.getElementById('artifactFileInput').click();
+}
+
+async function renderArtifactManager() {
+  const container = document.getElementById('artifactManager');
+  if (!container) return;
+  const handle = await getArtifactsHandle();
+
+  if (!handle) {
+    container.innerHTML = '<div class="artifact-empty">'
+      + '<div style="font-size:24px;margin-bottom:6px">📁</div>'
+      + 'Select a folder to store company-specific files<br>'
+      + '<span style="font-size:10px;color:var(--text-faintest)">Resumes, research briefs, slides, interview notes — organized by company</span>'
+      + '</div>';
+    updateArtifactFolderStatus();
+    return;
+  }
+
+  updateArtifactFolderStatus();
+  const index = getArtifactIndex();
+  const roles = loadRoles();
+  const companies = getCompanies();
+  // Get all unique companies from pipeline + tiers + artifacts
+  const allCo = [...new Set([
+    ...roles.map(r => r.company),
+    ...Object.values(companies).flat(),
+    ...index.artifacts.map(a => a.company)
+  ])].sort();
+
+  const totalFiles = index.artifacts.length;
+  const companiesWithFiles = [...new Set(index.artifacts.map(a => a.company))].length;
+
+  let html = '<div class="artifact-summary">';
+  html += '<div class="artifact-stat"><div class="num">' + totalFiles + '</div><div class="lbl">Files</div></div>';
+  html += '<div class="artifact-stat"><div class="num">' + companiesWithFiles + '</div><div class="lbl">Companies</div></div>';
+  html += '<div class="artifact-stat"><div class="num">' + index.artifacts.filter(a => a.type === 'research_brief').length + '</div><div class="lbl">Briefs</div></div>';
+  html += '</div>';
+
+  allCo.forEach(co => {
+    const arts = index.artifacts.filter(a => a.company === co);
+    const chevron = arts.length > 0 ? '▾' : '▸';
+    html += '<div class="artifact-company">';
+    html += '<div class="artifact-company-header" onclick="this.nextElementSibling.classList.toggle(\'open\')">';
+    html += '<span>' + chevron + '</span> ' + co;
+    html += '<span class="count">' + (arts.length ? arts.length + ' file' + (arts.length > 1 ? 's' : '') : 'empty') + '</span>';
+    html += '</div>';
+    html += '<div class="artifact-company-body' + (arts.length > 0 ? '' : '') + '">';
+    if (arts.length === 0) {
+      html += '<div style="font-size:10px;color:var(--text-faint);padding:4px 0">No files yet</div>';
+    }
+    arts.forEach(a => {
+      const dateStr = a.modified ? new Date(a.modified).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      html += '<div class="artifact-row">';
+      html += '<span class="a-icon">' + artifactTypeIcon(a.type) + '</span>';
+      html += '<span class="a-name" title="' + a.fileName + '">' + a.fileName + '</span>';
+      html += '<span class="a-size">' + formatFileSize(a.size) + '</span>';
+      html += '<span class="a-date">' + dateStr + '</span>';
+      html += '<button class="a-btn" onclick="openArtifactFile(\'' + a.company.replace(/'/g, "\\'") + '\',\'' + a.fileName.replace(/'/g, "\\'") + '\')">Open</button>';
+      html += '<button class="a-btn a-btn-del" onclick="if(confirm(\'Delete ' + a.fileName.replace(/'/g, "\\'") + '?\'))deleteArtifactFile(\'' + a.company.replace(/'/g, "\\'") + '\',\'' + a.fileName.replace(/'/g, "\\'") + '\').then(()=>{renderArtifactManager();renderPipeline();})">×</button>';
+      html += '</div>';
+    });
+    html += '<div class="artifact-upload-row">';
+    html += '<button class="artifact-upload-btn" onclick="uploadArtifactFor(\'' + co.replace(/'/g, "\\'") + '\')">+ Add File</button>';
+    html += '</div>';
+    html += '</div></div>';
+  });
+
+  container.innerHTML = html;
+}
+
+async function autoSaveResearchBrief(company, role, htmlContent) {
+  if (!_artifactReady) return;
+  const safeName = 'research_brief_' + role.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() + '.html';
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const saved = await saveArtifactFile(company, safeName, blob);
+  if (saved) {
+    renderArtifactManager();
+    showArtifactToast('Brief saved to ' + company + '/' + safeName);
+  }
+}
+
+// Initialize artifact system on load
+async function initArtifacts() {
+  if (!window.showDirectoryPicker) {
+    updateArtifactFolderStatus();
+    renderArtifactManager();
+    return;
+  }
+  const handle = await getArtifactsHandle();
+  if (handle) {
+    await syncFolderToIndex();
+  }
+  updateArtifactFolderStatus();
+  renderArtifactManager();
+}
+
 // ─── RENDER ALL ───────────────────────────────────────────────────────────
 function renderAll() {
   renderPipeline();
   renderTierList();
   renderContactLog();
   renderNetworkMap();
+  renderArtifactManager();
 }
 
 // ─── MIGRATION ────────────────────────────────────────────────────────────
@@ -2009,6 +2392,7 @@ renderAll();
 renderNudges();
 renderRecentBriefs();
 renderNetworkMap();
+initArtifacts();
 </script>
 </body>
 </html>
