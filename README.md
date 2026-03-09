@@ -42,6 +42,15 @@ One-click generation of a structured interview prep brief for any role. Streams 
 
 Research briefs are generated on-demand, saved locally, and tracked in a "Recent Research Briefs" section for easy access. They are excluded from this repo via `.gitignore` to keep interview prep notes private.
 
+### LinkedIn network map
+Import your LinkedIn connections via CSV export. The dashboard fuzzy-matches connection companies to your pipeline and tier list, showing **warm intro badges** (🔗) on pipeline cards and tier chips. Connection context is injected into AI research brief generation for networking strategy.
+
+### Company artifacts
+Local file-based storage for company-specific files — tailored resumes, research briefs, slides, interview notes, anything. Uses Chrome's **File System Access API** to read/write directly to a user-selected folder with auto-created company subfolders. Artifact counts show as 📎 badges on pipeline cards. Research briefs auto-save to the company subfolder.
+
+### Dark mode
+Full dark mode with three-state toggle: **Auto** (follows system preference), **Dark**, and **Light**. All UI elements use CSS custom properties for seamless theme switching. Preference persisted to localStorage.
+
 ---
 
 ## Roadmap
@@ -55,11 +64,11 @@ Research briefs are generated on-demand, saved locally, and tracked in a "Recent
 
 ### V2.0 — Company workspace & deep prep
 
-- **Company workspace** — a per-company folder view that collects the research brief, tailored resume, outreach history, and interview notes in one place, with a dashboard card for quick navigation
+- ~~**Company workspace**~~ ✅ Shipped as "Company Artifacts" — local file-based storage with File System Access API
 - **Deep research mode** — extended AI research triggered at the screening stage, covering 10-K filings, earnings calls, Glassdoor sentiment, leadership changes, competitive threats, and more
 - **Auto resume tailoring** — paste a JD and get two outputs: a quick-tailor markup showing exactly what to change, and a full rewrite with rephrased bullets, reordered sections, and a custom summary — both stored in the company workspace
 - **Interview prep deck (PPTX)** — auto-generated slide deck from the research brief with company overview, role breakdown, key talking points, and a "questions to ask" closing slide
-- **LinkedIn network map** — import your LinkedIn connections CSV to map 1st-degree connections to pipeline companies. "Warm intro" badges on pipeline cards, network strength indicators, and AI-assisted path-finding for 2nd-degree targets. Connection names are referenced in generated research briefs.
+- ~~**LinkedIn network map**~~ ✅ Shipped — CSV import, warm intro badges, connection context in research briefs
 
 ### V3.0 — Intelligence layer
 
@@ -92,7 +101,7 @@ Research briefs are generated on-demand, saved locally, and tracked in a "Recent
 
 ## Privacy model
 
-All data — roles, companies, contacts, API key — is stored exclusively in `localStorage` in your browser. Nothing is ever sent to a server except Anthropic API calls when you explicitly generate a research brief. The API key is sent only to `api.anthropic.com` and nowhere else.
+All data — roles, companies, contacts, API key — is stored in `localStorage` and `IndexedDB` in your browser. Company artifacts (files) are stored on your local disk via the File System Access API in a folder you choose. Nothing is ever sent to a server except Anthropic API calls when you explicitly generate a research brief. The API key is sent only to `api.anthropic.com` and nowhere else.
 
 Forking and self-hosting means the entire data flow can be audited end-to-end. There are no analytics, no tracking pixels, no third-party scripts.
 
@@ -104,7 +113,9 @@ Forking and self-hosting means the entire data flow can be audited end-to-end. T
 - Single-file architecture — everything in one `index.html`
 - HTML5 Drag and Drop API
 - Anthropic Messages API with server-sent events (SSE) streaming
-- localStorage for persistence with schema migration support
+- localStorage + IndexedDB for persistence with schema migration support
+- File System Access API for local artifact storage
+- CSS custom properties for dark mode theming
 
 ---
 
