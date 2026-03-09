@@ -2991,6 +2991,16 @@ JSON FORMAT:
 \\\`\\\`\\\`json
 {"summary":"...","skills":"Skill1 · Skill2 · ...","experience":[{"company":"JPMorgan Chase","title":"Product Director, AI & LLM","level":"(Executive Director)","dates":"2021 – 2026","subtitle":"AI-powered search, retrieval, and decisioning platforms for investment banking workflows","bullets":["..."]},{"company":"Yahoo (Verizon Media / Oath)","title":"Principal PM → Director → Sr. Director","dates":"2016 – 2021","subtitle":"...","bullets":["..."]},{"company":"New Relic","title":"Product Manager → Sr. Manager, Product","dates":"2014 – 2016","subtitle":"Billing, provisioning, and packaging systems during hypergrowth","bullets":["..."]},{"company":"Conversant","title":"Product Manager","dates":"2011 – 2014","subtitle":"Tag management, mobile measurement, and conversion tracking","bullets":["..."]}],"certs":"Project Management Professional (PMP) · Certified Scrum Master (CSM) · B.S., University of California, Santa Barbara","publication":{"title":"MetaCon: Unified Predictive Segments System with Trillion Concept Meta-Learning","venue":"arXiv, 2022 · Co-author","description":"AI system predicting user interests across 68+ tasks simultaneously; improved targeting accuracy 15.4% over prior production system at 20B+ daily ads scale"}}
 \\\`\\\`\\\`
+
+CRITICAL RESUME VALIDATION — before outputting the JSON, verify:
+✓ JPMC has exactly 3 bullets (all from B1-B4 or B3+B4 combined)
+✓ Yahoo has 4-6 bullets (all from Y1-Y6)
+✓ New Relic has exactly 2 bullets (from N1-N2)
+✓ Conversant has exactly 2 bullets (from C1-C2)
+✓ Every metric and number matches the bullet bank EXACTLY
+✓ No bullet was invented — if you cannot trace it to the bank, DELETE it
+✓ Summary is a plain string, NOT a nested object
+
 ## 8: Questions to Ask Them
 Be specific, opinionated, and direct. No filler. Write as if advising a senior PM colleague. Include at least one question that demonstrates you understand the company's specific challenges. Advanced tip: weave in an accomplishment — e.g. "At Yahoo I did X — have you guys tried something similar?"
 
@@ -3185,6 +3195,9 @@ A quick checklist for after each interview round:
       resumeData=null;
       return;
     }
+    // Coerce summary to string in case API returns an object
+    if(typeof rd.summary==='object') rd.summary=rd.summary.text||rd.summary.content||JSON.stringify(rd.summary);
+    rd.summary=String(rd.summary||'');
     let h='<div class="resume-preview" style="font-family:Arial,sans-serif;max-width:700px;border:1px solid #e2e8f0;border-radius:8px;padding:24px;background:#fff;margin-bottom:14px">';
     h+='<div style="font-size:20px;font-weight:bold;color:#1f4e79">Ili Selinger</div>';
     h+='<div style="font-size:9px;color:#444;margin:3px 0 8px">ilan.selinger@gmail.com · 510-332-0543 · Walnut Creek, CA · linkedin.com/in/ilan-selinger</div>';
