@@ -3062,7 +3062,7 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
         }catch(e){
           // Still streaming — show a friendly loading state, not raw JSON
           if(!el.querySelector('.resume-loading')){
-            el.innerHTML='<div class="resume-loading" style="text-align:center;padding:40px 20px;color:#64748b;"><div style="font-size:28px;margin-bottom:12px;">📄</div><div style="font-size:13px;font-weight:600;">Building your tailored resume…</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Reframing experience for this role</div></div>';
+            el.innerHTML='<div class="resume-loading" style="text-align:center;padding:40px 20px;color:#64748b;"><div style="font-size:28px;margin-bottom:12px;">📄</div><div style="font-size:13px;font-weight:600;">Building your tailored resume…</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Reframing experience for this role</div><div style="margin:16px auto 0;width:200px;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:0%;background:linear-gradient(90deg,#2e75b6,#1f4e79);border-radius:2px;animation:resumeProgress 25s ease-out forwards;"></div></div><style>@keyframes resumeProgress{0%{width:0%}30%{width:40%}60%{width:65%}80%{width:80%}100%{width:92%}}</style></div>';
           }
         }
       }else{
@@ -3104,7 +3104,7 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
         for(var ln of lns){
           if(!ln.startsWith('data: '))continue;var d=ln.slice(6);if(d==='[DONE]')continue;
           try{var ev=JSON.parse(d);if(ev.type==='content_block_delta'&&ev.delta&&ev.delta.text){txt+=ev.delta.text;
-            if(sid==='s7'){try{var jm=txt.match(/\\\`\\\`\\\`json\\n([\\s\\S]*?)\\\`\\\`\\\`/)||txt.match(/\\{[\\s\\S]*"summary"[\\s\\S]*\\}/);if(jm){resumeData=JSON.parse(jm[1]||jm[0]);renderResumePreview(el,resumeData);}else if(!el.querySelector('.resume-loading')){el.innerHTML='<div class="resume-loading" style="text-align:center;padding:40px 20px;color:#64748b;"><div style="font-size:28px;margin-bottom:12px;">📄</div><div style="font-size:13px;font-weight:600;">Building your tailored resume…</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Reframing experience for this role</div></div>';}}catch(e){if(!el.querySelector('.resume-loading')){el.innerHTML='<div class="resume-loading" style="text-align:center;padding:40px 20px;color:#64748b;"><div style="font-size:28px;margin-bottom:12px;">📄</div><div style="font-size:13px;font-weight:600;">Building your tailored resume…</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Reframing experience for this role</div></div>';}}}
+            if(sid==='s7'){try{var jm=txt.match(/\\\`\\\`\\\`json\\n([\\s\\S]*?)\\\`\\\`\\\`/)||txt.match(/\\{[\\s\\S]*"summary"[\\s\\S]*\\}/);if(jm){resumeData=JSON.parse(jm[1]||jm[0]);renderResumePreview(el,resumeData);}else if(!el.querySelector('.resume-loading')){el.innerHTML='<div class="resume-loading" style="text-align:center;padding:40px 20px;color:#64748b;"><div style="font-size:28px;margin-bottom:12px;">📄</div><div style="font-size:13px;font-weight:600;">Building your tailored resume…</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Reframing experience for this role</div><div style="margin:16px auto 0;width:200px;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:0%;background:linear-gradient(90deg,#2e75b6,#1f4e79);border-radius:2px;animation:resumeProgress 25s ease-out forwards;"></div></div><style>@keyframes resumeProgress{0%{width:0%}30%{width:40%}60%{width:65%}80%{width:80%}100%{width:92%}}</style></div>';}}catch(e){if(!el.querySelector('.resume-loading')){el.innerHTML='<div class="resume-loading" style="text-align:center;padding:40px 20px;color:#64748b;"><div style="font-size:28px;margin-bottom:12px;">📄</div><div style="font-size:13px;font-weight:600;">Building your tailored resume…</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Reframing experience for this role</div><div style="margin:16px auto 0;width:200px;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:0%;background:linear-gradient(90deg,#2e75b6,#1f4e79);border-radius:2px;animation:resumeProgress 25s ease-out forwards;"></div></div><style>@keyframes resumeProgress{0%{width:0%}30%{width:40%}60%{width:65%}80%{width:80%}100%{width:92%}}</style></div>';}}}
             else{el.innerHTML=mdToHtml(txt);}
           }}catch(e){}
         }
@@ -3119,24 +3119,31 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
     }catch(err){el.innerHTML='<p style="color:#dc2626">Error: '+err.message+' <button onclick="refreshSection(\\''+sid+'\\')">Retry</button></p>';}
   }
   function renderResumePreview(el,rd){
+    // Validate that we have real data — reject if key fields are missing
+    if(!rd || !rd.summary || rd.summary==='undefined' || !rd.experience || !rd.experience.length){
+      el.innerHTML='<div style="text-align:center;padding:30px 20px;color:#dc2626;"><div style="font-size:13px;font-weight:600;">Resume data incomplete</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Click 🔄 to regenerate this section</div></div>';
+      resumeData=null;
+      return;
+    }
     let h='<div class="resume-preview" style="font-family:Arial,sans-serif;max-width:700px;border:1px solid #e2e8f0;border-radius:8px;padding:24px;background:#fff;margin-bottom:14px">';
     h+='<div style="font-size:20px;font-weight:bold;color:#1f4e79">Ili Selinger</div>';
     h+='<div style="font-size:9px;color:#444;margin:3px 0 8px">ilan.selinger@gmail.com · 510-332-0543 · Walnut Creek, CA · linkedin.com/in/ilan-selinger</div>';
     h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:10px"></div>';
     h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:4px">SUMMARY</div>';
-    h+='<div style="font-size:9px;color:#1a1a1a;line-height:1.5;margin-bottom:4px">'+rd.summary+'</div>';
+    h+='<div style="font-size:9px;color:#1a1a1a;line-height:1.5;margin-bottom:4px">'+(rd.summary||'')+'</div>';
     if(rd.skills) h+='<div style="font-size:8px;color:#444;font-style:italic;margin-bottom:8px">'+rd.skills+'</div>';
     h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:8px"></div>';
     h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:6px">EXPERIENCE</div>';
     (rd.experience||[]).forEach(function(exp){
+      if(!exp||!exp.company)return;
       h+='<div style="margin-bottom:8px">';
-      h+='<div style="font-size:10px;color:#1a1a1a"><strong>'+exp.company+'</strong> <span style="color:#999">|</span> <strong>'+exp.title+'</strong>';
+      h+='<div style="font-size:10px;color:#1a1a1a"><strong>'+(exp.company||'')+'</strong> <span style="color:#999">|</span> <strong>'+(exp.title||'')+'</strong>';
       if(exp.level) h+=' <span style="color:#888;font-weight:normal;font-size:9px">'+exp.level+'</span>';
-      h+=' <span style="color:#999">|</span> <span style="color:#444">'+exp.dates+'</span></div>';
+      h+=' <span style="color:#999">|</span> <span style="color:#444">'+(exp.dates||'')+'</span></div>';
       if(exp.subtitle) h+='<div style="font-size:8px;color:#444;font-style:italic;margin:2px 0">'+exp.subtitle+'</div>';
       if(exp.bullets&&exp.bullets.length){
         h+='<ul style="margin:3px 0 0 16px;padding:0;font-size:8.5px;line-height:1.5;color:#1a1a1a">';
-        exp.bullets.forEach(function(b){ h+='<li style="margin:1px 0">'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>'; });
+        exp.bullets.forEach(function(b){ if(b) h+='<li style="margin:1px 0">'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>'; });
         h+='</ul>';
       }
       h+='</div>';
@@ -3149,7 +3156,7 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
     if(rd.publication){
       h+='<div style="border-bottom:2px solid #2e75b6;margin:8px 0"></div>';
       h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:3px">PUBLICATION</div>';
-      h+='<div style="font-size:8.5px;color:#1a1a1a"><strong>'+rd.publication.title+'</strong> | '+rd.publication.venue+'</div>';
+      h+='<div style="font-size:8.5px;color:#1a1a1a"><strong>'+(rd.publication.title||'')+'</strong> | '+(rd.publication.venue||'')+'</div>';
       if(rd.publication.description) h+='<div style="font-size:8px;color:#1a1a1a;margin-top:2px">'+rd.publication.description+'</div>';
     }
     h+='</div>';
