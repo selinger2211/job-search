@@ -7,7 +7,7 @@ const _cfg = getConfig();
 const NETWORK_NUDGES = _cfg.networkNudges;
 const CHECK_ITEMS = _cfg.checkItems;
 
-// ─── Streak ─────────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Streak \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function updateStreak() {
   const today = new Date().toDateString();
@@ -20,7 +20,7 @@ export function updateStreak() {
   } catch {}
 }
 
-// ─── Today's Actions ────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Today's Actions \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function renderTodayActions() {
   const todayActionsEl = document.getElementById('todayActions');
@@ -32,25 +32,25 @@ export function renderTodayActions() {
   const actions = [];
 
   if ([1,3,5].includes(day)) actions.push({
-    icon:'🏆', bg:'#ebf4ff',
+    icon:'\u{1F3C6}', bg:'#ebf4ff',
     title:'Check Tier 1 company job boards',
     sub:'Visit career pages for your Tier 1 companies and scan for new openings',
     badge:'badge-blue', badgeText:'Apply same day'
   });
   if (day === 1) {
-    actions.push({ icon:'📋', bg:'#f0fdf4', title:'Monday sweep: Tier 2 & 3 job boards', sub:'Check career pages for your Tier 2 and 3 companies — most postings go live Monday morning', badge:'badge-green', badgeText:'Apply within 3 days' });
-    actions.push({ icon:'🔔', bg:'#faf5ff', title:'Check LinkedIn saved search alerts', sub:'Review saved job search alerts — most new roles post on Monday mornings', badge:'badge-purple', badgeText:'Most jobs post today' });
+    actions.push({ icon:'\u{1F4CB}', bg:'#f0fdf4', title:'Monday sweep: Tier 2 & 3 job boards', sub:'Check career pages for your Tier 2 and 3 companies \u2014 most postings go live Monday morning', badge:'badge-green', badgeText:'Apply within 3 days' });
+    actions.push({ icon:'\u{1F514}', bg:'#faf5ff', title:'Check LinkedIn saved search alerts', sub:'Review saved job search alerts \u2014 most new roles post on Monday mornings', badge:'badge-purple', badgeText:'Most jobs post today' });
   }
 
   const nudgeIdx = d.getDate() % NETWORK_NUDGES.length;
-  actions.push({ icon:'🤝', bg:'#fffbeb', title:'Networking: ' + NETWORK_NUDGES[nudgeIdx].name, sub:NETWORK_NUDGES[nudgeIdx].co, badge:'badge-amber', badgeText:'Daily nudge' });
+  actions.push({ icon:'\u{1F91D}', bg:'#fffbeb', title:'Networking: ' + NETWORK_NUDGES[nudgeIdx].name, sub:NETWORK_NUDGES[nudgeIdx].co, badge:'badge-amber', badgeText:'Daily nudge' });
 
   const roles = loadRoles();
   const twoWeeksAgo = Date.now() - 14 * 86400000;
   const stale = roles.filter(r => ['outreach','applied'].includes(r.stage) && new Date(r.date).getTime() < twoWeeksAgo);
-  if (stale.length) actions.push({ icon:'⏰', bg:'#fef2f2', title:`${stale.length} outreach/application(s) — no movement in 2+ weeks`, sub:stale.map(r=>r.company).join(' · '), badge:'badge-red', badgeText:'Follow up or move on' });
+  if (stale.length) actions.push({ icon:'\u23F0', bg:'#fef2f2', title:`${stale.length} outreach/application(s) \u2014 no movement in 2+ weeks`, sub:stale.map(r=>r.company).join(' \u00B7 '), badge:'badge-red', badgeText:'Follow up or move on' });
 
-  if ([0,6].includes(day)) actions.push({ icon:'📚', bg:'#f7fafc', title:'Weekend: prep & practice', sub:'Good time for resume tailoring, interview prep, or warm outreach.', badge:'badge-blue', badgeText:'No new postings today' });
+  if ([0,6].includes(day)) actions.push({ icon:'\u{1F4DA}', bg:'#f7fafc', title:'Weekend: prep & practice', sub:'Good time for resume tailoring, interview prep, or warm outreach.', badge:'badge-blue', badgeText:'No new postings today' });
 
   todayActionsEl.innerHTML = actions.map(a => `
     <div class="action-item">
@@ -60,7 +60,7 @@ export function renderTodayActions() {
     </div>`).join('');
 }
 
-// ─── Quick Check ────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Quick Check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function renderQuickCheck() {
   const qcEl = document.getElementById('quickCheck');
@@ -73,7 +73,7 @@ export function renderQuickCheck() {
         <input type="checkbox" id="qc${i}" ${saved[i]?'checked':''} onchange="saveCheck(${i},this.checked,'${key}')">
         <label for="qc${i}">${item}</label>
       </div>`).join('') +
-    `<div style="margin-top:8px;font-size:10px;color:#718096">5 of 6 ✓ = apply. 4 or fewer = skip unless Tier 1 + referral.</div>`;
+    `<div style="margin-top:8px;font-size:10px;color:#718096">5 of 6 \u2713 = apply. 4 or fewer = skip unless Tier 1 + referral.</div>`;
 }
 
 export function saveCheck(i, val, key) {
@@ -82,7 +82,7 @@ export function saveCheck(i, val, key) {
   localStorage.setItem(key, JSON.stringify(saved));
 }
 
-// ─── Networking Nudges ──────────────────────────────────────────────────
+// \u2500\u2500\u2500 Networking Nudges \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 let nudgeOffset = 0;
 
@@ -97,7 +97,7 @@ export function renderNudges() {
       <div class="nudge-name">${n.name}</div>
       <div class="nudge-co">${n.co}</div>
       <div class="nudge-why">${n.why}</div>
-      <button class="nudge-btn" onclick="markNudgeDone(this)">✓ Done for today</button>
+      <button class="nudge-btn" onclick="markNudgeDone(this)">\u2713 Done for today</button>
     </div>`;
   }).join('');
 }
@@ -106,6 +106,6 @@ export function refreshNudges() { nudgeOffset += 2; renderNudges(); }
 
 export function markNudgeDone(btn) {
   btn.closest('.nudge-card').style.opacity='0.4';
-  btn.textContent='✓ Done';
+  btn.textContent='\u2713 Done';
   btn.disabled=true;
 }
