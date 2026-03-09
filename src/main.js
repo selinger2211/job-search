@@ -29,11 +29,7 @@ const STAGE_ICONS = _cfg.stageIcons;
 const STAGE_COLORS = _cfg.stageColors;
 const TIER_COLORS = _cfg.tierColors;
 const TIER_NAMES = _cfg.tierNames;
-const TIER_HDR_COLORS = TIER_COLORS;
 const STAGE_BADGE = _cfg.stageBadge;
-const DEFAULT_COMPANIES = _cfg.defaultCompanies;
-const NETWORK_NUDGES = _cfg.networkNudges;
-const CHECK_ITEMS = _cfg.checkItems;
 
 // ─── STORAGE (imported from data/store.js) ───────────────────────────────
 initCompanies();
