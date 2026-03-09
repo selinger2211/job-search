@@ -1,4 +1,4 @@
-// ─── IMPORTS ────────────────────────────────────────────────────────────
+// ─── IMPORTS ───────────────────────────────────────────────────────────
 import { getConfig } from '../config.js';
 import { initTheme, cycleTheme } from './ui/theme.js';
 import { normalizeCompanyName } from './utils/normalize.js';
@@ -33,15 +33,6 @@ const STAGE_BADGE = _cfg.stageBadge;
 
 // ─── STORAGE (imported from data/store.js) ───────────────────────────────
 initCompanies();
-
-// ─── STAGE HISTORY ────────────────────────────────────────────────────────
-function pushStageHistory(role, newStage) {
-  if (role.stage === newStage) return role;
-  if (!role.stageHistory) role.stageHistory = [{ stage: role.stage || 'tracking', ts: role.date || new Date().toISOString() }];
-  role.stageHistory.push({ stage: newStage, ts: new Date().toISOString() });
-  role.stage = newStage;
-  return role;
-}
 
 // ─── FILTER STATE ─────────────────────────────────────────────────────────
 let filterQuery = '';
