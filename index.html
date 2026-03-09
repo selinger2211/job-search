@@ -2751,7 +2751,7 @@ function generateResearchBrief() {
     {id:'s4',emoji:'⚠️',title:'Key Concerns & Pre-emptions', hint:'Likely tough questions with strong answers.'},
     {id:'s5',emoji:'👤',title:'Interviewer Insights',    hint:'Research each person — background, focus areas, good topics to reference.'},
     {id:'s6',emoji:'🎤',title:'Tell Me About Yourself',  hint:'A tailored 90-second opener connecting your story to this role.'},
-    {id:'s7',emoji:'📄',title:'Tailored Resume',          hint:'AI-generated one-page resume customized to this role. Review the content, then generate DOCX or print PDF.'},
+    {id:'s7',emoji:'📄',title:'Tailored Resume',          hint:'Your real resume, subtly reframed for this role. Only highlights and reorders existing experience — nothing fabricated. Review, then export as DOCX or PDF.'},
     {id:'s8',emoji:'❓',title:'Questions to Ask Them',   hint:'Strategic questions about roadmap, team, success definition.'},
   ];
 
@@ -2828,9 +2828,58 @@ Output your research in EXACTLY this format with these section markers. Each sec
 ## 5: Interviewer Insights
 ## 6: Tell Me About Yourself
 ## 7: Tailored Resume
-Output EXACTLY this JSON structure for the tailored resume (inside a JSON code block). Customize the summary, skills line, and bullet points to match this specific role. Keep the same companies and roles, but rewrite bullets to emphasize the most relevant achievements. MUST fit one page — max 3-4 bullets per role, shorter for older roles. Use this JSON format:
+Output EXACTLY this JSON structure for the tailored resume (inside a JSON code block).
+
+CRITICAL RULES — READ CAREFULLY:
+1. NEVER FABRICATE. Every bullet, metric, and claim must come from the BASE RESUME below. You may reword for flow but never invent achievements, numbers, or skills that don't exist.
+2. BE SUBTLE. The resume should read as a strong general resume that naturally aligns with this domain — NOT an obvious keyword-match to the JD. A hiring manager should think "this person has relevant experience" not "this was clearly rewritten for my job."
+3. WHAT YOU CAN CHANGE:
+   - Summary: Reframe the angle/lens (e.g., "AI/ML platform leader" vs "addressability infrastructure leader") using ONLY real experience
+   - Skills line: Reorder and select from Ili's actual skill areas to lead with the most relevant
+   - Bullet wording: Lightly rephrase to emphasize the relevant angle of real achievements (e.g., "enabling addressable audience activation at scale" is a valid reframe of the targeting work)
+   - Bullet selection/ordering: Choose which bullets to include or combine; put most relevant first
+   - Role subtitles: Adjust the italic one-liner to frame the role relevantly
+   - Drop older roles: Mindjet can be dropped if space is needed
+4. WHAT YOU CANNOT CHANGE: Company names, job titles, dates, metrics/numbers, core facts of what was built
+
+BASE RESUME (source of truth — all content must originate from here):
+Name: Ili Selinger
+Contact: ilan.selinger@gmail.com · 510-332-0543 · Walnut Creek, CA · linkedin.com/in/ilan-selinger
+
+JPMorgan Chase | Product Director, AI & LLM (Executive Director) | 2021-2026
+- Built keyword search and ranking platform — 99% top-5 accuracy / 80%+ precision, reducing analyst time-to-insight 40-60% across 7,000+ users
+- Designed agentic RAG pipeline over 45M+ documents, enabling large-scale retrieval and synthesis, replacing manual research workflows
+- Built agentic reporting system generating 300+ structured outputs/week, eliminating 90%+ manual work
+- Orchestrated agentic onboarding workflows reducing client turnaround to <24 hours for 85%+ of cases
+
+Yahoo (Verizon Media / Oath) | Principal PM → Director → Sr. Director | 2016-2021
+Subtitle options: "5-year progression across targeting, optimization, and ad integrity — 20B+ daily ads scale" OR "5-year progression across addressability, targeting, optimization, and ad integrity — 20B+ daily ads scale"
+- $500M+ annual revenue owned across targeting infrastructure — migrated batch systems to real-time decisioning, improving advertiser CPA 25%
+- Built and scaled audience addressability systems for brands, publishers, and DSPs/SSPs; rebuilt ranking models driving 50% revenue increase and $100M+ growth via search and mail retargeting
+- Led GDPR and CCPA compliance across targeting and identity systems; designed consent-aware data pipelines and high-performance data warehouse improving audience modeling accuracy
+- As Sr. Director, Trust & Verification: reduced ad fraud 90% via cloaking detection and enforcement systems at 20B+ daily ads scale; implemented ads.txt and sellers.json protocols reducing counterfeit inventory 30%
+- Rolled out IAB taxonomy audiences protecting ~$50M+ revenue across 900M monthly users
+- Reduced storage and compute costs 30% through data lifecycle optimization across targeting infrastructure
+
+New Relic | Product Manager → Sr. Manager, Product | 2014-2016
+- Accelerated SaaS product integration into billing platform supporting $100M+ ARR, reducing time-to-market ~80%; cut new product integration from 6 engineer-months to 3 engineer-weeks
+- Stabilized financial services infrastructure to 99.99% uptime; rebuilt e-commerce and partnership portals
+- Built data analysis platform normalizing data across internal databases, CRM (Salesforce), and customer data warehouse
+
+Conversant | Product Manager | 2011-2014
+- Launched Tag Manager with 50+ partner integrations in ~6 months
+- Developed unified mobile SDK; improved conversion tracking via server-to-server integration, ~3% revenue lift
+
+Mindjet | Project Manager & Manager of User Support | 2005-2011 (OPTIONAL — drop if not relevant)
+- Established PMO; pioneered multi-vendor bidding saving 40% in IT expenditures
+- Led remote engineering team building Mac product with 3-language localization
+
+Publication: MetaCon: Unified Predictive Segments System with Trillion Concept Meta-Learning | arXiv, 2022 · Co-author
+Certs: PMP · CSM · B.S., UC Santa Barbara
+
+JSON FORMAT:
 \\\`\\\`\\\`json
-{"summary":"One paragraph tailored summary...","skills":"Skill1 · Skill2 · Skill3 · ...","experience":[{"company":"Company Name","title":"Role Title","level":"(optional level)","dates":"YYYY – YYYY","subtitle":"One-line italic description","bullets":["Bullet 1 with **bold metrics**","Bullet 2..."]}],"certs":"Certifications & Education line","publication":{"title":"Paper title","venue":"arXiv, 2022 · Co-author","description":"One line description"}}
+{"summary":"Reframed 3-4 sentence summary using ONLY real experience...","skills":"Skill1 · Skill2 · Skill3 · ... (reordered from real skills)","experience":[{"company":"Company Name","title":"Exact Real Title","level":"(optional level if exists)","dates":"YYYY – YYYY","subtitle":"One-line italic framing","bullets":["Real bullet lightly reworded with **bold metrics**","Another real bullet..."]}],"certs":"Project Management Professional (PMP) · Certified Scrum Master (CSM) · B.S., University of California, Santa Barbara","publication":{"title":"MetaCon: Unified Predictive Segments System with Trillion Concept Meta-Learning","venue":"arXiv, 2022 · Co-author","description":"AI system predicting user interests across 68+ tasks simultaneously; improved targeting accuracy 15.4% over prior production system at 20B+ daily ads scale"}}
 \\\`\\\`\\\`
 ## 8: Questions to Ask Them
 
