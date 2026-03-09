@@ -177,6 +177,35 @@
   .cp-add-btn { padding: 5px 12px; background: var(--bg-surface); border: 1.5px dashed var(--border-medium); border-radius: 7px; font-size: 11px; color: var(--text-muted); cursor: pointer; margin-top: 8px; transition: all 0.12s; }
   .cp-add-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
 
+  /* ── Connections Side Panel ─────────────────────────────── */
+  .conn-panel-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--modal-backdrop); z-index: 99; }
+  .conn-panel-overlay.open { display: block; }
+  .conn-panel { position: fixed; top: 0; right: -420px; width: 400px; height: 100vh; background: var(--bg-card); box-shadow: -4px 0 20px var(--shadow-lg); z-index: 100; transition: right 0.25s ease; overflow-y: auto; display: flex; flex-direction: column; }
+  .conn-panel.open { right: 0; }
+  .conn-panel-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border-medium); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .conn-panel-header h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0; flex: 1; }
+  .conn-panel-close { padding: 4px 10px; background: var(--bg-surface); border: 1.5px solid var(--border-medium); border-radius: 6px; font-size: 14px; cursor: pointer; color: var(--text-muted); }
+  .conn-panel-body { flex: 1; padding: 12px 16px; overflow-y: auto; }
+  .conn-panel-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 8px; border-bottom: 1px solid var(--border-light); transition: background 0.1s; }
+  .conn-panel-item:hover { background: var(--bg-hover); border-radius: 8px; }
+  .conn-panel-item:last-child { border-bottom: none; }
+  .conn-panel-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .conn-panel-info { flex: 1; min-width: 0; }
+  .conn-panel-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .conn-panel-name a { color: var(--accent-blue); text-decoration: none; }
+  .conn-panel-name a:hover { text-decoration: underline; }
+  .conn-panel-title { font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .conn-panel-meta { font-size: 10px; color: var(--text-faint); margin-top: 3px; }
+  .conn-panel-empty { text-align: center; padding: 40px 20px; color: var(--text-faint); font-size: 13px; }
+  .conn-panel-count { font-size: 12px; color: var(--text-muted); padding: 8px 16px 4px; flex-shrink: 0; }
+
+  /* ── Hover tooltip for connection chips ────────────────── */
+  .conn-chip-wrap { position: relative; display: inline-block; cursor: pointer; }
+  .conn-chip-wrap .conn-tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border-medium); border-radius: 8px; padding: 8px 10px; box-shadow: 0 4px 12px var(--shadow-md); min-width: 200px; max-width: 280px; z-index: 80; font-size: 11px; }
+  .conn-chip-wrap:hover .conn-tooltip { display: block; }
+  .conn-tooltip-item { padding: 3px 0; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conn-tooltip-more { color: var(--text-faint); font-style: italic; padding-top: 4px; border-top: 1px solid var(--border-light); margin-top: 4px; }
+
   /* ── Quick Stats Bar ──────────────────────────────────── */
   .quick-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
   .quick-stat-box { flex: 1; min-width: 100px; background: var(--bg-card); border-radius: 10px; padding: 12px 14px; box-shadow: var(--card-shadow); text-align: center; }
@@ -489,6 +518,17 @@
 <!-- Hidden file inputs (needed globally) -->
 <input type="file" id="linkedinCsvInput" accept=".csv" style="display:none" onchange="importLinkedInCSV(this)">
 <input type="file" id="artifactFileInput" multiple style="display:none" onchange="handleArtifactUpload(this)">
+
+<!-- ══ CONNECTIONS SIDE PANEL ═══════════════════════════════════ -->
+<div class="conn-panel-overlay" id="connPanelOverlay" onclick="closeConnPanel()"></div>
+<div class="conn-panel" id="connPanel">
+  <div class="conn-panel-header">
+    <h3 id="connPanelTitle">Connections</h3>
+    <button class="conn-panel-close" onclick="closeConnPanel()">✕</button>
+  </div>
+  <div class="conn-panel-count" id="connPanelCount"></div>
+  <div class="conn-panel-body" id="connPanelBody"></div>
+</div>
 
 <!-- ══ RESEARCH MODAL ════════════════════════════════════════ -->
 <div class="modal-overlay" id="researchModal">
@@ -969,24 +1009,24 @@ function renderPipeline() {
     const prevStage = stageIdx > 0 ? STAGES[stageIdx-1] : null;
     const nextStage = stageIdx < STAGES.length-1 ? STAGES[stageIdx+1] : null;
 
-    const refBadge = role.referral === 'referred' ? `<span class="mini-badge referral-badge-referred">🤝</span>`
-      : role.referral === 'cold' ? `<span class="mini-badge referral-badge-cold">🧊</span>` : '';
+    const refBadge = role.referral === 'referred' ? `<span class="mini-badge referral-badge-referred" title="Has referral">🤝</span>`
+      : role.referral === 'cold' ? `<span class="mini-badge referral-badge-cold" title="Cold application">🧊</span>` : '';
     const srcBadge = role.source === 'inbound'
-      ? `<span class="mini-badge source-inbound">📥</span>`
-      : `<span class="mini-badge source-outbound">📤</span>`;
+      ? `<span class="mini-badge source-inbound" title="Inbound — recruiter reached out">📥</span>`
+      : `<span class="mini-badge source-outbound" title="Outbound — you applied">📤</span>`;
     const contactBadge = role.lastContactedMethod
-      ? `<span class="mini-badge contact-${role.lastContactedMethod}">${cmLabel[role.lastContactedMethod]}</span>` : '';
+      ? `<span class="mini-badge contact-${role.lastContactedMethod}" title="Last contact method: ${role.lastContactedMethod}">${cmLabel[role.lastContactedMethod]}</span>` : '';
     const contactDateStr = role.lastContactedDate
       ? new Date(role.lastContactedDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})
       : null;
 
     const linkedConns = getConnectionsForCompany(role.company);
     const warmBadge = linkedConns.length
-      ? `<span class="warm-intro-badge" title="${linkedConns.map(c=>c.fullName).join(', ')}">🔗 ${linkedConns.length}</span>`
+      ? `<span class="conn-chip-wrap" onclick="event.stopPropagation();openConnPanel('${role.company.replace(/'/g,"\\'")}')" title="View ${linkedConns.length} connections"><span class="warm-intro-badge">🔗 ${linkedConns.length}</span></span>`
       : '';
     const coArtifacts = getCompanyArtifacts(role.company);
     const artifactBadge = coArtifacts.length
-      ? `<span class="artifact-badge" title="${coArtifacts.map(a=>a.fileName).join(', ')}">📎 ${coArtifacts.length}</span>`
+      ? `<span class="artifact-badge" title="${coArtifacts.length} file${coArtifacts.length>1?'s':''}: ${coArtifacts.map(a=>a.fileName).join(', ')}">📎 ${coArtifacts.length}</span>`
       : '';
 
     card.innerHTML = `
@@ -996,17 +1036,17 @@ function renderPipeline() {
         ${refBadge}${warmBadge}${artifactBadge}
       </div>
       <div class="role">${role.roleTitle}</div>
-      ${role.url ? `<div style="margin-top:2px"><a href="${role.url}" target="_blank" style="font-size:9px;color:#2e75b6;text-decoration:none" onclick="event.stopPropagation()">🔗 posting</a></div>` : ''}
+      ${role.url ? `<div style="margin-top:2px"><a href="${role.url}" target="_blank" style="font-size:9px;color:var(--accent-blue);text-decoration:none;background:var(--bg-surface);padding:1px 6px;border-radius:4px;border:1px solid var(--border-medium)" onclick="event.stopPropagation()" title="Open job posting in new tab">📄 View Job Posting</a></div>` : ''}
       <div class="card-footer">
         <div class="card-meta">
           ${srcBadge}${contactBadge}
-          ${contactDateStr ? `<span style="font-size:9px;color:#a0aec0">${contactDateStr}</span>` : ''}
+          ${contactDateStr ? `<span style="font-size:9px;color:var(--text-faint)" title="Last contacted">${contactDateStr}</span>` : ''}
         </div>
         <div style="display:flex;gap:3px;align-items:center">
-          <button style="padding:2px 6px;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:4px;font-size:9px;cursor:pointer;color:var(--text-muted)" title="Edit role" onclick="event.stopPropagation();openEditModal('${role.id}')">✏️</button>
-          <button class="btn-research" title="Research this company" onclick="event.stopPropagation();openResearchModal('${role.company.replace(/'/g,"\\'")}','${(role.roleTitle||'').replace(/'/g,"\\'")}','${role.url||''}')">🔬</button>
-          ${prevStage ? `<button class="stage-btn stage-btn-back" title="← ${STAGE_LABELS[prevStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${prevStage}')">←</button>` : ''}
-          ${nextStage ? `<button class="stage-btn stage-btn-fwd" title="→ ${STAGE_LABELS[nextStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${nextStage}')">→ ${STAGE_LABELS[nextStage]}</button>` : ''}
+          <button style="padding:2px 6px;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:4px;font-size:9px;cursor:pointer;color:var(--text-muted)" title="Edit role details" onclick="event.stopPropagation();openEditModal('${role.id}')">✏️</button>
+          <button class="btn-research" title="Generate AI research brief for this role" onclick="event.stopPropagation();openResearchModal('${role.company.replace(/'/g,"\\'")}','${(role.roleTitle||'').replace(/'/g,"\\'")}','${role.url||''}')">🔬</button>
+          ${prevStage ? `<button class="stage-btn stage-btn-back" title="Move back to ${STAGE_LABELS[prevStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${prevStage}')">←</button>` : ''}
+          ${nextStage ? `<button class="stage-btn stage-btn-fwd" title="Advance to ${STAGE_LABELS[nextStage]}" onclick="event.stopPropagation();moveStage('${role.id}','${nextStage}')">→ ${STAGE_LABELS[nextStage]}</button>` : ''}
         </div>
       </div>`;
 
@@ -1071,6 +1111,86 @@ function moveStage(id, newStage) {
   renderAll();
 }
 
+// ─── CONNECTIONS SIDE PANEL ───────────────────────────────────────────────
+function openConnPanel(companyName) {
+  const conns = getConnectionsForCompany(companyName);
+  const panel = document.getElementById('connPanel');
+  const overlay = document.getElementById('connPanelOverlay');
+  const title = document.getElementById('connPanelTitle');
+  const count = document.getElementById('connPanelCount');
+  const body = document.getElementById('connPanelBody');
+
+  title.textContent = companyName + ' Connections';
+  count.textContent = conns.length + ' connection' + (conns.length !== 1 ? 's' : '') + ' found';
+
+  if (!conns.length) {
+    body.innerHTML = '<div class="conn-panel-empty">No LinkedIn connections found at ' + companyName + '.<br><br>Consider cold outreach or finding warm intros through mutual connections.</div>';
+  } else {
+    // Score connections by influence (title keywords)
+    const scored = conns.map(function(c) {
+      let score = 0;
+      const t = (c.position || '').toLowerCase();
+      // C-suite / VP / Director = highest
+      if (/\b(ceo|cto|cfo|coo|cpo|cmo|chief|president)\b/.test(t)) score += 50;
+      if (/\b(vp|vice president|svp|evp)\b/.test(t)) score += 40;
+      if (/\bdir(ector)?\b/.test(t)) score += 35;
+      if (/\b(head of|head,)\b/.test(t)) score += 33;
+      // Senior / Lead / Staff / Principal
+      if (/\b(senior|sr\.?|staff|principal|lead)\b/.test(t)) score += 25;
+      // Manager
+      if (/\bmanager\b/.test(t)) score += 20;
+      // Recruiter / Talent = can directly refer
+      if (/\b(recruiter|recruiting|talent|hr|people)\b/.test(t)) score += 30;
+      // Engineering / Product / relevant
+      if (/\b(engineer|product|design|data|software|platform)\b/.test(t)) score += 5;
+      return { conn: c, score: score };
+    });
+    scored.sort(function(a, b) { return b.score - a.score; });
+
+    body.innerHTML = scored.map(function(item) {
+      var c = item.conn;
+      var initials = ((c.firstName || '').charAt(0) + (c.lastName || '').charAt(0)).toUpperCase();
+      var connDate = c.connectedOn ? 'Connected ' + c.connectedOn : '';
+      var profileLink = c.url ? '<a href="' + c.url + '" target="_blank">' + c.fullName + '</a>' : c.fullName;
+      var influence = '';
+      if (item.score >= 40) influence = '<span style="background:#f0fdf4;color:#16a34a;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px">Key Contact</span>';
+      else if (item.score >= 25) influence = '<span style="background:#ebf4ff;color:#2e75b6;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px">Senior</span>';
+      else if (item.score >= 20) influence = '<span style="background:#fffbeb;color:#d97706;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600;margin-left:6px">Manager</span>';
+      return '<div class="conn-panel-item">'
+        + '<div class="conn-panel-avatar">' + initials + '</div>'
+        + '<div class="conn-panel-info">'
+        + '<div class="conn-panel-name">' + profileLink + influence + '</div>'
+        + '<div class="conn-panel-title">' + (c.position || 'No title listed') + '</div>'
+        + '<div class="conn-panel-meta">' + connDate + '</div>'
+        + '</div>'
+        + (c.url ? '<a href="' + c.url + '" target="_blank" style="font-size:11px;color:var(--accent-blue);text-decoration:none;flex-shrink:0;padding:4px 8px;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:5px" title="View LinkedIn profile">🔗 Profile</a>' : '')
+        + '</div>';
+    }).join('');
+  }
+
+  overlay.classList.add('open');
+  panel.classList.add('open');
+}
+
+function closeConnPanel() {
+  document.getElementById('connPanel').classList.remove('open');
+  document.getElementById('connPanelOverlay').classList.remove('open');
+}
+
+// Build a connection badge with hover tooltip and click-to-panel
+function buildConnBadge(company, conns) {
+  if (!conns.length) return '';
+  var preview = conns.slice(0, 3).map(function(c) {
+    return '<div class="conn-tooltip-item"><strong>' + c.fullName + '</strong> — ' + (c.position || '?') + '</div>';
+  }).join('');
+  if (conns.length > 3) preview += '<div class="conn-tooltip-more">+ ' + (conns.length - 3) + ' more — click to see all</div>';
+  var safeCo = company.replace(/'/g, "\\'");
+  return '<span class="conn-chip-wrap" onclick="event.stopPropagation();openConnPanel(\'' + safeCo + '\')">'
+    + '<span class="tier-chip-conn">🔗' + conns.length + '</span>'
+    + '<div class="conn-tooltip">' + preview + '</div>'
+    + '</span>';
+}
+
 // ─── TIER LIST ────────────────────────────────────────────────────────────
 let editModeActive = false;
 function toggleEditMode() {
@@ -1111,7 +1231,7 @@ function renderTierList() {
           const cls = `company-chip chip-t${tier}${sb?' '+sb.cls:''}${hidden}`;
           const badge = sb ? `<span class="chip-status-badge" style="background:rgba(0,0,0,0.08)">${sb.label}</span>` : '';
           const conns = getConnectionsForCompany(co);
-          const connBadge = conns.length ? `<span class="tier-chip-conn" title="${conns.map(c=>c.fullName).join(', ')}">🔗${conns.length}</span>` : '';
+          const connBadge = buildConnBadge(co, conns);
           return `<span class="${cls}" title="${sb?sb.title:'Click to add to pipeline'}" onclick="if(!editModeActive)openAddModalCo('${safeId}','${tier}')">${co}${badge}${connBadge}<span class="chip-remove" onclick="event.stopPropagation();removeCompanyFromTier('${safeId}','${tier}')" title="Remove">×</span></span>`;
         }).join('')}
       </div>
@@ -1540,15 +1660,24 @@ function renderNetworkMap() {
   const q = filterQuery;
 
   // Pipeline matches
+  let groupIdx = 0;
   if (pipelineMatches.length) {
     html += '<div style="font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px">Pipeline — Warm Intros</div>';
     pipelineMatches.forEach(co => {
       if (q && !co.toLowerCase().includes(q)) return;
       const conns = matchMap[co];
+      const gid = 'nm-grp-' + (groupIdx++);
+      const safeCo = co.replace(/'/g, "\\'");
+      const PREVIEW = 3;
+      const personHtml = (c) => {
+        const linkedIn = c.linkedInUrl ? ' href="' + c.linkedInUrl + '" target="_blank" style="color:var(--text-primary);text-decoration:none"' : '';
+        return '<div class="network-person">' + (linkedIn ? '<a' + linkedIn + '>' : '') + c.fullName + (linkedIn ? '</a>' : '') + (c.position ? ' <span class="pos">— ' + c.position + '</span>' : '') + '</div>';
+      };
       html += '<div class="network-group">'
-        + '<div class="network-group-title">' + co + ' <span class="network-group-count">' + conns.length + ' connection' + (conns.length>1?'s':'') + '</span></div>'
-        + conns.slice(0,5).map(c => '<div class="network-person">' + c.fullName + (c.position ? ' <span class="pos">— ' + c.position + '</span>' : '') + '</div>').join('')
-        + (conns.length > 5 ? '<div class="network-person pos">+ ' + (conns.length-5) + ' more</div>' : '')
+        + '<div class="network-group-title" style="cursor:pointer" onclick="openConnPanel(\'' + safeCo + '\')">' + co + ' <span class="network-group-count">' + conns.length + ' connection' + (conns.length>1?'s':'') + ' →</span></div>'
+        + conns.slice(0, PREVIEW).map(personHtml).join('')
+        + (conns.length > PREVIEW ? '<div id="' + gid + '" style="display:none">' + conns.slice(PREVIEW).map(personHtml).join('') + '</div>'
+          + '<div class="network-person" style="cursor:pointer;color:var(--accent-blue);font-weight:600" onclick="var el=document.getElementById(\'' + gid + '\');if(el.style.display===\'none\'){el.style.display=\'block\';this.textContent=\'▲ Show fewer\';}else{el.style.display=\'none\';this.textContent=\'▼ Show all ' + conns.length + ' connections\';}">▼ Show all ' + conns.length + ' connections</div>' : '')
         + '</div>';
     });
   }
@@ -1626,14 +1755,16 @@ async function selectArtifactsFolder() {
   }
 }
 
-async function getArtifactsHandle() {
+async function getArtifactsHandle(interactive) {
   if (_artifactDirHandle) return _artifactDirHandle;
   try {
     const handle = await getHandleFromDB();
     if (!handle) return null;
-    // Verify permission (user must re-grant after browser restart)
+    // Check if permission already granted
     const perm = await handle.queryPermission({ mode: 'readwrite' });
     if (perm === 'granted') { _artifactDirHandle = handle; _artifactReady = true; return handle; }
+    // Only prompt user if interactive (user clicked something)
+    if (!interactive) return null;
     const req = await handle.requestPermission({ mode: 'readwrite' });
     if (req === 'granted') { _artifactDirHandle = handle; _artifactReady = true; return handle; }
     return null;
@@ -1641,7 +1772,7 @@ async function getArtifactsHandle() {
 }
 
 async function ensureCompanyFolder(company) {
-  const root = await getArtifactsHandle();
+  const root = await getArtifactsHandle(true);
   if (!root) return null;
   try { return await root.getDirectoryHandle(company, { create: true }); }
   catch (e) {
@@ -1738,7 +1869,7 @@ function getCompanyArtifacts(company) {
 }
 
 async function syncFolderToIndex() {
-  const root = await getArtifactsHandle();
+  const root = await getArtifactsHandle(false);
   if (!root) return;
   const index = getArtifactIndex();
   const found = new Set();
@@ -1817,7 +1948,7 @@ function uploadArtifactFor(company) {
 async function renderArtifactManager() {
   const container = document.getElementById('artifactManager');
   if (!container) return;
-  const handle = await getArtifactsHandle();
+  const handle = await getArtifactsHandle(false);
 
   if (!handle) {
     container.innerHTML = '<div class="artifact-empty">'
@@ -1899,7 +2030,8 @@ async function initArtifacts() {
     renderArtifactManager();
     return;
   }
-  const handle = await getArtifactsHandle();
+  // Non-interactive: only use handle if permission already granted (no browser prompt)
+  const handle = await getArtifactsHandle(false);
   if (handle) {
     await syncFolderToIndex();
   }
@@ -1994,7 +2126,8 @@ function getAllTrackedCompanies() {
   }
 
   // Artifacts
-  artifactIdx.forEach(a => {
+  (artifactIdx.artifacts || []).forEach(a => {
+    if (!a.company) return;
     const key = a.company.toLowerCase();
     if (companyMap[key]) companyMap[key].artifacts.push(a);
   });
@@ -2361,7 +2494,7 @@ async function renderCompanyProfileArtifacts(companyName, artifacts) {
     return;
   }
 
-  const handle = await getArtifactsHandle();
+  const handle = await getArtifactsHandle(false);
   if (!handle) {
     mgr.innerHTML = `<div class="artifact-empty">
       <div style="font-size:13px;margin-bottom:6px">No artifacts folder configured</div>
@@ -2758,20 +2891,10 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
     + '<script>\n' + pageJs + '\n' + streamFn + '\n<\/script>\n'
     + '</body>\n</html>';
 
-  // Save brief as a downloadable HTML file AND open it
+  // Open brief as HTML in a new tab (no file download)
   const fileName = 'brief_' + company.replace(/\W+/g,'_').toLowerCase() + '_' + role.replace(/\W+/g,'_').toLowerCase() + '.html';
   const blob = new Blob([html], {type:'text/html'});
   const blobUrl = URL.createObjectURL(blob);
-
-  // Save the file via download so it persists on disk
-  const a = document.createElement('a');
-  a.href = blobUrl;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  // Also open the brief in a new tab immediately
   window.open(blobUrl, '_blank');
 
   // Track this brief in localStorage for the Recent Briefs list
