@@ -1,85 +1,42 @@
-// ─── THEME (dark mode) ──────────────────────────────────────────────────
-(function initTheme() {
-  const saved = localStorage.getItem('ili_theme'); // 'light', 'dark', or 'auto'
-  const pref = saved || 'auto';
-  applyTheme(pref);
-  // Listen for system changes when in auto mode
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
-    if ((localStorage.getItem('ili_theme') || 'auto') === 'auto') applyTheme('auto');
-  });
-})();
-function applyTheme(mode) {
-  let dark;
-  if (mode === 'auto') dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  else dark = mode === 'dark';
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  const btn = document.getElementById('themeToggle');
-  if (btn) {
-    const saved = localStorage.getItem('ili_theme') || 'auto';
-    btn.textContent = saved === 'auto' ? (dark ? '🌙' : '☀️') : (dark ? '🌙' : '☀️');
-    btn.title = 'Theme: ' + saved + (saved === 'auto' ? ' (system)' : '');
-  }
-}
-function cycleTheme() {
-  const current = localStorage.getItem('ili_theme') || 'auto';
-  const next = current === 'auto' ? 'dark' : current === 'dark' ? 'light' : 'auto';
-  localStorage.setItem('ili_theme', next);
-  applyTheme(next);
-}
+// ─── IMPORTS ────────────────────────────────────────────────────────────
+import { getConfig } from '../config.js';
+import { initTheme, applyTheme, cycleTheme } from './ui/theme.js';
+import { normalizeCompanyName } from './utils/normalize.js';
+import { parseCSVLine } from './utils/csv.js';
+import { formatFileSize, detectArtifactType, artifactTypeIcon } from './utils/format.js';
+import {
+  loadRoles, saveRoles, getCompanies, saveCompaniesData, initCompanies,
+  getLinkedInData, saveLinkedInData, clearConnectionCache,
+  getArtifactIndex, saveArtifactIndex, getCompanyArtifacts,
+  getResearchBriefsList, saveResearchBriefsList,
+  getCompanyProfile, saveCompanyProfile,
+  getApiKey, saveApiKey,
+  getLastView, saveLastView, getLastCompany, saveLastCompany,
+  getStreak, saveStreak,
+  getArtifactsFolderName, saveArtifactsFolderName,
+  getQuickCheck, saveQuickCheck,
+  getResearchContent, saveResearchContent,
+} from './data/store.js';
 
-// ─── CONSTANTS ───────────────────────────────────────────────────────────
-const STAGES = ['tracking','outreach','applied','screen','interview','offer'];
-const STAGE_LABELS = { tracking:'Tracking', outreach:'Outreach', applied:'Applied', screen:'Screen', interview:'Interview', offer:'Offer/Done' };
-const STAGE_ICONS  = { tracking:'👀', outreach:'📨', applied:'📤', screen:'📞', interview:'🎯', offer:'🎉' };
-const STAGE_COLORS = { tracking:'#a0aec0', outreach:'#0e7490', applied:'#2e75b6', screen:'#7c3aed', interview:'#d97706', offer:'#16a34a' };
+// ─── INIT THEME ─────────────────────────────────────────────────────────
+initTheme();
 
-const TIER_COLORS = { "1":"#1a3a5c", "2":"#2e75b6", "3":"#1e7e34", "4":"#718096" };
-const TIER_NAMES  = { "1":"Tier 1 — Dream", "2":"Tier 2 — High Prob", "3":"Tier 3 — Big Tech", "4":"Tier 4 — Monitor" };
+// ─── CONSTANTS (from config) ─────────────────────────────────────────────
+const _cfg = getConfig();
+const STAGES = _cfg.stages;
+const STAGE_LABELS = _cfg.stageLabels;
+const STAGE_ICONS = _cfg.stageIcons;
+const STAGE_COLORS = _cfg.stageColors;
+const TIER_COLORS = _cfg.tierColors;
+const TIER_NAMES = _cfg.tierNames;
 const TIER_HDR_COLORS = TIER_COLORS;
+const STAGE_BADGE = _cfg.stageBadge;
+const DEFAULT_COMPANIES = _cfg.defaultCompanies;
+const NETWORK_NUDGES = _cfg.networkNudges;
+const CHECK_ITEMS = _cfg.checkItems;
 
-const STAGE_BADGE = {
-  tracking:  { label:'👀',          title:'Tracking',     cls:'chip-status-tracking'  },
-  outreach:  { label:'📨 Outreach', title:'Outreach',     cls:'chip-status-outreach'  },
-  applied:   { label:'📤 Applied',  title:'Applied',      cls:'chip-status-applied'   },
-  screen:    { label:'📞 Screen',   title:'Phone Screen', cls:'chip-status-screen'    },
-  interview: { label:'🎯 Live',     title:'Interviewing', cls:'chip-status-interview' },
-  offer:     { label:'🎉 Done',     title:'Offer/Done',   cls:'chip-status-offer'     },
-};
-
-const DEFAULT_COMPANIES = {
-  1: ["Company A","Company B","Company C","Company D","Company E"],
-  2: ["Company F","Company G","Company H","Company I","Company J"],
-  3: ["Company K","Company L","Company M","Company N","Company O"],
-  4: ["Company P","Company Q","Company R","Company S","Company T"]
-};
-
-// Edit these nudges to reflect YOUR network and target companies
-const NETWORK_NUDGES = [
-  { name:"Former employer alumni",      co:"→ Target Company 1, Target Company 2",     why:"Your former colleagues are your warmest network. Search LinkedIn for people from past roles now at your target companies." },
-  { name:"School / community network",  co:"→ Target Company 3, Target Company 4",     why:"Alumni networks are underutilized. Reach out to classmates or community members at companies you're targeting." },
-  { name:"Online community contacts",   co:"→ Target Company 5, Target Company 6",     why:"Slack communities, Discord servers, and Twitter/X connections can open unexpected doors." },
-  { name:"Type 3 outreach example",     co:"Role Title at Target Company (open role)", why:"Find 15–20 contacts — hiring managers, team leads, recruiters. Target: 20 messages → 2 conversations → 1 referral." },
-];
-
-// Edit these criteria to match YOUR job search filters
-const CHECK_ITEMS = [
-  "Does the role match my target title / seniority level?",
-  "Is the location or remote policy compatible with my needs?",
-  "Does the company have the stage / size I'm looking for?",
-  "Does the role align with my target domain or industry?",
-  "Is this an IC role with end-to-end ownership?",
-  "Does the JD mention specific outcomes / metrics (not just features)?",
-];
-
-// ─── STORAGE ─────────────────────────────────────────────────────────────
-function loadRoles()    { try { return JSON.parse(localStorage.getItem('ili_roles')    || '[]'); } catch { return []; } }
-function saveRoles(r)   { localStorage.setItem('ili_roles', JSON.stringify(r)); }
-function getCompanies() {
-  try { const s = localStorage.getItem('ili_companies'); if (s) return JSON.parse(s); } catch {}
-  return JSON.parse(JSON.stringify(DEFAULT_COMPANIES));
-}
-function saveCompaniesData(c) { localStorage.setItem('ili_companies', JSON.stringify(c)); }
-if (!localStorage.getItem('ili_companies')) saveCompaniesData(DEFAULT_COMPANIES);
+// ─── STORAGE (imported from data/store.js) ───────────────────────────────
+initCompanies();
 
 // ─── STAGE HISTORY ────────────────────────────────────────────────────────
 function pushStageHistory(role, newStage) {
@@ -713,23 +670,8 @@ function renderContactLog() {
 }
 
 // ─── LINKEDIN NETWORK MAP ─────────────────────────────────────────────────
-function normalizeCompanyName(name) {
-  if (!name) return '';
-  return name.toLowerCase()
-    .replace(/,?\s*(inc\.?|ltd\.?|llc|corp\.?|co\.?|plc|l\.?p\.?|gmbh|ag|s\.?a\.?|n\.?v\.?)$/i, '')
-    .replace(/[^\w\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-let _connectionCache = null;
-function getLinkedInData() {
-  if (_connectionCache) return _connectionCache;
-  try {
-    _connectionCache = JSON.parse(localStorage.getItem('ili_linkedin_connections'));
-  } catch(e) { _connectionCache = null; }
-  return _connectionCache;
-}
+// normalizeCompanyName imported from utils/normalize.js
+// getLinkedInData imported from data/store.js
 
 function getConnectionsForCompany(companyName) {
   const data = getLinkedInData();
@@ -827,8 +769,7 @@ function importLinkedInCSV(input) {
       total: connections.length,
       connections: connections
     };
-    _connectionCache = data;
-    localStorage.setItem('ili_linkedin_connections', JSON.stringify(data));
+    saveLinkedInData(data);
     renderNetworkMap();
     renderPipeline();
     renderTierList();
@@ -837,26 +778,7 @@ function importLinkedInCSV(input) {
   reader.readAsText(file);
 }
 
-function parseCSVLine(line) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (i + 1 < line.length && line[i+1] === '"') { current += '"'; i++; }
-        else inQuotes = false;
-      } else { current += ch; }
-    } else {
-      if (ch === '"') inQuotes = true;
-      else if (ch === ',') { result.push(current); current = ''; }
-      else current += ch;
-    }
-  }
-  result.push(current);
-  return result;
-}
+// parseCSVLine imported from utils/csv.js
 
 function renderNetworkMap() {
   const container = document.getElementById('networkMap');
@@ -1084,37 +1006,9 @@ async function openArtifactFile(company, fileName) {
   } catch (e) { console.error('Open artifact failed:', e); }
 }
 
-function detectArtifactType(fileName) {
-  const ext = fileName.split('.').pop().toLowerCase();
-  if (['pdf', 'docx', 'doc'].includes(ext)) return 'resume';
-  if (['pptx', 'ppt', 'key'].includes(ext)) return 'slides';
-  if (ext === 'html' && fileName.includes('research')) return 'research_brief';
-  if (['md', 'txt'].includes(ext)) return 'notes';
-  return 'other';
-}
+// detectArtifactType, artifactTypeIcon, formatFileSize imported from utils/format.js
 
-function artifactTypeIcon(type) {
-  const icons = { resume: '📄', research_brief: '🔬', deep_research: '🔍', slides: '📊', notes: '📝', other: '📎' };
-  return icons[type] || '📎';
-}
-
-function formatFileSize(bytes) {
-  if (!bytes) return '';
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB';
-  return (bytes / 1048576).toFixed(1) + ' MB';
-}
-
-function getArtifactIndex() {
-  try { return JSON.parse(localStorage.getItem('ili_artifacts')) || { artifacts: [] }; }
-  catch { return { artifacts: [] }; }
-}
-function saveArtifactIndex(index) {
-  localStorage.setItem('ili_artifacts', JSON.stringify(index));
-}
-function getCompanyArtifacts(company) {
-  return getArtifactIndex().artifacts.filter(a => a.company === company);
-}
+// getArtifactIndex, saveArtifactIndex, getCompanyArtifacts imported from data/store.js
 
 async function syncFolderToIndex() {
   const root = await getArtifactsHandle(false);
@@ -2799,3 +2693,29 @@ try {
 } catch(e) { console.error('[Dashboard INIT error]', e); }
 // Init artifacts (async, may need to verify handle)
 initArtifacts();
+
+// ─── EXPOSE FUNCTIONS TO WINDOW (for onclick handlers in HTML) ──────────
+// Functions referenced by onclick/onchange in index.html or dynamically generated HTML
+Object.assign(window, {
+  // Theme
+  cycleTheme,
+  // Navigation
+  switchView,
+  // Pipeline
+  applyFilter, clearFilter, moveStage,
+  openAddModal, openAddModalCo, closeModal, saveRole,
+  openEditModal, closeEditModal, updateRole, deleteRole,
+  // Tiers
+  openCoManager, closeCoManager, addCompany, deleteCompany, recheckCompany, toggleEditMode, removeCompanyFromTier,
+  // Research
+  openResearchModal, closeResearchModal, generateResearchBrief, generateCompanyProfile,
+  reopenBrief, rerunBrief,
+  // Connections
+  openConnPanel, closeConnPanel, importLinkedInCSV,
+  // Artifacts
+  selectArtifactsFolder, uploadArtifactFor, deleteArtifactFile, openArtifactFile, handleArtifactUpload,
+  // Actions & nudges
+  refreshNudges, markNudgeDone, saveCheck,
+  // Company views
+  filterCompanyByTier, filterCompanyCards, renderCompanyProfileArtifacts,
+});
