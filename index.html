@@ -3136,7 +3136,7 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
     if(!resumeData)return alert('Resume data not ready yet.');
     const rd=resumeData;
     let h='<!DOCTYPE html><html><head><style>';
-    h+='@page{size:letter;margin:0.5in 0.625in}*{box-sizing:border-box;margin:0;padding:0}';
+    h+='@page{size:letter;margin:0.5in 0.625in}@media print{@page{margin:0.5in 0.625in}}*{box-sizing:border-box;margin:0;padding:0}';
     h+='body{font-family:Arial,sans-serif;color:#1a1a1a;font-size:8.5pt;line-height:1.35}';
     h+='.name{font-size:20pt;font-weight:bold;color:#1f4e79}.contact{font-size:8.5pt;color:#444;margin:2pt 0 5pt}';
     h+='.divider{border-bottom:2px solid #2e75b6;margin:4pt 0 6pt}.sec-hdr{font-size:9pt;font-weight:bold;color:#1f4e79;margin:4pt 0 3pt}';
@@ -3167,7 +3167,7 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
     if(rd.publication){h+='<div class="divider"></div><div class="sec-hdr">PUBLICATION</div><div style="font-size:8.5pt"><strong>'+rd.publication.title+'</strong> | '+rd.publication.venue+'</div>';if(rd.publication.description)h+='<div style="font-size:8pt;margin-top:2pt">'+rd.publication.description+'</div>';}
     h+='</body></html>';
     const w=window.open('','_blank');
-    if(w){w.document.write(h);w.document.close();setTimeout(function(){w.print();},500);}
+    if(w){w.document.write(h);w.document.close();w.document.title='Ili_Selinger_Resume';setTimeout(function(){w.print();},500);}
   }
   async function generateDocx(){
     if(!resumeData)return alert('Resume data not ready yet.');
