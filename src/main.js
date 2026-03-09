@@ -1303,8 +1303,8 @@ A quick checklist for after each interview round:
     if(!resumeData)return alert('Resume data not ready yet.');
     const rd=resumeData;
     let h='<!DOCTYPE html><html><head><style>';
-    h+='@page{size:letter;margin:0.5in 0.625in}@media print{@page{margin:0.5in 0.625in}}*{box-sizing:border-box;margin:0;padding:0}';
-    h+='body{font-family:Arial,sans-serif;color:#1a1a1a;font-size:8.5pt;line-height:1.35}';
+    h+='@page{size:letter;margin:0}@media print{@page{margin:0}}*{box-sizing:border-box;margin:0;padding:0}';
+    h+='body{font-family:Arial,sans-serif;color:#1a1a1a;font-size:8.5pt;line-height:1.35;padding:0.5in 0.625in}';
     h+='.name{font-size:20pt;font-weight:bold;color:#1f4e79}.contact{font-size:8.5pt;color:#444;margin:2pt 0 5pt}';
     h+='.divider{border-bottom:2px solid #2e75b6;margin:4pt 0 6pt}.sec-hdr{font-size:9pt;font-weight:bold;color:#1f4e79;margin:4pt 0 3pt}';
     h+='.summary{font-size:8.5pt;line-height:1.4;margin-bottom:2pt}.skills{font-size:8pt;color:#444;font-style:italic;margin-bottom:4pt}';
@@ -1411,8 +1411,7 @@ A quick checklist for after each interview round:
           children:children
         }]
       });
-      const buffer=await Packer.toBuffer(doc);
-      const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+      const blob=await Packer.toBlob(doc);
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');
       a.href=url;a.download='Ili_Selinger_Resume_'+${JSON.stringify(company)}.replace(/\\W+/g,'_')+'_'+${JSON.stringify(role)}.replace(/\\W+/g,'_')+'.docx';
