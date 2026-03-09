@@ -19,7 +19,7 @@ export function renderContactLog() {
   }
 
   const today = new Date(); today.setHours(0,0,0,0);
-  const cmLabel = { email:'✉️ Email', linkedin:'💼 LinkedIn', other:'💬 Other' };
+  const cmLabel = { email:'\u2709\uFE0F Email', linkedin:'\u{1F4BC} LinkedIn', other:'\u{1F4AC} Other' };
 
   function mostRecent(r) {
     const ds = [];
@@ -37,9 +37,9 @@ export function renderContactLog() {
   container.innerHTML = sorted.map(r => {
     let stageEventHtml = '';
     if (r.stage==='outreach' && r.date) {
-      stageEventHtml = `<span class="contact-log-applied">📨 Outreach <strong>${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</strong></span>`;
+      stageEventHtml = `<span class="contact-log-applied">\u{1F4E8} Outreach <strong>${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</strong></span>`;
     } else if (appliedStages.has(r.stage) && r.date) {
-      stageEventHtml = `<span class="contact-log-applied">📤 Applied <strong>${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</strong></span>`;
+      stageEventHtml = `<span class="contact-log-applied">\u{1F4E4} Applied <strong>${new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</strong></span>`;
     }
     let contactHtml = '';
     if (r.lastContactedDate) {
@@ -48,12 +48,12 @@ export function renderContactLog() {
       const stale = days>=7;
       const label = days===0?'today':days===1?'1d ago':`${days}d ago`;
       const mb = r.lastContactedMethod ? `<span class="mini-badge contact-${r.lastContactedMethod}">${cmLabel[r.lastContactedMethod]}</span> ` : '';
-      contactHtml = `<span class="${stale?'contact-stale':'contact-log-date'}">${mb}${stale?'⚠️ ':''}${label}</span>`;
+      contactHtml = `<span class="${stale?'contact-stale':'contact-log-date'}">${mb}${stale?'\u26A0\uFE0F ':''}${label}</span>`;
     } else {
       contactHtml = `<span class="contact-log-never">no outreach logged</span>`;
     }
-    const refBadge = r.referral==='referred' ? `<span class="mini-badge referral-badge-referred">🤝</span> `
-      : r.referral==='cold' ? `<span class="mini-badge referral-badge-cold">🧊</span> ` : '';
+    const refBadge = r.referral==='referred' ? `<span class="mini-badge referral-badge-referred">\u{1F91D}</span> `
+      : r.referral==='cold' ? `<span class="mini-badge referral-badge-cold">\u{1F9CA}</span> ` : '';
     const stageBadge = STAGE_BADGE[r.stage]
       ? `<span style="font-size:9px;background:#f0f4f8;padding:1px 5px;border-radius:6px;color:#4a5568">${STAGE_BADGE[r.stage].title}</span>` : '';
 
@@ -62,7 +62,7 @@ export function renderContactLog() {
       <div class="contact-log-role">${r.roleTitle} ${stageBadge}</div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         ${refBadge}${stageEventHtml}
-        ${stageEventHtml&&contactHtml?'<span style="color:#e2e8f0;font-size:9px">·</span>':''}
+        ${stageEventHtml&&contactHtml?'<span style="color:#e2e8f0;font-size:9px">\u00B7</span>':''}
         ${contactHtml}
       </div>
     </div>`;
