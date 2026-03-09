@@ -864,7 +864,7 @@ function generateResearchBrief() {
       + '<div class="sec-hd"><span class="sec-em">' + s.emoji + '</span><h2>' + s.title + '</h2>' + refreshBtn + '</div>'
       + '<p class="sec-hint">' + s.hint + '</p>'
       + '<div class="sec-content" id="content-' + s.id + '">'
-      + (apiKey ? '<p class="streaming-msg">\u23F3 Researching\u2026</p>' : '<p class="empty-msg">Waiting for Claude to research this\u2026</p>')
+      + (apiKey ? '<p class="streaming-msg">\u23F3 Researching\u2026</p>' : '<p class="empty-msg">\u23F3 Loading\u2026</p>')
       + '</div>'
       + '<div class="notes-wrap">'
       + '<div class="notes-label">My Notes</div>'
@@ -906,7 +906,220 @@ function generateResearchBrief() {
       .replace(/\\n{2,}/g,'\\n');
   }`;
 
-  // Streaming API call function
+  // Rendering functions (always available, even without API key)
+  const renderFns = `
+  let resumeData=null;
+  function renderSections(text){
+    const MARKERS=[/^## 1:/m,/^## 2:/m,/^## 3:/m,/^## 4:/m,/^## 5:/m,/^## 6:/m,/^## 7:/m,/^## 8:/m,/^## 9:/m,/^## 10:/m];
+    const IDS=['s1','s2','s3','s4','s5','s6','s7','s8','s9','s10'];
+    const positions=MARKERS.map(function(m){const match=text.match(m);return match?text.indexOf(match[0]):-1;});
+    for(let i=0;i<10;i++){
+      if(positions[i]===-1)continue;
+      const start=text.indexOf('\\n',positions[i]);
+      if(start===-1)continue;
+      const end=(i<9&&positions[i+1]!==-1)?positions[i+1]:text.length;
+      const content=text.slice(start+1,end).trim();
+      if(!content)continue;
+      const el=document.getElementById('content-'+IDS[i]);
+      if(!el)continue;
+      // Section 7 = Tailored Resume \u2014 parse JSON and show resume preview
+      if(IDS[i]==='s7'){
+        try{
+          const jsonMatch=content.match(/\\\`\\\`\\\`json\\n([\\s\\S]*?)\\\`\\\`\\\`/)||content.match(/\\{[\\s\\S]*"summary"[\\s\\S]*\\}/);
+          const jsonStr=jsonMatch?(jsonMatch[1]||jsonMatch[0]):content;
+          resumeData=JSON.parse(jsonStr);
+          renderResumePreview(el,resumeData);
+        }catch(e){
+          // Still streaming \u2014 show a friendly loading state, not raw JSON
+          if(!el.querySelector('.resume-loading')){
+            el.innerHTML='<div class="resume-loading" style="text-align:center;padding:40px 20px;color:#64748b;"><div style="font-size:28px;margin-bottom:12px;">\u{1F4C4}</div><div style="font-size:13px;font-weight:600;">Building your tailored resume\u2026</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Reframing experience for this role</div><div style="margin:16px auto 0;width:200px;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:0%;background:linear-gradient(90deg,#2e75b6,#1f4e79);border-radius:2px;animation:resumeProgress 25s ease-out forwards;"></div></div><style>@keyframes resumeProgress{0%{width:0%}30%{width:40%}60%{width:65%}80%{width:80%}100%{width:92%}}</style></div>';
+          }
+        }
+      }else{
+        el.innerHTML=mdToHtml(content);
+      }
+      const sec=document.getElementById(IDS[i]);
+      if(sec)sec.classList.add('done');
+    }
+  }
+  function renderResumePreview(el,rd){
+    // Validate that we have real data \u2014 reject if key fields are missing
+    if(!rd || !rd.summary || rd.summary==='undefined' || !rd.experience || !rd.experience.length){
+      el.innerHTML='<div style="text-align:center;padding:30px 20px;color:#dc2626;"><div style="font-size:13px;font-weight:600;">Resume data incomplete</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Click \u{1F504} to regenerate this section</div></div>';
+      resumeData=null;
+      return;
+    }
+    // Coerce summary to string in case API returns an object
+    if(typeof rd.summary==='object') rd.summary=rd.summary.text||rd.summary.content||JSON.stringify(rd.summary);
+    rd.summary=String(rd.summary||'');
+    let h='<div class="resume-preview" style="font-family:Arial,sans-serif;max-width:700px;border:1px solid #e2e8f0;border-radius:8px;padding:24px;background:#fff;margin-bottom:14px">';
+    h+='<div style="font-size:20px;font-weight:bold;color:#1f4e79">Ili Selinger</div>';
+    h+='<div style="font-size:9px;color:#444;margin:3px 0 8px">ilan.selinger@gmail.com \u00B7 510-332-0543 \u00B7 Walnut Creek, CA \u00B7 linkedin.com/in/ilan-selinger</div>';
+    h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:10px"></div>';
+    h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:4px">SUMMARY</div>';
+    h+='<div style="font-size:9px;color:#1a1a1a;line-height:1.5;margin-bottom:4px">'+(rd.summary||'')+'</div>';
+    if(rd.skills) h+='<div style="font-size:8px;color:#444;font-style:italic;margin-bottom:8px">'+rd.skills+'</div>';
+    h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:8px"></div>';
+    h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:6px">EXPERIENCE</div>';
+    (rd.experience||[]).forEach(function(exp){
+      if(!exp||!exp.company)return;
+      h+='<div style="margin-bottom:8px">';
+      h+='<div style="font-size:10px;color:#1a1a1a"><strong>'+(exp.company||'')+'</strong> <span style="color:#999">|</span> <strong>'+(exp.title||'')+'</strong>';
+      if(exp.level) h+=' <span style="color:#888;font-weight:normal;font-size:9px">'+exp.level+'</span>';
+      h+=' <span style="color:#999">|</span> <span style="color:#444">'+(exp.dates||'')+'</span></div>';
+      if(exp.subtitle) h+='<div style="font-size:8px;color:#444;font-style:italic;margin:2px 0">'+exp.subtitle+'</div>';
+      if(exp.bullets&&exp.bullets.length){
+        h+='<ul style="margin:3px 0 0 16px;padding:0;font-size:8.5px;line-height:1.5;color:#1a1a1a">';
+        exp.bullets.forEach(function(b){ if(b) h+='<li style="margin:1px 0">'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>'; });
+        h+='</ul>';
+      }
+      h+='</div>';
+    });
+    if(rd.certs){
+      h+='<div style="border-bottom:2px solid #2e75b6;margin:8px 0"></div>';
+      h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:3px">CERTIFICATIONS & EDUCATION</div>';
+      h+='<div style="font-size:8.5px;color:#1a1a1a">'+rd.certs+'</div>';
+    }
+    if(rd.publication){
+      h+='<div style="border-bottom:2px solid #2e75b6;margin:8px 0"></div>';
+      h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:3px">PUBLICATION</div>';
+      h+='<div style="font-size:8.5px;color:#1a1a1a"><strong>'+(rd.publication.title||'')+'</strong> | '+(rd.publication.venue||'')+'</div>';
+      if(rd.publication.description) h+='<div style="font-size:8px;color:#1a1a1a;margin-top:2px">'+rd.publication.description+'</div>';
+    }
+    h+='</div>';
+    h+='<div style="display:flex;gap:10px;flex-wrap:wrap">';
+    h+='<button onclick="generateDocx()" style="padding:8px 18px;background:#2e75b6;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">\u{1F4E5} Download Word (.docx)</button>';
+    h+='<button onclick="printResume()" style="padding:8px 18px;background:#1a3a5c;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">\u{1F5A8}\uFE0F Print / Save PDF</button>';
+    h+='</div>';
+    el.innerHTML=h;
+  }
+  function printResume(){
+    if(!resumeData)return alert('Resume data not ready yet.');
+    const rd=resumeData;
+    let h='<!DOCTYPE html><html><head><style>';
+    h+='@page{size:letter;margin:0}@media print{@page{margin:0}}*{box-sizing:border-box;margin:0;padding:0}';
+    h+='body{font-family:Arial,sans-serif;color:#1a1a1a;font-size:8.5pt;line-height:1.35;padding:0.5in 0.625in}';
+    h+='.name{font-size:20pt;font-weight:bold;color:#1f4e79}.contact{font-size:8.5pt;color:#444;margin:2pt 0 5pt}';
+    h+='.divider{border-bottom:2px solid #2e75b6;margin:4pt 0 6pt}.sec-hdr{font-size:9pt;font-weight:bold;color:#1f4e79;margin:4pt 0 3pt}';
+    h+='.summary{font-size:8.5pt;line-height:1.4;margin-bottom:2pt}.skills{font-size:8pt;color:#444;font-style:italic;margin-bottom:4pt}';
+    h+='.exp-hdr{font-size:10pt;margin:4pt 0 1pt}.exp-sub{font-size:8.5pt;color:#444;font-style:italic;margin:1pt 0}';
+    h+='ul{margin:2pt 0 0 16pt;padding:0}li{margin:1pt 0;font-size:8.5pt;line-height:1.35}';
+    h+='</style></head><body>';
+    h+='<div class="name">Ili Selinger</div>';
+    h+='<div class="contact">ilan.selinger@gmail.com \u00B7 510-332-0543 \u00B7 Walnut Creek, CA \u00B7 <a href="https://linkedin.com/in/ilan-selinger">linkedin.com/in/ilan-selinger</a></div>';
+    h+='<div class="divider"></div>';
+    h+='<div class="sec-hdr">SUMMARY</div>';
+    h+='<div class="summary">'+rd.summary+'</div>';
+    if(rd.skills) h+='<div class="skills">'+rd.skills+'</div>';
+    h+='<div class="divider"></div>';
+    h+='<div class="sec-hdr">EXPERIENCE</div>';
+    (rd.experience||[]).forEach(function(exp){
+      h+='<div class="exp-hdr"><strong>'+exp.company+'</strong> <span style="color:#999">|</span> <strong>'+exp.title+'</strong>';
+      if(exp.level) h+=' <span style="color:#888;font-weight:normal;font-size:8.5pt">'+exp.level+'</span>';
+      h+=' <span style="color:#999">|</span> <span style="color:#444">'+exp.dates+'</span></div>';
+      if(exp.subtitle) h+='<div class="exp-sub">'+exp.subtitle+'</div>';
+      if(exp.bullets&&exp.bullets.length){
+        h+='<ul>';
+        exp.bullets.forEach(function(b){ h+='<li>'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>'; });
+        h+='</ul>';
+      }
+    });
+    if(rd.certs){h+='<div class="divider"></div><div class="sec-hdr">CERTIFICATIONS & EDUCATION</div><div style="font-size:8.5pt">'+rd.certs+'</div>';}
+    if(rd.publication){h+='<div class="divider"></div><div class="sec-hdr">PUBLICATION</div><div style="font-size:8.5pt"><strong>'+rd.publication.title+'</strong> | '+rd.publication.venue+'</div>';if(rd.publication.description)h+='<div style="font-size:8pt;margin-top:2pt">'+rd.publication.description+'</div>';}
+    h+='</body></html>';
+    const w=window.open('','_blank');
+    if(w){w.document.write(h);w.document.close();w.document.title='Ili_Selinger_Resume';setTimeout(function(){w.print();},500);}
+  }
+  async function generateDocx(){
+    if(!resumeData)return alert('Resume data not ready yet.');
+    const statusEl=document.getElementById('stream-status');
+    statusEl.textContent='\u{1F4C4} Generating Word document\u2026';
+    statusEl.style.display='block';
+    try{
+      // Load docx library from CDN
+      if(!window.docx){
+        await new Promise(function(resolve,reject){
+          const s=document.createElement('script');
+          s.src='https://unpkg.com/docx@9.1.1/build/index.umd.js';
+          s.onload=resolve;s.onerror=reject;document.head.appendChild(s);
+        });
+      }
+      const{Document,Packer,Paragraph,TextRun,AlignmentType,LevelFormat,ExternalHyperlink,BorderStyle}=window.docx;
+      const rd=resumeData;
+      // Build document children
+      const children=[];
+      // Name
+      children.push(new Paragraph({spacing:{after:10,before:0},alignment:AlignmentType.LEFT,children:[new TextRun({text:'Ili Selinger',font:'Arial',bold:true,color:'1f4e79',size:40})]}));
+      // Contact
+      children.push(new Paragraph({spacing:{after:60,before:0},children:[new TextRun({text:'ilan.selinger@gmail.com  \u00B7  510-332-0543  \u00B7  Walnut Creek, CA  \u00B7  ',font:'Arial',color:'444444',size:17}),new ExternalHyperlink({children:[new TextRun({text:'linkedin.com/in/ilan-selinger',font:'Arial',color:'1155cc',size:17,style:'Hyperlink'})],link:'https://linkedin.com/in/ilan-selinger'})]}));
+      // Blue divider
+      children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
+      // SUMMARY header
+      children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'SUMMARY',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
+      // Summary text
+      children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.summary,font:'Arial',color:'1a1a1a',size:17})]}));
+      // Skills italic
+      if(rd.skills)children.push(new Paragraph({spacing:{after:60,before:0},children:[new TextRun({text:rd.skills,font:'Arial',italics:true,color:'444444',size:16})]}));
+      // Blue divider
+      children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
+      // EXPERIENCE header
+      children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'EXPERIENCE',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
+      // Experience entries
+      (rd.experience||[]).forEach(function(exp){
+        const titleRuns=[
+          new TextRun({text:exp.company,font:'Arial',bold:true,color:'1a1a1a',size:20}),
+          new TextRun({text:'  |  ',font:'Arial',color:'999999',size:19}),
+          new TextRun({text:exp.title,font:'Arial',bold:true,color:'1a1a1a',size:19})
+        ];
+        if(exp.level)titleRuns.push(new TextRun({text:'  '+exp.level,font:'Arial',color:'888888',size:17}));
+        titleRuns.push(new TextRun({text:'  |  ',font:'Arial',color:'999999',size:19}));
+        titleRuns.push(new TextRun({text:exp.dates,font:'Arial',color:'444444',size:19}));
+        children.push(new Paragraph({spacing:{after:16,before:40},children:titleRuns}));
+        if(exp.subtitle)children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:exp.subtitle,font:'Arial',italics:true,color:'444444',size:17})]}));
+        (exp.bullets||[]).forEach(function(bullet){
+          // Parse **bold** markers
+          const parts=bullet.split(/\\*\\*(.+?)\\*\\*/g);
+          const runs=parts.map(function(p,idx){
+            return new TextRun({text:p,font:'Arial',bold:idx%2===1,color:'1a1a1a',size:17});
+          });
+          children.push(new Paragraph({spacing:{after:18,before:18,line:240,lineRule:'auto'},indent:{left:480,hanging:240},numbering:{reference:'bullets',level:0},children:runs}));
+        });
+      });
+      // CERTS
+      if(rd.certs){
+        children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
+        children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'CERTIFICATIONS & EDUCATION',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
+        children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.certs,font:'Arial',color:'1a1a1a',size:17})]}));
+      }
+      // PUBLICATION
+      if(rd.publication){
+        children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
+        children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'PUBLICATION',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
+        children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.publication.title,font:'Arial',bold:true,color:'1a1a1a',size:17}),new TextRun({text:' | '+rd.publication.venue,font:'Arial',color:'1a1a1a',size:17})]}));
+        if(rd.publication.description)children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.publication.description,font:'Arial',color:'1a1a1a',size:17})]}));
+      }
+      const doc=new Document({
+        numbering:{config:[{reference:'bullets',levels:[{level:0,format:LevelFormat.BULLET,text:'\\u2022',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:480,hanging:240}}}}]}]},
+        sections:[{
+          properties:{page:{size:{width:12240,height:15840},margin:{top:500,bottom:500,left:900,right:900}}},
+          children:children
+        }]
+      });
+      const blob=await Packer.toBlob(doc);
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download='Ili_Selinger_Resume_'+${JSON.stringify(company)}.replace(/\\W+/g,'_')+'_'+${JSON.stringify(role)}.replace(/\\W+/g,'_')+'.docx';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+      statusEl.textContent='\u2705 Resume downloaded!';
+      setTimeout(function(){statusEl.style.display='none';},3000);
+    }catch(err){
+      statusEl.textContent='\u274C '+err.message;
+      statusEl.style.background='rgba(220,38,38,.15)';
+      statusEl.style.color='#dc2626';
+      console.error('DOCX generation error:',err);
+    }
+  }
+  `;
   const streamFn = apiKey ? `
   async function streamResearch(){
     const statusEl=document.getElementById('stream-status');
@@ -1166,40 +1379,6 @@ A quick checklist for after each interview round:
       statusEl.innerHTML+=' <button onclick="streamResearch()" style="margin-left:8px;padding:3px 10px;border-radius:5px;border:1px solid #dc2626;background:white;color:#dc2626;font-size:11px;cursor:pointer">Retry</button>';
     }
   }
-  let resumeData=null;
-  function renderSections(text){
-    const MARKERS=[/^## 1:/m,/^## 2:/m,/^## 3:/m,/^## 4:/m,/^## 5:/m,/^## 6:/m,/^## 7:/m,/^## 8:/m,/^## 9:/m,/^## 10:/m];
-    const IDS=['s1','s2','s3','s4','s5','s6','s7','s8','s9','s10'];
-    const positions=MARKERS.map(function(m){const match=text.match(m);return match?text.indexOf(match[0]):-1;});
-    for(let i=0;i<10;i++){
-      if(positions[i]===-1)continue;
-      const start=text.indexOf('\\n',positions[i]);
-      if(start===-1)continue;
-      const end=(i<9&&positions[i+1]!==-1)?positions[i+1]:text.length;
-      const content=text.slice(start+1,end).trim();
-      if(!content)continue;
-      const el=document.getElementById('content-'+IDS[i]);
-      if(!el)continue;
-      // Section 7 = Tailored Resume \u2014 parse JSON and show resume preview
-      if(IDS[i]==='s7'){
-        try{
-          const jsonMatch=content.match(/\\\`\\\`\\\`json\\n([\\s\\S]*?)\\\`\\\`\\\`/)||content.match(/\\{[\\s\\S]*"summary"[\\s\\S]*\\}/);
-          const jsonStr=jsonMatch?(jsonMatch[1]||jsonMatch[0]):content;
-          resumeData=JSON.parse(jsonStr);
-          renderResumePreview(el,resumeData);
-        }catch(e){
-          // Still streaming \u2014 show a friendly loading state, not raw JSON
-          if(!el.querySelector('.resume-loading')){
-            el.innerHTML='<div class="resume-loading" style="text-align:center;padding:40px 20px;color:#64748b;"><div style="font-size:28px;margin-bottom:12px;">\u{1F4C4}</div><div style="font-size:13px;font-weight:600;">Building your tailored resume\u2026</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Reframing experience for this role</div><div style="margin:16px auto 0;width:200px;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:0%;background:linear-gradient(90deg,#2e75b6,#1f4e79);border-radius:2px;animation:resumeProgress 25s ease-out forwards;"></div></div><style>@keyframes resumeProgress{0%{width:0%}30%{width:40%}60%{width:65%}80%{width:80%}100%{width:92%}}</style></div>';
-          }
-        }
-      }else{
-        el.innerHTML=mdToHtml(content);
-      }
-      const sec=document.getElementById(IDS[i]);
-      if(sec)sec.classList.add('done');
-    }
-  }
   async function refreshSection(sid){
     var aKey='${apiKey.replace(/'/g,"\\'")}';
     if(!aKey){alert('No API key.');return;}
@@ -1248,188 +1427,13 @@ A quick checklist for after each interview round:
       if(mi!==-1){var ni=full.indexOf(nk,mi);full=full.slice(0,mi)+mk+' '+sNames[sid]+'\\n'+txt+'\\n'+(ni!==-1?full.slice(ni):'');localStorage.setItem('${storageKey}_ai_research',full);}
     }catch(err){el.innerHTML='<p style="color:#dc2626">Error: '+err.message+' <button onclick="refreshSection(\\''+sid+'\\')">Retry</button></p>';}
   }
-  function renderResumePreview(el,rd){
-    // Validate that we have real data \u2014 reject if key fields are missing
-    if(!rd || !rd.summary || rd.summary==='undefined' || !rd.experience || !rd.experience.length){
-      el.innerHTML='<div style="text-align:center;padding:30px 20px;color:#dc2626;"><div style="font-size:13px;font-weight:600;">Resume data incomplete</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Click \u{1F504} to regenerate this section</div></div>';
-      resumeData=null;
-      return;
-    }
-    // Coerce summary to string in case API returns an object
-    if(typeof rd.summary==='object') rd.summary=rd.summary.text||rd.summary.content||JSON.stringify(rd.summary);
-    rd.summary=String(rd.summary||'');
-    let h='<div class="resume-preview" style="font-family:Arial,sans-serif;max-width:700px;border:1px solid #e2e8f0;border-radius:8px;padding:24px;background:#fff;margin-bottom:14px">';
-    h+='<div style="font-size:20px;font-weight:bold;color:#1f4e79">Ili Selinger</div>';
-    h+='<div style="font-size:9px;color:#444;margin:3px 0 8px">ilan.selinger@gmail.com \u00B7 510-332-0543 \u00B7 Walnut Creek, CA \u00B7 linkedin.com/in/ilan-selinger</div>';
-    h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:10px"></div>';
-    h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:4px">SUMMARY</div>';
-    h+='<div style="font-size:9px;color:#1a1a1a;line-height:1.5;margin-bottom:4px">'+(rd.summary||'')+'</div>';
-    if(rd.skills) h+='<div style="font-size:8px;color:#444;font-style:italic;margin-bottom:8px">'+rd.skills+'</div>';
-    h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:8px"></div>';
-    h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:6px">EXPERIENCE</div>';
-    (rd.experience||[]).forEach(function(exp){
-      if(!exp||!exp.company)return;
-      h+='<div style="margin-bottom:8px">';
-      h+='<div style="font-size:10px;color:#1a1a1a"><strong>'+(exp.company||'')+'</strong> <span style="color:#999">|</span> <strong>'+(exp.title||'')+'</strong>';
-      if(exp.level) h+=' <span style="color:#888;font-weight:normal;font-size:9px">'+exp.level+'</span>';
-      h+=' <span style="color:#999">|</span> <span style="color:#444">'+(exp.dates||'')+'</span></div>';
-      if(exp.subtitle) h+='<div style="font-size:8px;color:#444;font-style:italic;margin:2px 0">'+exp.subtitle+'</div>';
-      if(exp.bullets&&exp.bullets.length){
-        h+='<ul style="margin:3px 0 0 16px;padding:0;font-size:8.5px;line-height:1.5;color:#1a1a1a">';
-        exp.bullets.forEach(function(b){ if(b) h+='<li style="margin:1px 0">'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>'; });
-        h+='</ul>';
-      }
-      h+='</div>';
-    });
-    if(rd.certs){
-      h+='<div style="border-bottom:2px solid #2e75b6;margin:8px 0"></div>';
-      h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:3px">CERTIFICATIONS & EDUCATION</div>';
-      h+='<div style="font-size:8.5px;color:#1a1a1a">'+rd.certs+'</div>';
-    }
-    if(rd.publication){
-      h+='<div style="border-bottom:2px solid #2e75b6;margin:8px 0"></div>';
-      h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:3px">PUBLICATION</div>';
-      h+='<div style="font-size:8.5px;color:#1a1a1a"><strong>'+(rd.publication.title||'')+'</strong> | '+(rd.publication.venue||'')+'</div>';
-      if(rd.publication.description) h+='<div style="font-size:8px;color:#1a1a1a;margin-top:2px">'+rd.publication.description+'</div>';
-    }
-    h+='</div>';
-    h+='<div style="display:flex;gap:10px;flex-wrap:wrap">';
-    h+='<button onclick="generateDocx()" style="padding:8px 18px;background:#2e75b6;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">\u{1F4E5} Download Word (.docx)</button>';
-    h+='<button onclick="printResume()" style="padding:8px 18px;background:#1a3a5c;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">\u{1F5A8}\uFE0F Print / Save PDF</button>';
-    h+='</div>';
-    el.innerHTML=h;
-  }
-  function printResume(){
-    if(!resumeData)return alert('Resume data not ready yet.');
-    const rd=resumeData;
-    let h='<!DOCTYPE html><html><head><style>';
-    h+='@page{size:letter;margin:0}@media print{@page{margin:0}}*{box-sizing:border-box;margin:0;padding:0}';
-    h+='body{font-family:Arial,sans-serif;color:#1a1a1a;font-size:8.5pt;line-height:1.35;padding:0.5in 0.625in}';
-    h+='.name{font-size:20pt;font-weight:bold;color:#1f4e79}.contact{font-size:8.5pt;color:#444;margin:2pt 0 5pt}';
-    h+='.divider{border-bottom:2px solid #2e75b6;margin:4pt 0 6pt}.sec-hdr{font-size:9pt;font-weight:bold;color:#1f4e79;margin:4pt 0 3pt}';
-    h+='.summary{font-size:8.5pt;line-height:1.4;margin-bottom:2pt}.skills{font-size:8pt;color:#444;font-style:italic;margin-bottom:4pt}';
-    h+='.exp-hdr{font-size:10pt;margin:4pt 0 1pt}.exp-sub{font-size:8.5pt;color:#444;font-style:italic;margin:1pt 0}';
-    h+='ul{margin:2pt 0 0 16pt;padding:0}li{margin:1pt 0;font-size:8.5pt;line-height:1.35}';
-    h+='</style></head><body>';
-    h+='<div class="name">Ili Selinger</div>';
-    h+='<div class="contact">ilan.selinger@gmail.com \u00B7 510-332-0543 \u00B7 Walnut Creek, CA \u00B7 <a href="https://linkedin.com/in/ilan-selinger">linkedin.com/in/ilan-selinger</a></div>';
-    h+='<div class="divider"></div>';
-    h+='<div class="sec-hdr">SUMMARY</div>';
-    h+='<div class="summary">'+rd.summary+'</div>';
-    if(rd.skills) h+='<div class="skills">'+rd.skills+'</div>';
-    h+='<div class="divider"></div>';
-    h+='<div class="sec-hdr">EXPERIENCE</div>';
-    (rd.experience||[]).forEach(function(exp){
-      h+='<div class="exp-hdr"><strong>'+exp.company+'</strong> <span style="color:#999">|</span> <strong>'+exp.title+'</strong>';
-      if(exp.level) h+=' <span style="color:#888;font-weight:normal;font-size:8.5pt">'+exp.level+'</span>';
-      h+=' <span style="color:#999">|</span> <span style="color:#444">'+exp.dates+'</span></div>';
-      if(exp.subtitle) h+='<div class="exp-sub">'+exp.subtitle+'</div>';
-      if(exp.bullets&&exp.bullets.length){
-        h+='<ul>';
-        exp.bullets.forEach(function(b){ h+='<li>'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>'; });
-        h+='</ul>';
-      }
-    });
-    if(rd.certs){h+='<div class="divider"></div><div class="sec-hdr">CERTIFICATIONS & EDUCATION</div><div style="font-size:8.5pt">'+rd.certs+'</div>';}
-    if(rd.publication){h+='<div class="divider"></div><div class="sec-hdr">PUBLICATION</div><div style="font-size:8.5pt"><strong>'+rd.publication.title+'</strong> | '+rd.publication.venue+'</div>';if(rd.publication.description)h+='<div style="font-size:8pt;margin-top:2pt">'+rd.publication.description+'</div>';}
-    h+='</body></html>';
-    const w=window.open('','_blank');
-    if(w){w.document.write(h);w.document.close();w.document.title='Ili_Selinger_Resume';setTimeout(function(){w.print();},500);}
-  }
-  async function generateDocx(){
-    if(!resumeData)return alert('Resume data not ready yet.');
-    const statusEl=document.getElementById('stream-status');
-    statusEl.textContent='\u{1F4C4} Generating Word document\u2026';
-    statusEl.style.display='block';
-    try{
-      // Load docx library from CDN
-      if(!window.docx){
-        await new Promise(function(resolve,reject){
-          const s=document.createElement('script');
-          s.src='https://unpkg.com/docx@9.1.1/build/index.umd.js';
-          s.onload=resolve;s.onerror=reject;document.head.appendChild(s);
-        });
-      }
-      const{Document,Packer,Paragraph,TextRun,AlignmentType,LevelFormat,ExternalHyperlink,BorderStyle}=window.docx;
-      const rd=resumeData;
-      // Build document children
-      const children=[];
-      // Name
-      children.push(new Paragraph({spacing:{after:10,before:0},alignment:AlignmentType.LEFT,children:[new TextRun({text:'Ili Selinger',font:'Arial',bold:true,color:'1f4e79',size:40})]}));
-      // Contact
-      children.push(new Paragraph({spacing:{after:60,before:0},children:[new TextRun({text:'ilan.selinger@gmail.com  \u00B7  510-332-0543  \u00B7  Walnut Creek, CA  \u00B7  ',font:'Arial',color:'444444',size:17}),new ExternalHyperlink({children:[new TextRun({text:'linkedin.com/in/ilan-selinger',font:'Arial',color:'1155cc',size:17,style:'Hyperlink'})],link:'https://linkedin.com/in/ilan-selinger'})]}));
-      // Blue divider
-      children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
-      // SUMMARY header
-      children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'SUMMARY',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
-      // Summary text
-      children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.summary,font:'Arial',color:'1a1a1a',size:17})]}));
-      // Skills italic
-      if(rd.skills)children.push(new Paragraph({spacing:{after:60,before:0},children:[new TextRun({text:rd.skills,font:'Arial',italics:true,color:'444444',size:16})]}));
-      // Blue divider
-      children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
-      // EXPERIENCE header
-      children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'EXPERIENCE',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
-      // Experience entries
-      (rd.experience||[]).forEach(function(exp){
-        const titleRuns=[
-          new TextRun({text:exp.company,font:'Arial',bold:true,color:'1a1a1a',size:20}),
-          new TextRun({text:'  |  ',font:'Arial',color:'999999',size:19}),
-          new TextRun({text:exp.title,font:'Arial',bold:true,color:'1a1a1a',size:19})
-        ];
-        if(exp.level)titleRuns.push(new TextRun({text:'  '+exp.level,font:'Arial',color:'888888',size:17}));
-        titleRuns.push(new TextRun({text:'  |  ',font:'Arial',color:'999999',size:19}));
-        titleRuns.push(new TextRun({text:exp.dates,font:'Arial',color:'444444',size:19}));
-        children.push(new Paragraph({spacing:{after:16,before:40},children:titleRuns}));
-        if(exp.subtitle)children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:exp.subtitle,font:'Arial',italics:true,color:'444444',size:17})]}));
-        (exp.bullets||[]).forEach(function(bullet){
-          // Parse **bold** markers
-          const parts=bullet.split(/\\*\\*(.+?)\\*\\*/g);
-          const runs=parts.map(function(p,idx){
-            return new TextRun({text:p,font:'Arial',bold:idx%2===1,color:'1a1a1a',size:17});
-          });
-          children.push(new Paragraph({spacing:{after:18,before:18,line:240,lineRule:'auto'},indent:{left:480,hanging:240},numbering:{reference:'bullets',level:0},children:runs}));
-        });
-      });
-      // CERTS
-      if(rd.certs){
-        children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
-        children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'CERTIFICATIONS & EDUCATION',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
-        children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.certs,font:'Arial',color:'1a1a1a',size:17})]}));
-      }
-      // PUBLICATION
-      if(rd.publication){
-        children.push(new Paragraph({spacing:{after:40,before:15},border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'2e75b6',space:1}},children:[]}));
-        children.push(new Paragraph({spacing:{after:30,before:40},children:[new TextRun({text:'PUBLICATION',font:'Arial',bold:true,color:'1f4e79',size:18})]}));
-        children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.publication.title,font:'Arial',bold:true,color:'1a1a1a',size:17}),new TextRun({text:' | '+rd.publication.venue,font:'Arial',color:'1a1a1a',size:17})]}));
-        if(rd.publication.description)children.push(new Paragraph({spacing:{after:10,before:0},children:[new TextRun({text:rd.publication.description,font:'Arial',color:'1a1a1a',size:17})]}));
-      }
-      const doc=new Document({
-        numbering:{config:[{reference:'bullets',levels:[{level:0,format:LevelFormat.BULLET,text:'\\u2022',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:480,hanging:240}}}}]}]},
-        sections:[{
-          properties:{page:{size:{width:12240,height:15840},margin:{top:500,bottom:500,left:900,right:900}}},
-          children:children
-        }]
-      });
-      const blob=await Packer.toBlob(doc);
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;a.download='Ili_Selinger_Resume_'+${JSON.stringify(company)}.replace(/\\W+/g,'_')+'_'+${JSON.stringify(role)}.replace(/\\W+/g,'_')+'.docx';
-      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-      statusEl.textContent='\u2705 Resume downloaded!';
-      setTimeout(function(){statusEl.style.display='none';},3000);
-    }catch(err){
-      statusEl.textContent='\u274C '+err.message;
-      statusEl.style.background='rgba(220,38,38,.15)';
-      statusEl.style.color='#dc2626';
-      console.error('DOCX generation error:',err);
-    }
-  }
+  ` : '';
+  const cacheCheckFn = `
   // Check for cached research first
   const cached=localStorage.getItem('${storageKey}_ai_research');
   if(cached){renderSections(cached);document.querySelectorAll('.sec').forEach(function(s){s.classList.add('done');});document.getElementById('stream-status').textContent='\u{1F4E6} Loaded from cache';document.getElementById('stream-status').style.display='block';setTimeout(function(){document.getElementById('stream-status').style.display='none';},2000);}
-  else{streamResearch();}
-  ` : '';
+  else if(typeof streamResearch==='function'){streamResearch();}else{document.querySelectorAll('.sec').forEach(function(s){var c=s.querySelector('.sec-content');if(c&&c.querySelector('.empty-msg')){c.innerHTML='<p class="empty-msg">Enter your Claude API key in Settings to generate research.</p>';}});}
+  `;
 
   const pageJs = [
     mdToHtmlFn,
@@ -1558,7 +1562,7 @@ A quick checklist for after each interview round:
     + '  <div id="stream-status"></div>\n'
     + sectionsHtml + '\n'
     + '</main>\n'
-    + '<script>\n' + pageJs + '\n' + streamFn + '\n<\/script>\n'
+    + '<script>\n' + pageJs + '\n' + renderFns + '\n' + streamFn + '\n' + cacheCheckFn + '\n<\/script>\n'
     + '</body>\n</html>';
 
   // Open brief as HTML in a new tab
@@ -1635,6 +1639,294 @@ function rerunBrief(encoded) {
   if (iv) iv.value = b.interviewers || '';
   generateResearchBrief();
 }
+// \u2500\u2500\u2500 STANDALONE RESUME GENERATOR \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function generateStandaloneResume(company, role, jdUrl) {
+  const apiKey = localStorage.getItem('ili_api_key') || '';
+  if (!apiKey) {
+    alert('Please add your Claude API key in Settings first.');
+    return;
+  }
+
+  const storageKey = 'resume_' + (company + '_' + role).replace(/\W+/g,'_').toLowerCase();
+  const cachedResume = localStorage.getItem(storageKey + '_data');
+
+  // Resume prompt \u2014 focused only on section 7
+  const resumePrompt = `Generate a tailored resume for this role. Output ONLY a JSON code block with this exact structure:
+\`\`\`json
+{
+  "summary": "2-3 sentence professional summary tailored to this role",
+  "skills": "Skill1 \u00B7 Skill2 \u00B7 Skill3",
+  "experience": [
+    {"company":"...","title":"...","level":"...","dates":"...","subtitle":"...","bullets":["..."]}
+  ],
+  "certs": "certifications and education string",
+  "publication": {"title":"...","venue":"...","description":"..."}
+}
+\`\`\`
+
+RULES:
+- Use EXACT titles: "Product Director, AI & LLM" with level "Executive Director" for JPMC; "Principal PM \u2192 Director \u2192 Sr. Director" for Yahoo/Verizon; "Product Manager \u2192 Sr. Manager, Product" for New Relic; "Product Manager" for Conversant; "Project Manager" for Mindjet.
+- Skills from ONLY: Addressability and Identity Resolution, First-Party Data Activation, Data Collaboration, Programmatic and RTB, Privacy Law GDPR CCPA, Publisher Monetization, Real-Time Decisioning, Audience Segmentation, AI/ML Platforms, Agentic Systems and RAG, Search and Ranking, Ad Quality and Trust, Cross-Functional Leadership, Platform Infrastructure. NEVER invent skills.
+- All bullets must use real metrics from actual experience. Order bullets by relevance to JD \u2014 hardest-to-find skill FIRST.
+- Use strong verbs (built, designed, led, drove, launched).
+- Summary must address top recruiter skepticism.
+- For lesser-known companies (New Relic, Conversant, Mindjet), include company descriptor in subtitle.
+- Company: ${company}
+- Role: ${role}
+${jdUrl ? '- JD URL: ' + jdUrl : ''}`;
+
+  const sysPrompt = `You are generating a tailored resume. Write in second person (you/your). NEVER refer to the candidate as "Ili" or by name.
+
+My background:
+- JPMorgan Chase (2021-2026): Product Director, AI & LLM (Executive Director). Built keyword search/ranking platform (99% top-5 accuracy, 7000+ users), agentic RAG pipeline over 45M+ docs, agentic reporting system (300+ outputs/week, 90%+ manual work eliminated), agentic onboarding (<24hr turnaround for 85%+ of cases)
+- Yahoo/Verizon Media (2016-2021): Principal PM \u2192 Director \u2192 Sr. Director. 5-year progression. $500M+ annual revenue owned across targeting. Rebuilt ranking models (50% revenue increase), $100M+ growth via retargeting, reduced infrastructure costs 30%. Trust & Verification: reduced ad fraud 90% at 20B+ daily ads scale. IAB taxonomy audiences protecting ~$50M+ revenue across 900M monthly users. GDPR/CCPA compliance lead.
+- New Relic (2014-2016): PM \u2192 Sr. Manager. Billing/provisioning for $100M+ ARR SaaS. Reduced new product integration from 6 engineer-months to 3 engineer-weeks. Zero incidents over multiple months.
+- Conversant (2011-2014): PM. Launched Tag Manager in ~6 months with 50+ integrations. Mobile SDK, ~3% revenue lift via server-to-server tracking.
+- Mindjet (2005-2011): Project Manager. Established PMO, 40% IT savings, Mac product with 3-language localization.
+- Certifications: PMP, CSM. B.S. UC Santa Barbara.
+- Publication: MetaCon \u2014 Unified Predictive Segments with Trillion Concept Meta-Learning (arXiv 2022). 15.4% targeting accuracy improvement at 20B+ daily ads scale.
+- Target: IC Principal/Staff PM at Series B+ or public companies in AdTech, AI/ML, or data platforms`;
+
+  // Build the resume page HTML
+  const css = `*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f0f4f8;color:#1a202c;padding:24px;max-width:800px;margin:0 auto}
+.header{text-align:center;margin-bottom:24px;padding:18px;background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.header h1{font-size:18px;color:#1a3a5c;margin-bottom:4px}
+.header .sub{font-size:13px;color:#64748b}
+#status{padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:16px;display:none;text-align:center;background:rgba(46,117,182,.1);color:#2e75b6}
+#resume-container{background:white;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:24px;min-height:200px}
+.empty-msg{text-align:center;padding:40px 20px;color:#94a3b8;font-size:13px}`;
+
+  const pageScript = `
+let resumeData = null;
+
+function renderResumePreview(el, rd) {
+  if(!rd || !rd.summary || rd.summary==='undefined' || !rd.experience || !rd.experience.length){
+    el.innerHTML='<div style="text-align:center;padding:30px 20px;color:#dc2626;font-size:13px;font-weight:600;">Resume data incomplete. Try regenerating.</div>';
+    resumeData=null;return;
+  }
+  if(typeof rd.summary==='object') rd.summary=rd.summary.text||rd.summary.content||JSON.stringify(rd.summary);
+  rd.summary=String(rd.summary||'');
+  let h='<div style="font-family:Arial,sans-serif;max-width:700px;border:1px solid #e2e8f0;border-radius:8px;padding:24px;background:#fff;margin-bottom:14px">';
+  h+='<div style="font-size:20px;font-weight:bold;color:#1f4e79">Ili Selinger</div>';
+  h+='<div style="font-size:9px;color:#444;margin:3px 0 8px">ilan.selinger@gmail.com \\u00B7 510-332-0543 \\u00B7 Walnut Creek, CA \\u00B7 linkedin.com/in/ilan-selinger</div>';
+  h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:10px"></div>';
+  h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:4px">SUMMARY</div>';
+  h+='<div style="font-size:9px;color:#1a1a1a;line-height:1.5;margin-bottom:4px">'+(rd.summary||'')+'</div>';
+  if(rd.skills) h+='<div style="font-size:8px;color:#444;font-style:italic;margin-bottom:8px">'+rd.skills+'</div>';
+  h+='<div style="border-bottom:2px solid #2e75b6;margin-bottom:8px"></div>';
+  h+='<div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:6px">EXPERIENCE</div>';
+  (rd.experience||[]).forEach(function(exp){
+    if(!exp||!exp.company)return;
+    h+='<div style="margin-bottom:8px">';
+    h+='<div style="font-size:10px;color:#1a1a1a"><strong>'+(exp.company||'')+'</strong> <span style="color:#999">|</span> <strong>'+(exp.title||'')+'</strong>';
+    if(exp.level) h+=' <span style="color:#888;font-weight:normal;font-size:9px">'+exp.level+'</span>';
+    h+=' <span style="color:#999">|</span> <span style="color:#444">'+(exp.dates||'')+'</span></div>';
+    if(exp.subtitle) h+='<div style="font-size:8px;color:#444;font-style:italic;margin:2px 0">'+exp.subtitle+'</div>';
+    if(exp.bullets&&exp.bullets.length){
+      h+='<ul style="margin:3px 0 0 16px;padding:0;font-size:8.5px;line-height:1.5;color:#1a1a1a">';
+      exp.bullets.forEach(function(b){ if(b) h+='<li style="margin:1px 0">'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>'; });
+      h+='</ul>';
+    }
+    h+='</div>';
+  });
+  if(rd.certs){h+='<div style="border-bottom:2px solid #2e75b6;margin:8px 0"></div><div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:3px">CERTIFICATIONS & EDUCATION</div><div style="font-size:8.5px;color:#1a1a1a">'+rd.certs+'</div>';}
+  if(rd.publication){h+='<div style="border-bottom:2px solid #2e75b6;margin:8px 0"></div><div style="font-size:9px;font-weight:bold;color:#1f4e79;margin-bottom:3px">PUBLICATION</div><div style="font-size:8.5px;color:#1a1a1a"><strong>'+(rd.publication.title||'')+'</strong> | '+(rd.publication.venue||'')+'</div>';if(rd.publication.description)h+='<div style="font-size:8pt;margin-top:2pt">'+rd.publication.description+'</div>';}
+  h+='</div>';
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">';
+  h+='<button onclick="generateDocx()" style="padding:8px 18px;background:#2e75b6;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">\\u{1F4E5} Download Word (.docx)</button>';
+  h+='<button onclick="printResume()" style="padding:8px 18px;background:#1a3a5c;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">\\u{1F5A8}\\uFE0F Print / Save PDF</button>';
+  h+='<button onclick="regenerateResume()" style="padding:8px 18px;background:#dc2626;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">\\u{1F504} Regenerate</button>';
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+function printResume(){
+  if(!resumeData)return alert('Resume data not ready yet.');
+  const rd=resumeData;
+  let h='<!DOCTYPE html><html><head><style>';
+  h+='@page{size:letter;margin:0}@media print{@page{margin:0}}*{box-sizing:border-box;margin:0;padding:0}';
+  h+='body{font-family:Arial,sans-serif;color:#1a1a1a;font-size:8.5pt;line-height:1.35;padding:0.5in 0.625in}';
+  h+='.name{font-size:20pt;font-weight:bold;color:#1f4e79}.contact{font-size:8.5pt;color:#444;margin:2pt 0 5pt}';
+  h+='.divider{border-bottom:2px solid #2e75b6;margin:4pt 0 6pt}.sec-hdr{font-size:9pt;font-weight:bold;color:#1f4e79;margin:4pt 0 3pt}';
+  h+='.summary{font-size:8.5pt;line-height:1.4;margin-bottom:2pt}.skills{font-size:8pt;color:#444;font-style:italic;margin-bottom:4pt}';
+  h+='.exp-hdr{font-size:10pt;margin:4pt 0 1pt}.exp-sub{font-size:8.5pt;color:#444;font-style:italic;margin:1pt 0}';
+  h+='ul{margin:2pt 0 0 16pt;padding:0}li{margin:1pt 0;font-size:8.5pt;line-height:1.35}';
+  h+='</style></head><body>';
+  h+='<div class="name">Ili Selinger</div>';
+  h+='<div class="contact">ilan.selinger@gmail.com \\u00B7 510-332-0543 \\u00B7 Walnut Creek, CA \\u00B7 <a href="https://linkedin.com/in/ilan-selinger">linkedin.com/in/ilan-selinger</a></div>';
+  h+='<div class="divider"></div><div class="sec-hdr">SUMMARY</div>';
+  h+='<div class="summary">'+rd.summary+'</div>';
+  if(rd.skills) h+='<div class="skills">'+rd.skills+'</div>';
+  h+='<div class="divider"></div><div class="sec-hdr">EXPERIENCE</div>';
+  (rd.experience||[]).forEach(function(exp){
+    h+='<div class="exp-hdr"><strong>'+exp.company+'</strong> <span style="color:#999">|</span> <strong>'+exp.title+'</strong>';
+    if(exp.level) h+=' <span style="color:#888;font-weight:normal;font-size:8.5pt">'+exp.level+'</span>';
+    h+=' <span style="color:#999">|</span> <span style="color:#444">'+exp.dates+'</span></div>';
+    if(exp.subtitle) h+='<div class="exp-sub">'+exp.subtitle+'</div>';
+    if(exp.bullets&&exp.bullets.length){h+='<ul>';exp.bullets.forEach(function(b){h+='<li>'+b.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>')+'</li>';});h+='</ul>';}
+  });
+  if(rd.certs){h+='<div class="divider"></div><div class="sec-hdr">CERTIFICATIONS & EDUCATION</div><div style="font-size:8.5pt">'+rd.certs+'</div>';}
+  if(rd.publication){h+='<div class="divider"></div><div class="sec-hdr">PUBLICATION</div><div style="font-size:8.5pt"><strong>'+rd.publication.title+'</strong> | '+rd.publication.venue+'</div>';if(rd.publication.description)h+='<div style="font-size:8pt;margin-top:2pt">'+rd.publication.description+'</div>';}
+  h+='</body></html>';
+  const w=window.open('','_blank');
+  if(w){w.document.write(h);w.document.close();w.document.title='Ili_Selinger_Resume';setTimeout(function(){w.print();},500);}
+}
+
+async function generateDocx(){
+  if(!resumeData)return alert('Resume data not ready yet.');
+  const statusEl=document.getElementById('status');
+  statusEl.textContent='\\u{1F4C4} Generating Word document\\u2026';
+  statusEl.style.display='block';
+  try{
+    if(!window.docx){
+      await new Promise(function(resolve,reject){
+        const s=document.createElement('script');
+        s.src='https://unpkg.com/docx@9.1.1/build/index.umd.js';
+        s.onload=resolve;s.onerror=reject;document.head.appendChild(s);
+      });
+    }
+    const{Document,Packer,Paragraph,TextRun,AlignmentType,LevelFormat,ExternalHyperlink,BorderStyle}=window.docx;
+    const rd=resumeData;
+    const doc=new Document({
+      numbering:{config:[{reference:'bullet',levels:[{level:0,format:LevelFormat.BULLET,text:'\\u2022',alignment:AlignmentType.LEFT,style:{paragraph:{indent:{left:360,hanging:180}}}}]}]},
+      sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:720,bottom:720,left:900,right:900}}},
+      children:[
+        new Paragraph({children:[new TextRun({text:'Ili Selinger',bold:true,size:40,color:'1f4e79',font:'Arial'})]}),
+        new Paragraph({children:[new TextRun({text:'ilan.selinger@gmail.com \\u00B7 510-332-0543 \\u00B7 Walnut Creek, CA \\u00B7 ',size:17,font:'Arial',color:'444444'}),new ExternalHyperlink({children:[new TextRun({text:'linkedin.com/in/ilan-selinger',size:17,font:'Arial',color:'2e75b6',underline:{}})],link:'https://linkedin.com/in/ilan-selinger'})],spacing:{after:60}}),
+        new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'2e75b6'}},spacing:{after:120}}),
+        new Paragraph({children:[new TextRun({text:'SUMMARY',bold:true,size:18,color:'1f4e79',font:'Arial'})],spacing:{after:40}}),
+        new Paragraph({children:[new TextRun({text:rd.summary||'',size:17,font:'Arial'})],spacing:{after:40}}),
+        ...(rd.skills?[new Paragraph({children:[new TextRun({text:rd.skills,size:16,font:'Arial',color:'444444',italics:true})],spacing:{after:80}})]:[]  ),
+        new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'2e75b6'}},spacing:{after:80}}),
+        new Paragraph({children:[new TextRun({text:'EXPERIENCE',bold:true,size:18,color:'1f4e79',font:'Arial'})],spacing:{after:60}}),
+        ...(rd.experience||[]).flatMap(function(exp){
+          if(!exp||!exp.company)return[];
+          var ps=[new Paragraph({children:[new TextRun({text:exp.company,bold:true,size:20,font:'Arial'}),new TextRun({text:' | ',size:20,font:'Arial',color:'999999'}),new TextRun({text:exp.title||'',bold:true,size:20,font:'Arial'}),
+            ...(exp.level?[new TextRun({text:' '+exp.level,size:17,font:'Arial',color:'888888'})]:[]),new TextRun({text:' | ',size:20,font:'Arial',color:'999999'}),new TextRun({text:exp.dates||'',size:20,font:'Arial',color:'444444'})],spacing:{before:80,after:20}})];
+          if(exp.subtitle)ps.push(new Paragraph({children:[new TextRun({text:exp.subtitle,size:17,font:'Arial',color:'444444',italics:true})],spacing:{after:20}}));
+          (exp.bullets||[]).forEach(function(b){if(b)ps.push(new Paragraph({numbering:{reference:'bullet',level:0},children:[new TextRun({text:b.replace(/\\*\\*(.+?)\\*\\*/g,'$1'),size:17,font:'Arial'})],spacing:{after:10}}));});
+          return ps;
+        }),
+        ...(rd.certs?[new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'2e75b6'}},spacing:{before:80,after:80}}),new Paragraph({children:[new TextRun({text:'CERTIFICATIONS & EDUCATION',bold:true,size:18,color:'1f4e79',font:'Arial'})],spacing:{after:40}}),new Paragraph({children:[new TextRun({text:rd.certs,size:17,font:'Arial'})],spacing:{after:40}})]:[]  ),
+        ...(rd.publication?[new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:6,color:'2e75b6'}},spacing:{before:80,after:80}}),new Paragraph({children:[new TextRun({text:'PUBLICATION',bold:true,size:18,color:'1f4e79',font:'Arial'})],spacing:{after:40}}),new Paragraph({children:[new TextRun({text:rd.publication.title||'',bold:true,size:17,font:'Arial'}),new TextRun({text:' | '+(rd.publication.venue||''),size:17,font:'Arial'})],spacing:{after:20}}),
+          ...(rd.publication.description?[new Paragraph({children:[new TextRun({text:rd.publication.description,size:16,font:'Arial'})],spacing:{after:20}})]:[]  )]:[]  ),
+      ]}]
+    });
+    const blob=await Packer.toBlob(doc);
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='Ili_Selinger_Resume.docx';a.click();
+    URL.revokeObjectURL(url);
+    statusEl.textContent='\\u2705 Word document downloaded!';
+    setTimeout(function(){statusEl.style.display='none';},3000);
+  }catch(err){
+    statusEl.textContent='\\u274C '+err.message;
+    statusEl.style.background='rgba(220,38,38,.15)';statusEl.style.color='#dc2626';
+    console.error('DOCX error:',err);
+  }
+}
+
+async function streamResumeGeneration(){
+  const statusEl=document.getElementById('status');
+  const container=document.getElementById('resume-container');
+  statusEl.textContent='\\u{1F504} Connecting to Claude\\u2026';
+  statusEl.style.display='block';
+  container.innerHTML='<div style="text-align:center;padding:40px 20px;color:#64748b;"><div style="font-size:28px;margin-bottom:12px;">\\u{1F4C4}</div><div style="font-size:13px;font-weight:600;">Building your tailored resume\\u2026</div><div style="font-size:11px;margin-top:6px;color:#94a3b8;">Reframing experience for this role</div><div style="margin:16px auto 0;width:200px;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:0%;background:linear-gradient(90deg,#2e75b6,#1f4e79);border-radius:2px;animation:resumeProgress 25s ease-out forwards;"></div></div><style>@keyframes resumeProgress{0%{width:0%}30%{width:40%}60%{width:65%}80%{width:80%}100%{width:92%}}</style></div>';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':window._resumeApiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,stream:true,system:window._resumeSysPrompt,messages:[{role:'user',content:window._resumePrompt}]})
+    });
+    if(!resp.ok)throw new Error('API '+resp.status);
+    const reader=resp.body.getReader();const decoder=new TextDecoder();let txt='';let buf='';
+    while(true){
+      const rd=await reader.read();if(rd.done)break;
+      buf+=decoder.decode(rd.value,{stream:true});
+      const lns=buf.split('\\n');buf=lns.pop()||'';
+      for(const ln of lns){
+        if(!ln.startsWith('data: '))continue;const d=ln.slice(6);if(d==='[DONE]')continue;
+        try{const ev=JSON.parse(d);if(ev.type==='content_block_delta'&&ev.delta&&ev.delta.text){
+          txt+=ev.delta.text;
+          statusEl.textContent='\\u{1F504} Streaming resume data\\u2026 ('+txt.length+' chars)';
+        }}catch(e){}
+      }
+    }
+    // Parse the resume JSON
+    let parsed=null;
+    try{
+      const jm=txt.match(/\\\`\\\`\\\`json\\n([\\s\\S]*?)\\\`\\\`\\\`/)||txt.match(/\\{[\\s\\S]*"summary"[\\s\\S]*\\}/);
+      const jsonStr=jm?(jm[1]||jm[0]):txt;
+      parsed=JSON.parse(jsonStr);
+    }catch(e){
+      // Aggressive extraction
+      const fb=txt.indexOf('{');const lb=txt.lastIndexOf('}');
+      if(fb!==-1&&lb>fb){try{parsed=JSON.parse(txt.slice(fb,lb+1));}catch(e2){}}
+    }
+    if(parsed){
+      resumeData=parsed;
+      renderResumePreview(container,resumeData);
+      // Cache
+      localStorage.setItem(window._resumeStorageKey+'_data',JSON.stringify(resumeData));
+      statusEl.textContent='\\u2705 Resume ready!';
+      setTimeout(function(){statusEl.style.display='none';},3000);
+    }else{
+      container.innerHTML='<div style="text-align:center;padding:30px;color:#dc2626;font-size:13px;font-weight:600;">Could not parse resume data. <button onclick="regenerateResume()">Try again</button></div>';
+      statusEl.style.display='none';
+    }
+  }catch(err){
+    statusEl.textContent='\\u274C '+err.message;
+    statusEl.style.background='rgba(220,38,38,.15)';statusEl.style.color='#dc2626';
+    container.innerHTML+='<div style="text-align:center;margin-top:12px"><button onclick="regenerateResume()" style="padding:6px 14px;background:#dc2626;color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">Retry</button></div>';
+  }
+}
+
+function regenerateResume(){
+  localStorage.removeItem(window._resumeStorageKey+'_data');
+  streamResumeGeneration();
+}
+
+// Check for cached resume
+const cachedData=localStorage.getItem(window._resumeStorageKey+'_data');
+if(cachedData){
+  try{
+    resumeData=JSON.parse(cachedData);
+    renderResumePreview(document.getElementById('resume-container'),resumeData);
+    const st=document.getElementById('status');
+    st.textContent='\\u{1F4E6} Loaded from cache';st.style.display='block';
+    setTimeout(function(){st.style.display='none';},2000);
+  }catch(e){streamResumeGeneration();}
+}else{streamResumeGeneration();}
+`;
+
+  const html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n'
+    + '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n'
+    + '<title>Resume: ' + company + ' \u2013 ' + role + '</title>\n'
+    + '<style>\n' + css + '\n</style>\n'
+    + '</head>\n<body>\n'
+    + '<div class="header">\n'
+    + '  <h1>\u{1F4C4} Tailored Resume</h1>\n'
+    + '  <div class="sub">' + company + ' \u2014 ' + role + '</div>\n'
+    + '</div>\n'
+    + '<div id="status"></div>\n'
+    + '<div id="resume-container"><p class="empty-msg">\u23F3 Loading\u2026</p></div>\n'
+    + '<script>\n'
+    + 'window._resumeApiKey=' + JSON.stringify(apiKey) + ';\n'
+    + 'window._resumeSysPrompt=' + JSON.stringify(sysPrompt) + ';\n'
+    + 'window._resumePrompt=' + JSON.stringify(resumePrompt) + ';\n'
+    + 'window._resumeStorageKey=' + JSON.stringify(storageKey) + ';\n'
+    + pageScript + '\n'
+    + '<\/script>\n'
+    + '</body>\n</html>';
+
+  const resumeWin = window.open('', '_blank');
+  if (resumeWin) {
+    resumeWin.document.open();
+    resumeWin.document.write(html);
+    resumeWin.document.close();
+  }
+}
+
 // \u2500\u2500\u2500 INIT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 try {
   migrateData();
@@ -1672,7 +1964,7 @@ Object.assign(window, {
   openCoManager, closeCoManager, addCompany, deleteCompany, recheckCompany, toggleEditMode, removeCompanyFromTier, isEditMode,
   // Research
   openResearchModal, closeResearchModal, generateResearchBrief, generateCompanyProfile,
-  reopenBrief, rerunBrief,
+  reopenBrief, rerunBrief, generateStandaloneResume,
   // Connections
   openConnPanel, closeConnPanel, importLinkedInCSV,
   // Artifacts
