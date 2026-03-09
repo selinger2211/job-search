@@ -274,11 +274,6 @@ function getAllTrackedCompanies() {
   return companyMap;
 }
 
-function getContactLogForCompany(companyName) {
-  const roles = loadRoles().filter(r => r.company.toLowerCase() === companyName.toLowerCase());
-  return roles;
-}
-
 function getResearchBriefsForCompany(companyName) {
   const briefs = JSON.parse(localStorage.getItem('ili_research_briefs') || '[]');
   return briefs.filter(b => b.company.toLowerCase() === companyName.toLowerCase());
@@ -694,40 +689,6 @@ function renderCompanyProfileView(container, companyName) {
 
   // Render artifacts for this specific company
   renderCompanyProfileArtifacts(companyName, artifacts);
-}
-
-async function renderCompanyProfileArtifacts(companyName, artifacts) {
-  const mgr = document.getElementById('artifactManager');
-  if (!mgr) return;
-
-  if (!window.showDirectoryPicker) {
-    mgr.innerHTML = '<div class="cp-empty">File System Access API not available in this browser. Use Chrome for full artifact support.</div>';
-    return;
-  }
-
-  const handle = await getArtifactsHandle(false);
-  if (!handle) {
-    mgr.innerHTML = `<div class="artifact-empty">
-      <div style="font-size:13px;margin-bottom:6px">No artifacts folder configured</div>
-      <button onclick="selectArtifactsFolder().then(()=>switchView('company-profile','${companyName.replace(/'/g, "\\'")}'))" style="padding:6px 14px;background:#d97706;color:white;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">\u{1F4C1} Set Folder</button>
-    </div>`;
-    return;
-  }
-
-  if (artifacts.length) {
-    mgr.innerHTML = artifacts.map(a => `
-      <div class="artifact-row">
-        <span>${artifactTypeIcon(a.type)}</span>
-        <strong style="flex:1;font-size:12px">${a.fileName}</strong>
-        <span style="font-size:10px;color:var(--text-faint)">${formatFileSize(a.size)}</span>
-        <button onclick="openArtifactFile('${companyName.replace(/'/g, "\\'")}','${a.fileName.replace(/'/g, "\\'")}')" style="padding:3px 8px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:5px;font-size:10px;color:var(--text-secondary);cursor:pointer">Open</button>
-        <button onclick="deleteArtifactFile('${companyName.replace(/'/g, "\\'")}','${a.fileName.replace(/'/g, "\\'")}').then(()=>switchView('company-profile','${companyName.replace(/'/g, "\\'")}'))" style="padding:3px 8px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:5px;font-size:10px;cursor:pointer">Delete</button>
-      </div>
-    `).join('');
-  } else {
-    mgr.innerHTML = '<div class="cp-empty">No artifacts for this company yet.</div>';
-  }
-  mgr.innerHTML += `<button class="cp-add-btn" onclick="uploadArtifactFor('${companyName.replace(/'/g, "\\'")}')">+ Upload file</button>`;
 }
 
 // \u2500\u2500\u2500 RENDER ALL (legacy compat) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
