@@ -1524,10 +1524,30 @@ function getConnectionsForCompany(companyName) {
   if (!norm) return [];
   return data.connections.filter(c => {
     const cn = normalizeCompanyName(c.company);
+    // Skip connections with no company listed
+    if (!cn) return false;
+    // Both must be at least 3 chars to avoid spurious substring matches
+    if (cn.length < 3 || norm.length < 3) return cn === norm;
     // Exact normalized match
     if (cn === norm) return true;
-    // One contains the other (handles "The Trade Desk" vs "Trade Desk")
-    if (cn.includes(norm) || norm.includes(cn)) return true;
+    // Word-boundary substring: only match if the shorter string appears
+    // as a complete word segment (e.g. "workday" won't match "day")
+    if (cn.length >= norm.length) {
+      // Check if norm appears in cn as a word boundary match
+      const idx = cn.indexOf(norm);
+      if (idx !== -1) {
+        const before = idx === 0 || cn[idx - 1] === ' ';
+        const after = idx + norm.length === cn.length || cn[idx + norm.length] === ' ';
+        if (before && after) return true;
+      }
+    } else {
+      const idx = norm.indexOf(cn);
+      if (idx !== -1) {
+        const before = idx === 0 || norm[idx - 1] === ' ';
+        const after = idx + cn.length === norm.length || norm[idx + cn.length] === ' ';
+        if (before && after) return true;
+      }
+    }
     return false;
   });
 }
@@ -2341,8 +2361,8 @@ function renderCompaniesListView(container) {
         const coInitial = co.name.charAt(0).toUpperCase();
         return `<div class="company-card" data-company="${co.name.toLowerCase()}" data-tier="${co.tier || ''}" data-roles="${co.roles.length}" data-conns="${co.connections.length}" onclick="switchView('company-profile','${safeName}')">
           <div class="company-card-name">
-            <img src="${coLogoFinal}" alt="" style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border-light);object-fit:contain;background:white;flex-shrink:0" onerror="this.onerror=function(){this.style.display='none';this.nextElementSibling.style.display='flex'};this.src='${coLogoFallback}'">
-            <span style="display:none;width:22px;height:22px;border-radius:5px;background:var(--accent-blue);color:white;font-size:11px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">${coInitial}</span>
+            <img src="${coLogoFinal}" alt="" style="width:32px;height:32px;border-radius:6px;border:1px solid var(--border-light);object-fit:contain;background:white;flex-shrink:0" onerror="this.onerror=function(){this.style.display='none';this.nextElementSibling.style.display='flex'};this.src='${coLogoFallback}'">
+            <span style="display:none;width:32px;height:32px;border-radius:6px;background:var(--accent-blue);color:white;font-size:14px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">${coInitial}</span>
             ${co.name}
             <span class="company-card-tier ${tierClass}" style="margin-left:auto">${tierLabel}</span>
           </div>
@@ -2448,8 +2468,8 @@ function renderCompanyProfileView(container, companyName) {
 
     <div class="cp-header">
       <div class="cp-header-top" style="display:flex;align-items:center;gap:14px">
-        <img src="${finalLogoUrl}" alt="${companyName}" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border-light);object-fit:contain;background:white" onerror="this.onerror=function(){this.style.display='none';this.nextElementSibling.style.display='flex'};this.src='${fallbackLogoUrl}'">
-        <span style="display:none;width:48px;height:48px;border-radius:10px;background:var(--accent-blue);color:white;font-size:20px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">${compInitial}</span>
+        <img src="${finalLogoUrl}" alt="${companyName}" style="width:56px;height:56px;border-radius:12px;border:1px solid var(--border-light);object-fit:contain;background:white" onerror="this.onerror=function(){this.style.display='none';this.nextElementSibling.style.display='flex'};this.src='${fallbackLogoUrl}'">
+        <span style="display:none;width:56px;height:56px;border-radius:12px;background:var(--accent-blue);color:white;font-size:20px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">${compInitial}</span>
         <div>
           <h2>${companyName}</h2>
           ${tierLabel}
@@ -2696,8 +2716,8 @@ async function generateCompanyProfile(companyName) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 2000,
-        system: 'You are helping Ili Selinger research companies for his job search. He is a Senior/Staff PM with 15+ years experience in AdTech (Yahoo, 20B+ daily ads, $500M+ revenue), AI/ML platforms (JPMorgan Chase, agentic RAG, search ranking), and enterprise SaaS (New Relic). He published a paper on LLM applications (arXiv). Respond in JSON format ONLY — no markdown, no commentary.',
-        messages: [{ role: 'user', content: 'Generate a company profile for ' + companyName + '. ' + roleCtx + '\n\nRespond with ONLY this JSON:\n{"mission":"2-3 sentence company mission/what they do","approach":"2-3 sentences on how Ili should approach this company — what angle, which experience to lead with, who to connect with, what to emphasize","fit":"2-3 sentences analyzing if Ili is a good fit — what matches well and any gaps to address"}' }]
+        system: 'You are generating a company profile for my job search dashboard. Write in SECOND PERSON — "you should", "your experience", "your background". NEVER use "Ili" or third person. My background: 15+ years PM, Yahoo (20B+ daily ads, $500M+ revenue, Principal PM → Director → Sr. Director), JPMorgan Chase (AI/ML, agentic RAG, search ranking — IC role), New Relic (SaaS billing), Conversant (AdTech tag management). Published MetaCon on arXiv. Targeting IC Principal/Staff PM roles. Respond in JSON format ONLY — no markdown, no commentary.',
+        messages: [{ role: 'user', content: 'Generate a company profile for ' + companyName + '. ' + roleCtx + '\n\nRespond with ONLY this JSON:\n{"mission":"2-3 sentence company mission/what they do","approach":"2-3 sentences on how I should approach this company — what angle, which experience to lead with, who to connect with, what to emphasize. Write as \\"you should\\" not \\"Ili should\\"","fit":"2-3 sentences analyzing fit — what matches well and any gaps to address. Write as \\"you are\\" not \\"Ili is\\""}' }]
       })
     });
     if (!resp.ok) throw new Error('API error ' + resp.status);
@@ -2798,6 +2818,20 @@ function generateResearchBrief() {
 
   // Markdown-to-HTML converter (lightweight, no dependencies)
   const mdToHtmlFn = `function mdToHtml(md){
+    // Parse markdown tables first
+    md = md.replace(/((?:^\\|.+\\|\\s*\\n)+)/gm, function(tableBlock){
+      var rows = tableBlock.trim().split('\\n').filter(function(r){return r.trim();});
+      if(rows.length < 2) return tableBlock;
+      var html = '<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:12px">';
+      rows.forEach(function(row, idx){
+        if(row.replace(/[|\\-\\s]/g,'').length === 0) return; // skip separator row
+        var cells = row.split('|').filter(function(c,i,a){return i>0 && i<a.length-1;});
+        var tag = idx === 0 ? 'th' : 'td';
+        var style = idx === 0 ? 'style="text-align:left;padding:6px 10px;border-bottom:2px solid var(--border-medium,#e2e8f0);font-weight:600;color:var(--text-primary,#1a202c);background:var(--bg-surface,#f7fafc)"' : 'style="text-align:left;padding:6px 10px;border-bottom:1px solid var(--border-light,#f0f4f8)"';
+        html += '<tr>' + cells.map(function(c){return '<'+tag+' '+style+'>'+c.trim()+'</'+tag+'>';}).join('') + '</tr>';
+      });
+      return html + '</table>';
+    });
     return md
       .replace(/^#### (.+)$/gm,'<h4>$1</h4>')
       .replace(/^### (.+)$/gm,'<h3>$1</h3>')
@@ -2806,7 +2840,7 @@ function generateResearchBrief() {
       .replace(/^- (.+)$/gm,'<li>$1</li>')
       .replace(/(<li>.*<\\/li>)/gs,function(m){return '<ul>'+m+'</ul>';})
       .replace(/<\\/ul>\\s*<ul>/g,'')
-      .replace(/^(?!<[hul]|<li)(\\S.+)$/gm,'<p>$1</p>')
+      .replace(/^(?!<[hultTp]|<li)(\\S.+)$/gm,'<p>$1</p>')
       .replace(/\\n{2,}/g,'\\n');
   }`;
 
@@ -2843,9 +2877,15 @@ My background:
 - Publication: MetaCon — Unified Predictive Segments with Trillion Concept Meta-Learning (arXiv 2022). 15.4% targeting accuracy improvement at 20B+ daily ads scale.
 - Target: IC Principal/Staff PM at Series B+ or public companies in AdTech, AI/ML, or data platforms
 
+IC EXPERIENCE CONTEXT (important — I have deep IC roots):
+- My JPMC role (2021-2026) is an IC role with Executive Director level. No direct reports — pure product ownership.
+- At New Relic, I was simultaneously managing (2 direct reports) AND performing as an individual contributor.
+- At Conversant, I was a pure IC Product Manager for the first year before taking on PM leadership.
+- I am specifically targeting IC Principal/Staff roles because I do my best work as a deep IC contributor.
+
 IMPORTANT VOICE RULES:
 - Write in second person: "you have", "your experience", "your background in..."
-- Section 6 (Tell Me About Yourself) should be written in first person as a script I would actually say: "I'm a Sr. Director-level product leader..." NOT "Ili is a product leader..."
+- Section 6 (Tell Me About Yourself) should be written in first person as a script I would actually say. Do NOT open with "Sr. Director-level product leader" if the target role is IC — instead lead with the relevant IC framing (e.g., "I'm a product leader with 15+ years building [relevant domain] at scale" or "I'm a Principal-level PM who's spent the last decade..."). Match the seniority framing to the role.
 - Section 5 (Interviewer Insights) should say "your connection" not "Ili's connection"
 - NEVER refer to me in the third person. This is MY personal prep document.
 
@@ -2874,7 +2914,7 @@ STRICT RULES:
 2. SKILLS LINE: Pick 5-8 from ONLY this pool, reorder by relevance to the role:
    [Addressability & Identity Resolution, First-Party Data Activation, Data Collaboration, Programmatic & RTB, Privacy Law (GDPR / CCPA), Publisher Monetization, Real-Time Decisioning, Audience Segmentation, AI/ML Platforms, Agentic Systems & RAG, Search & Ranking, Ad Quality & Trust, Cross-Functional Leadership, Platform Infrastructure]
    Do NOT invent skills. Do NOT pull keywords from the JD as skills.
-3. SUMMARY: 3-4 sentences reframing the same real experience through a lens relevant to this role. You MUST include "Sr. Director-level Product leader with 10+ years" and mention "$500M+ revenue products at Yahoo" and "20B+ daily ads scale". Do NOT add capabilities or experience Ili doesn't have.
+3. SUMMARY: 3-4 sentences reframing the same real experience through a lens relevant to this role. MUST mention "$500M+ revenue products at Yahoo" and "20B+ daily ads scale". For the opening, match seniority framing to the TARGET ROLE: if the role is IC (Principal PM, Staff PM, etc.), do NOT lead with "Sr. Director-level" — instead use framing like "Product leader with 10+ years" or "Principal-level product leader with 10+ years". Only use "Sr. Director-level" if applying to a Director+ management role. Do NOT add capabilities or experience not in the bullet bank.
 4. BULLETS: Choose from the BULLET BANK below. You may lightly rephrase for flow (see examples) but every metric, every number, every claim must match the original. You may combine two related bullets into one. You may reorder bullets within a role. Bold the key metrics with **.
 5. DO NOT add JD-specific keywords, technologies, or frameworks that don't appear in the bullet bank. The resume should feel naturally relevant, not keyword-stuffed.
 6. Mindjet role: include ONLY if relevant, otherwise omit entirely.
