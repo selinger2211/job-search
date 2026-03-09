@@ -4,7 +4,7 @@ import { normalizeCompanyName } from '../utils/normalize.js';
 import { parseCSVLine } from '../utils/csv.js';
 import { getLinkedInData, saveLinkedInData, getCompanies } from '../data/store.js';
 
-// ─── Connection matching ────────────────────────────────────────────────
+// \u2500\u2500\u2500 Connection matching \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function getConnectionsForCompany(companyName) {
   const data = getLinkedInData();
@@ -40,7 +40,7 @@ export function getConnectionsForCompany(companyName) {
   });
 }
 
-// ─── CSV Import ─────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 CSV Import \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function importLinkedInCSV(input, { renderNetworkMap, renderPipeline, renderTierList }) {
   const file = input.files[0];
@@ -51,7 +51,7 @@ export function importLinkedInCSV(input, { renderNetworkMap, renderPipeline, ren
     const lines = text.split('\n');
     if (lines.length < 2) { alert('CSV appears empty.'); return; }
 
-    // Parse header — LinkedIn CSVs sometimes have extra rows before the header
+    // Parse header \u2014 LinkedIn CSVs sometimes have extra rows before the header
     let headerIdx = 0;
     let headers = [];
     for (let i = 0; i < Math.min(5, lines.length); i++) {
@@ -110,7 +110,7 @@ export function importLinkedInCSV(input, { renderNetworkMap, renderPipeline, ren
   reader.readAsText(file);
 }
 
-// ─── Network Map ────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Network Map \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function renderNetworkMap(filterQuery) {
   const container = document.getElementById('networkMap');
@@ -118,9 +118,9 @@ export function renderNetworkMap(filterQuery) {
   const data = getLinkedInData();
   if (!data || !data.connections || data.connections.length === 0) {
     container.innerHTML = '<div class="network-empty">'
-      + '<div style="font-size:24px;margin-bottom:6px">🔗</div>'
+      + '<div style="font-size:24px;margin-bottom:6px">\u{1F517}</div>'
       + 'Import your LinkedIn connections to see warm intro paths.<br>'
-      + '<span style="font-size:10px;color:#cbd5e0">LinkedIn → Settings → Data Privacy → Get a copy of your data → Connections</span>'
+      + '<span style="font-size:10px;color:#cbd5e0">LinkedIn \u2192 Settings \u2192 Data Privacy \u2192 Get a copy of your data \u2192 Connections</span>'
       + '</div>';
     return;
   }
@@ -161,7 +161,7 @@ export function renderNetworkMap(filterQuery) {
   let groupIdx = 0;
 
   if (pipelineMatches.length) {
-    html += '<div style="font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px">Pipeline — Warm Intros</div>';
+    html += '<div style="font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px">Pipeline \u2014 Warm Intros</div>';
     pipelineMatches.forEach(co => {
       if (q && !co.toLowerCase().includes(q)) return;
       const conns = matchMap[co];
@@ -170,13 +170,13 @@ export function renderNetworkMap(filterQuery) {
       const PREVIEW = 3;
       const personHtml = (c) => {
         const linkedIn = c.linkedInUrl ? ' href="' + c.linkedInUrl + '" target="_blank" style="color:var(--text-primary);text-decoration:none"' : '';
-        return '<div class="network-person">' + (linkedIn ? '<a' + linkedIn + '>' : '') + c.fullName + (linkedIn ? '</a>' : '') + (c.position ? ' <span class="pos">— ' + c.position + '</span>' : '') + '</div>';
+        return '<div class="network-person">' + (linkedIn ? '<a' + linkedIn + '>' : '') + c.fullName + (linkedIn ? '</a>' : '') + (c.position ? ' <span class="pos">\u2014 ' + c.position + '</span>' : '') + '</div>';
       };
       html += '<div class="network-group">'
-        + '<div class="network-group-title" style="cursor:pointer" onclick="openConnPanel(\'' + safeCo + '\')">' + co + ' <span class="network-group-count">' + conns.length + ' connection' + (conns.length>1?'s':'') + ' →</span></div>'
+        + '<div class="network-group-title" style="cursor:pointer" onclick="openConnPanel(\'' + safeCo + '\')">' + co + ' <span class="network-group-count">' + conns.length + ' connection' + (conns.length>1?'s':'') + ' \u2192</span></div>'
         + conns.slice(0, PREVIEW).map(personHtml).join('')
         + (conns.length > PREVIEW ? '<div id="' + gid + '" style="display:none">' + conns.slice(PREVIEW).map(personHtml).join('') + '</div>'
-          + '<div class="network-person" style="cursor:pointer;color:var(--accent-blue);font-weight:600" onclick="var el=document.getElementById(\'' + gid + '\');if(el.style.display===\'none\'){el.style.display=\'block\';this.textContent=\'▲ Show fewer\';}else{el.style.display=\'none\';this.textContent=\'▼ Show all ' + conns.length + ' connections\';}">▼ Show all ' + conns.length + ' connections</div>' : '')
+          + '<div class="network-person" style="cursor:pointer;color:var(--accent-blue);font-weight:600" onclick="var el=document.getElementById(\'' + gid + '\');if(el.style.display===\'none\'){el.style.display=\'block\';this.textContent=\'\u25B2 Show fewer\';}else{el.style.display=\'none\';this.textContent=\'\u25BC Show all ' + conns.length + ' connections\';}">\u25BC Show all ' + conns.length + ' connections</div>' : '')
         + '</div>';
     });
   }
@@ -184,7 +184,7 @@ export function renderNetworkMap(filterQuery) {
   if (coldPipeline.length) {
     const coldVisible = q ? coldPipeline.filter(c => c.toLowerCase().includes(q)) : coldPipeline;
     if (coldVisible.length) {
-      html += '<div style="font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px">Pipeline — No Connections (cold)</div>';
+      html += '<div style="font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px">Pipeline \u2014 No Connections (cold)</div>';
       html += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
       coldVisible.forEach(co => {
         html += '<span style="display:inline-block;font-size:10px;color:#a0aec0;background:#f7fafc;padding:2px 8px;border-radius:10px;border:1px solid #e2e8f0">' + co + '</span>';
@@ -193,12 +193,12 @@ export function renderNetworkMap(filterQuery) {
     }
   }
 
-  html += '<div style="font-size:9px;color:#cbd5e0;margin-top:10px">Imported ' + importDate + ' from ' + data.fileName + ' · <a href="#" onclick="event.preventDefault();document.getElementById(\'linkedinCsvInput\').click()" style="color:#2e75b6;text-decoration:none">Re-import</a></div>';
+  html += '<div style="font-size:9px;color:#cbd5e0;margin-top:10px">Imported ' + importDate + ' from ' + data.fileName + ' \u00B7 <a href="#" onclick="event.preventDefault();document.getElementById(\'linkedinCsvInput\').click()" style="color:#2e75b6;text-decoration:none">Re-import</a></div>';
 
   container.innerHTML = html;
 }
 
-// ─── Side Panel ─────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Side Panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function openConnPanel(companyName) {
   const conns = getConnectionsForCompany(companyName);
@@ -258,7 +258,7 @@ export function openConnPanel(companyName) {
         + '<div class="conn-panel-title">' + (c.position || 'No title listed') + '</div>'
         + '<div class="conn-panel-meta">' + connDate + '</div>'
         + '</div>'
-        + (c.url ? '<a href="' + c.url + '" target="_blank" style="font-size:11px;color:var(--accent-blue);text-decoration:none;flex-shrink:0;padding:4px 8px;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:5px" title="View LinkedIn profile">🔗 Profile</a>' : '')
+        + (c.url ? '<a href="' + c.url + '" target="_blank" style="font-size:11px;color:var(--accent-blue);text-decoration:none;flex-shrink:0;padding:4px 8px;background:var(--bg-surface);border:1px solid var(--border-medium);border-radius:5px" title="View LinkedIn profile">\u{1F517} Profile</a>' : '')
         + '</div>';
     }).join('');
   }
@@ -275,12 +275,12 @@ export function closeConnPanel() {
 export function buildConnBadge(company, conns) {
   if (!conns.length) return '';
   var preview = conns.slice(0, 3).map(function(c) {
-    return '<div class="conn-tooltip-item"><strong>' + c.fullName + '</strong> — ' + (c.position || '?') + '</div>';
+    return '<div class="conn-tooltip-item"><strong>' + c.fullName + '</strong> \u2014 ' + (c.position || '?') + '</div>';
   }).join('');
-  if (conns.length > 3) preview += '<div class="conn-tooltip-more">+ ' + (conns.length - 3) + ' more — click to see all</div>';
+  if (conns.length > 3) preview += '<div class="conn-tooltip-more">+ ' + (conns.length - 3) + ' more \u2014 click to see all</div>';
   var safeCo = company.replace(/'/g, "\\'");
   return '<span class="conn-chip-wrap" onclick="event.stopPropagation();openConnPanel(\'' + safeCo + '\')">'
-    + '<span class="tier-chip-conn">🔗' + conns.length + '</span>'
+    + '<span class="tier-chip-conn">\u{1F517}' + conns.length + '</span>'
     + '<div class="conn-tooltip">' + preview + '</div>'
     + '</span>';
 }
