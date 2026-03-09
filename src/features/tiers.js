@@ -10,7 +10,7 @@ const TIER_COLORS = _cfg.tierColors;
 const TIER_NAMES = _cfg.tierNames;
 const TIER_HDR_COLORS = TIER_COLORS;
 
-// ─── Edit Mode ──────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Edit Mode \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 let editModeActive = false;
 
@@ -18,7 +18,7 @@ export function toggleEditMode() {
   editModeActive = !editModeActive;
   document.body.classList.toggle('edit-mode', editModeActive);
   const btn = document.getElementById('editModeBtn');
-  btn.textContent = editModeActive ? '✅ Done' : '✏️ Edit';
+  btn.textContent = editModeActive ? '\u2705 Done' : '\u270F\uFE0F Edit';
   btn.style.background   = editModeActive ? '#f0fdf4' : '#f7fafc';
   btn.style.borderColor  = editModeActive ? '#9ae6b4' : '#e2e8f0';
   btn.style.color        = editModeActive ? '#16a34a' : '#4a5568';
@@ -29,7 +29,7 @@ export function removeCompanyFromTier(co, tier) {
   saveCompaniesData(cos); renderTierList();
 }
 
-// ─── Tier List ──────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Tier List \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function renderTierList(filterQuery) {
   const tierListEl = document.getElementById('tierList');
@@ -57,7 +57,7 @@ export function renderTierList(filterQuery) {
           const badge = sb ? `<span class="chip-status-badge" style="background:rgba(0,0,0,0.08)">${sb.label}</span>` : '';
           const conns = getConnectionsForCompany(co);
           const connBadge = buildConnBadge(co, conns);
-          return `<span class="${cls}" title="${sb?sb.title:'Click to add to pipeline'}" onclick="if(!isEditMode())openAddModalCo('${safeId}','${tier}')">${co}${badge}${connBadge}<span class="chip-remove" onclick="event.stopPropagation();removeCompanyFromTier('${safeId}','${tier}')" title="Remove">×</span></span>`;
+          return `<span class="${cls}" title="${sb?sb.title:'Click to add to pipeline'}" onclick="if(!isEditMode())openAddModalCo('${safeId}','${tier}')">${co}${badge}${connBadge}<span class="chip-remove" onclick="event.stopPropagation();removeCompanyFromTier('${safeId}','${tier}')" title="Remove">\u00D7</span></span>`;
         }).join('')}
       </div>
     </div>`).join('');
@@ -66,7 +66,7 @@ export function renderTierList(filterQuery) {
   if (clEl) clEl.innerHTML = Object.values(COMPANIES).flat().map(c=>`<option value="${c}">`).join('');
 }
 
-// ─── Company Manager Modal ──────────────────────────────────────────────
+// \u2500\u2500\u2500 Company Manager Modal \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function openCoManager() { renderCoManagerList(); document.getElementById('coManagerModal').classList.add('open'); }
 export function closeCoManager() { document.getElementById('coManagerModal').classList.remove('open'); renderTierList(); }
@@ -82,7 +82,7 @@ function renderCoManagerList() {
         <select class="co-mgr-tier" onchange="recheckCompany('${co.replace(/'/g,"\\'")}',this.value)">
           ${[1,2,3,4].map(t=>`<option value="${t}" ${t==tier?'selected':''}>${TIER_NAMES[t]}</option>`).join('')}
         </select>
-        <button class="co-mgr-del" onclick="deleteCompany('${co.replace(/'/g,"\\'")}','${tier}')">✕</button>
+        <button class="co-mgr-del" onclick="deleteCompany('${co.replace(/'/g,"\\'")}','${tier}')">\u2715</button>
       </div>`).join('')}
     </div>`).join('');
 }
@@ -112,6 +112,6 @@ export function addCompany() {
   renderCoManagerList();
 }
 
-// ─── Expose editModeActive for onclick references ───────────────────────
+// \u2500\u2500\u2500 Expose editModeActive for onclick references \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // The onclick in renderTierList checks `editModeActive` on window
 export function isEditMode() { return editModeActive; }
