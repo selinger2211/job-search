@@ -3,7 +3,7 @@
 
 import { getConfig } from '../../config.js';
 
-// ─── Roles (pipeline applications) ─────────────────────────────────────
+// \u2500\u2500\u2500 Roles (pipeline applications) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function loadRoles() {
   try { return JSON.parse(localStorage.getItem('ili_roles') || '[]'); }
@@ -14,7 +14,7 @@ export function saveRoles(r) {
   localStorage.setItem('ili_roles', JSON.stringify(r));
 }
 
-// ─── Companies (tier list) ─────────────────────────────────────────────
+// \u2500\u2500\u2500 Companies (tier list) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function getCompanies() {
   try {
@@ -34,7 +34,7 @@ export function initCompanies() {
   }
 }
 
-// ─── LinkedIn connections ──────────────────────────────────────────────
+// \u2500\u2500\u2500 LinkedIn connections \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 let _connectionCache = null;
 
@@ -55,7 +55,7 @@ export function clearConnectionCache() {
   _connectionCache = null;
 }
 
-// ─── Artifacts ─────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Artifacts \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function getArtifactIndex() {
   try { return JSON.parse(localStorage.getItem('ili_artifacts')) || { artifacts: [] }; }
@@ -70,7 +70,7 @@ export function getCompanyArtifacts(company) {
   return getArtifactIndex().artifacts.filter(a => a.company === company);
 }
 
-// ─── Research briefs ───────────────────────────────────────────────────
+// \u2500\u2500\u2500 Research briefs \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function getResearchBriefsList() {
   try { return JSON.parse(localStorage.getItem('ili_research_briefs') || '[]'); }
@@ -89,7 +89,7 @@ export function saveResearchContent(storageKey, text) {
   localStorage.setItem(storageKey + '_ai_research', text);
 }
 
-// ─── Company profiles ──────────────────────────────────────────────────
+// \u2500\u2500\u2500 Company profiles \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function getCompanyProfile(companyName) {
   try {
@@ -101,7 +101,7 @@ export function saveCompanyProfile(companyName, profile) {
   localStorage.setItem('ili_company_profile_' + companyName, JSON.stringify(profile));
 }
 
-// ─── Settings ──────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Settings \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function getTheme() {
   return localStorage.getItem('ili_theme') || 'auto';
@@ -119,7 +119,7 @@ export function saveApiKey(key) {
   localStorage.setItem('ili_anthropic_key', key);
 }
 
-// ─── UI State ──────────────────────────────────────────────────────────
+// \u2500\u2500\u2500 UI State \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function getLastView() {
   return localStorage.getItem('ili_lastView') || 'dashboard';
@@ -146,7 +146,7 @@ export function saveStreak(data) {
   localStorage.setItem('ili_streak', JSON.stringify(data));
 }
 
-// ─── Artifacts folder ──────────────────────────────────────────────────
+// \u2500\u2500\u2500 Artifacts folder \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function getArtifactsFolderName() {
   return localStorage.getItem('ili_artifacts_folder') || '';
@@ -156,7 +156,7 @@ export function saveArtifactsFolderName(name) {
   localStorage.setItem('ili_artifacts_folder', name);
 }
 
-// ─── Quick check ───────────────────────────────────────────────────────
+// \u2500\u2500\u2500 Quick check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 
 export function getQuickCheck(roleId) {
   try { return JSON.parse(localStorage.getItem('quickCheck_' + roleId) || '{}'); }
