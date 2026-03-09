@@ -2335,10 +2335,14 @@ function renderCompaniesListView(container) {
 
         const coLogoDomain = co.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com';
         const coAltLogos = {'jpmorgan chase':'jpmorganchase.com','jp morgan':'jpmorganchase.com','meta':'meta.com','trade desk':'thetradedesk.com','the trade desk':'thetradedesk.com','new relic':'newrelic.com','yahoo':'yahoo.com','datadog':'datadoghq.com','notion':'notion.so','block':'block.xyz','scale ai':'scale.com','snap':'snap.com','snapchat':'snap.com'};
-        const coLogoFinal = 'https://logo.clearbit.com/' + (coAltLogos[co.name.toLowerCase()] || coLogoDomain) + '?size=40';
+        const coLogoDomainFinal = coAltLogos[co.name.toLowerCase()] || coLogoDomain;
+        const coLogoFinal = 'https://logo.clearbit.com/' + coLogoDomainFinal + '?size=40';
+        const coLogoFallback = 'https://www.google.com/s2/favicons?domain=' + coLogoDomainFinal + '&sz=64';
+        const coInitial = co.name.charAt(0).toUpperCase();
         return `<div class="company-card" data-company="${co.name.toLowerCase()}" data-tier="${co.tier || ''}" data-roles="${co.roles.length}" data-conns="${co.connections.length}" onclick="switchView('company-profile','${safeName}')">
           <div class="company-card-name">
-            <img src="${coLogoFinal}" alt="" style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border-light);object-fit:contain;background:white;flex-shrink:0" onerror="this.style.display='none'">
+            <img src="${coLogoFinal}" alt="" style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border-light);object-fit:contain;background:white;flex-shrink:0" onerror="this.onerror=function(){this.style.display='none';this.nextElementSibling.style.display='flex'};this.src='${coLogoFallback}'">
+            <span style="display:none;width:22px;height:22px;border-radius:5px;background:var(--accent-blue);color:white;font-size:11px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">${coInitial}</span>
             ${co.name}
             <span class="company-card-tier ${tierClass}" style="margin-left:auto">${tierLabel}</span>
           </div>
@@ -2430,7 +2434,10 @@ function renderCompanyProfileView(container, companyName) {
     'plaid': 'plaid.com', 'brex': 'brex.com', 'ramp': 'ramp.com', 'scale ai': 'scale.com'
   };
   const domainOverride = altLogos[companyName.toLowerCase()];
-  const finalLogoUrl = 'https://logo.clearbit.com/' + (domainOverride || logoDomain) + '?size=80';
+  const finalLogoDomain = domainOverride || logoDomain;
+  const finalLogoUrl = 'https://logo.clearbit.com/' + finalLogoDomain + '?size=80';
+  const fallbackLogoUrl = 'https://www.google.com/s2/favicons?domain=' + finalLogoDomain + '&sz=128';
+  const compInitial = companyName.charAt(0).toUpperCase();
 
   container.innerHTML = `
     <div class="cp-breadcrumb">
@@ -2441,7 +2448,8 @@ function renderCompanyProfileView(container, companyName) {
 
     <div class="cp-header">
       <div class="cp-header-top" style="display:flex;align-items:center;gap:14px">
-        <img src="${finalLogoUrl}" alt="${companyName}" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border-light);object-fit:contain;background:white" onerror="this.style.display='none'">
+        <img src="${finalLogoUrl}" alt="${companyName}" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border-light);object-fit:contain;background:white" onerror="this.onerror=function(){this.style.display='none';this.nextElementSibling.style.display='flex'};this.src='${fallbackLogoUrl}'">
+        <span style="display:none;width:48px;height:48px;border-radius:10px;background:var(--accent-blue);color:white;font-size:20px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0">${compInitial}</span>
         <div>
           <h2>${companyName}</h2>
           ${tierLabel}
@@ -2503,13 +2511,23 @@ function renderCompanyProfileView(container, companyName) {
 
     <div class="cp-section">
       <h3>🔗 Warm Introductions <span class="count">(${connections.length})</span></h3>
-      ${connections.length ? connections.slice(0, 10).map(c => `
-        <div class="cp-conn-item">
-          <strong>${c.fullName}</strong>
-          <span style="color:var(--text-muted);flex:1">${c.position || ''}</span>
-          ${c.url ? `<a href="${c.url}" target="_blank" style="font-size:10px;color:var(--accent-blue);text-decoration:none">🔗 Profile</a>` : ''}
-        </div>
-      `).join('') + (connections.length > 10 ? `<div style="font-size:11px;color:var(--text-faint);padding:6px 0">+ ${connections.length - 10} more connections</div>` : '')
+      ${connections.length ? (() => {
+        const TOP_SHOW = 3;
+        const allConns = connections.map(c => {
+          const linkedinUrl = c.url || ('https://www.linkedin.com/search/results/all/?keywords=' + encodeURIComponent(c.fullName));
+          return `<div class="cp-conn-item">
+            <a href="${linkedinUrl}" target="_blank" style="font-weight:600;color:var(--text-primary);text-decoration:none">${c.fullName}</a>
+            <span style="color:var(--text-muted);flex:1">${c.position || ''}</span>
+            <a href="${linkedinUrl}" target="_blank" style="font-size:10px;color:var(--accent-blue);text-decoration:none">🔗 Profile</a>
+          </div>`;
+        });
+        const topHtml = allConns.slice(0, TOP_SHOW).join('');
+        const moreHtml = allConns.length > TOP_SHOW
+          ? `<div id="connMoreWrap_${safeName.replace(/[^a-zA-Z0-9]/g,'_')}" style="display:none">${allConns.slice(TOP_SHOW).join('')}</div>
+             <button id="connMoreBtn_${safeName.replace(/[^a-zA-Z0-9]/g,'_')}" onclick="document.getElementById('connMoreWrap_${safeName.replace(/[^a-zA-Z0-9]/g,'_')}').style.display='block';this.style.display='none'" style="padding:4px 12px;background:var(--bg-surface);border:1.5px solid var(--border-medium);border-radius:5px;font-size:11px;color:var(--text-secondary);cursor:pointer;margin-top:4px">Show ${allConns.length - TOP_SHOW} more connections</button>`
+          : '';
+        return topHtml + moreHtml;
+      })()
       : '<div class="cp-empty">No connections found at this company. Consider cold outreach or finding warm intros through mutual connections.</div>'}
     </div>
 
@@ -2731,8 +2749,8 @@ function generateResearchBrief() {
     return { c: c, s: s };
   }).sort(function(a,b){ return b.s - a.s; });
   const networkCtx = scoredConns.length
-    ? '\n\nNETWORKING CONTEXT: You have ' + scoredConns.length + ' 1st-degree LinkedIn connection(s) at ' + company + ' (listed by relevance — Product/Eng/Design and seniority prioritized):\n' + scoredConns.slice(0,15).map(function(x){ return '- ' + x.c.fullName + (x.c.position ? ', ' + x.c.position : '') + ' (score:' + x.s + ')'; }).join('\n') + '\nPRIORITIZE the most senior Product, Engineering, and Design connections in Section 5 (Interviewer Insights). For each top connection, explain how to leverage them for a warm introduction. Put the most influential contacts first.'
-    : '\n\nNETWORKING CONTEXT: No direct LinkedIn connections at ' + company + '. Suggest strategies for getting a warm intro (mutual connections, alumni networks, industry events).';
+    ? '\n\nNETWORKING CONTEXT: I have ' + scoredConns.length + ' 1st-degree LinkedIn connection(s) at ' + company + ' (listed by relevance — Product/Eng/Design and seniority prioritized):\n' + scoredConns.slice(0,15).map(function(x){ return '- ' + x.c.fullName + (x.c.position ? ', ' + x.c.position : '') + ' (score:' + x.s + ')'; }).join('\n') + '\nPRIORITIZE the most senior Product, Engineering, and Design connections in Section 5 (Interviewer Insights). For each top connection, explain how I can leverage them for a warm introduction. Put the most influential contacts first. Use "your connection" not "Ili\'s connection".'
+    : '\n\nNETWORKING CONTEXT: I don\'t have direct LinkedIn connections at ' + company + '. Suggest strategies for getting a warm intro (mutual connections, alumni networks, industry events).';
 
   // Save or clear API key
   if (apiKey && saveKey) localStorage.setItem('ili_anthropic_key', apiKey);
@@ -2755,9 +2773,13 @@ function generateResearchBrief() {
     {id:'s8',emoji:'❓',title:'Questions to Ask Them',   hint:'Strategic questions about roadmap, team, success definition.'},
   ];
 
+  const refreshableSections = new Set(['s5','s6','s7']);
   const sectionsHtml = sectionDefs.map(function(s) {
+    const refreshBtn = refreshableSections.has(s.id)
+      ? '<button class="sec-refresh-btn" onclick="refreshSection(\'' + s.id + '\')" title="Regenerate this section">🔄</button>'
+      : '';
     return '<section class="sec" id="' + s.id + '">'
-      + '<div class="sec-hd"><span class="sec-em">' + s.emoji + '</span><h2>' + s.title + '</h2></div>'
+      + '<div class="sec-hd"><span class="sec-em">' + s.emoji + '</span><h2>' + s.title + '</h2>' + refreshBtn + '</div>'
       + '<p class="sec-hint">' + s.hint + '</p>'
       + '<div class="sec-content" id="content-' + s.id + '">'
       + (apiKey ? '<p class="streaming-msg">⏳ Researching…</p>' : '<p class="empty-msg">Waiting for Claude to research this…</p>')
@@ -2809,15 +2831,25 @@ function generateResearchBrief() {
           model:'claude-sonnet-4-6',
           max_tokens:8000,
           stream:true,
-          system:\`You are generating an interview prep research brief for Ili Selinger, a Senior/Staff/Principal PM candidate with 15+ years experience:
-- JPMorgan Chase (2021-2026): Product Director AI & LLM (Executive Director). Built keyword search/ranking platform (99% top-5 accuracy, 7000+ users), agentic RAG pipeline over 45M+ docs, agentic reporting system (300+ outputs/week, 90%+ manual work eliminated), agentic onboarding (<24hr turnaround for 85%+ of cases)
-- Yahoo/Verizon Media (2016-2021): Principal PM to Sr. Director. 5-year progression. $500M+ annual revenue owned across targeting. Rebuilt ranking models (50% revenue increase), $100M+ growth via retargeting, reduced infrastructure costs 30%. Trust & Verification: reduced ad fraud 90% at 20B+ daily ads scale. IAB taxonomy audiences protecting ~$50M+ revenue across 900M monthly users. GDPR/CCPA compliance lead.
-- New Relic (2014-2016): PM to Sr. Manager. Billing/provisioning for $100M+ ARR SaaS. Reduced new product integration from 6 engineer-months to 3 engineer-weeks. Zero incidents over multiple months.
+          system:\`You are generating an interview prep research brief for me. Write everything in FIRST PERSON — address me as "you" and "your", never "Ili" or "the candidate". This is my personal prep tool.
+
+My background:
+- JPMorgan Chase (2021-2026): Product Director, AI & LLM (Executive Director). Built keyword search/ranking platform (99% top-5 accuracy, 7000+ users), agentic RAG pipeline over 45M+ docs, agentic reporting system (300+ outputs/week, 90%+ manual work eliminated), agentic onboarding (<24hr turnaround for 85%+ of cases)
+- Yahoo/Verizon Media (2016-2021): Principal PM → Director → Sr. Director. 5-year progression. $500M+ annual revenue owned across targeting. Rebuilt ranking models (50% revenue increase), $100M+ growth via retargeting, reduced infrastructure costs 30%. Trust & Verification: reduced ad fraud 90% at 20B+ daily ads scale. IAB taxonomy audiences protecting ~$50M+ revenue across 900M monthly users. GDPR/CCPA compliance lead.
+- New Relic (2014-2016): PM → Sr. Manager. Billing/provisioning for $100M+ ARR SaaS. Reduced new product integration from 6 engineer-months to 3 engineer-weeks. Zero incidents over multiple months.
 - Conversant (2011-2014): PM. Launched Tag Manager in ~6 months with 50+ integrations. Mobile SDK, ~3% revenue lift via server-to-server tracking.
 - Mindjet (2005-2011): Project Manager. Established PMO, 40% IT savings, Mac product with 3-language localization.
 - Certifications: PMP, CSM. B.S. UC Santa Barbara.
 - Publication: MetaCon — Unified Predictive Segments with Trillion Concept Meta-Learning (arXiv 2022). 15.4% targeting accuracy improvement at 20B+ daily ads scale.
 - Target: IC Principal/Staff PM at Series B+ or public companies in AdTech, AI/ML, or data platforms
+
+IMPORTANT VOICE RULES:
+- Write in second person: "you have", "your experience", "your background in..."
+- Section 6 (Tell Me About Yourself) should be written in first person as a script I would actually say: "I'm a Sr. Director-level product leader..." NOT "Ili is a product leader..."
+- Section 5 (Interviewer Insights) should say "your connection" not "Ili's connection"
+- NEVER refer to me in the third person. This is MY personal prep document.
+
+TITLE ACCURACY: My Yahoo progression was "Principal PM → Director → Sr. Director". Do NOT abbreviate or alter this. I was NEVER a "Principal PM" as a standalone title — I started as a Principal PM and was promoted twice. My JPMC title is "Product Director, AI & LLM (Executive Director)". Use exact titles everywhere.
 
 Output your research in EXACTLY this format with these section markers. Each section MUST start with the marker on its own line:
 
@@ -2976,6 +3008,48 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
       const sec=document.getElementById(IDS[i]);
       if(sec)sec.classList.add('done');
     }
+  }
+  async function refreshSection(sid){
+    var aKey='${apiKey.replace(/'/g,"\\'")}';
+    if(!aKey){alert('No API key.');return;}
+    var el=document.getElementById('content-'+sid);
+    if(!el)return;
+    el.innerHTML='<p class="streaming-msg">🔄 Regenerating…</p>';
+    var sNames={s5:'Interviewer Insights',s6:'Tell Me About Yourself',s7:'Tailored Resume'};
+    var sNum=parseInt(sid.replace('s',''));
+    var cached=localStorage.getItem('${storageKey}_ai_research')||'';
+    var ctxM=cached.match(/## 1:[\\s\\S]*?(?=## 3:|$)/);
+    var ctx=ctxM?ctxM[0].slice(0,1500):'';
+    var jdCtx=(cached.match(/## 2:[\\s\\S]*?(?=## 3:|$)/)||[''])[0].slice(0,1000);
+    var prompts={};
+    prompts.s5='Regenerate Section 5: Interviewer Insights. Write in second person (your, you). Previous context:\\n'+ctx;
+    prompts.s6='Regenerate Section 6: Tell Me About Yourself. Write a 90-second opener in FIRST PERSON as a script I would say. Start with "I am a Sr. Director-level product leader...". My Yahoo progression was "Principal PM then Director then Sr. Director" — NEVER use "Principal PM" alone. JPMC title: "Product Director, AI and LLM (Executive Director)". Context:\\n'+ctx+'\\n'+jdCtx;
+    prompts.s7='Regenerate Section 7: Tailored Resume. Output ONLY a JSON code block. RULES: Use EXACT titles (Product Director AI and LLM with level Executive Director; Principal PM then Director then Sr. Director; Product Manager then Sr. Manager Product; Product Manager at Conversant). Skills from ONLY: Addressability and Identity Resolution, First-Party Data Activation, Data Collaboration, Programmatic and RTB, Privacy Law GDPR CCPA, Publisher Monetization, Real-Time Decisioning, Audience Segmentation, AI/ML Platforms, Agentic Systems and RAG, Search and Ranking, Ad Quality and Trust, Cross-Functional Leadership, Platform Infrastructure. NEVER invent skills or pull JD keywords. All bullets must use real metrics from my actual experience. Context:\\n'+jdCtx;
+    var sysP='You are regenerating one section of my interview prep brief. Write in second person (you/your) except Section 6 which should be first person. NEVER refer to me as Ili or the candidate. My background: JPMC 2021-2026 Product Director AI/LLM (ED), Yahoo 2016-2021 Principal PM to Director to Sr. Director ($500M+ revenue, 20B+ daily ads), New Relic 2014-2016, Conversant 2011-2014. Publication: MetaCon arXiv 2022.';
+    try{
+      var resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':aKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,stream:true,system:sysP,messages:[{role:'user',content:prompts[sid]+' '+${JSON.stringify(networkCtx)}}]})
+      });
+      if(!resp.ok)throw new Error('API '+resp.status);
+      var reader=resp.body.getReader();var decoder=new TextDecoder();var txt='';var buf='';
+      while(true){
+        var rd=await reader.read();if(rd.done)break;
+        buf+=decoder.decode(rd.value,{stream:true});
+        var lns=buf.split('\\n');buf=lns.pop()||'';
+        for(var ln of lns){
+          if(!ln.startsWith('data: '))continue;var d=ln.slice(6);if(d==='[DONE]')continue;
+          try{var ev=JSON.parse(d);if(ev.type==='content_block_delta'&&ev.delta&&ev.delta.text){txt+=ev.delta.text;
+            if(sid==='s7'){try{var jm=txt.match(/\\\`\\\`\\\`json\\n([\\s\\S]*?)\\\`\\\`\\\`/)||txt.match(/\\{[\\s\\S]*"summary"[\\s\\S]*\\}/);if(jm){resumeData=JSON.parse(jm[1]||jm[0]);renderResumePreview(el,resumeData);}else{el.innerHTML=mdToHtml(txt);}}catch(e){el.innerHTML=mdToHtml(txt);}}
+            else{el.innerHTML=mdToHtml(txt);}
+          }}catch(e){}
+        }
+      }
+      var full=localStorage.getItem('${storageKey}_ai_research')||'';
+      var mk='## '+sNum+':';var nk='## '+(sNum+1)+':';var mi=full.indexOf(mk);
+      if(mi!==-1){var ni=full.indexOf(nk,mi);full=full.slice(0,mi)+mk+' '+sNames[sid]+'\\n'+txt+'\\n'+(ni!==-1?full.slice(ni):'');localStorage.setItem('${storageKey}_ai_research',full);}
+    }catch(err){el.innerHTML='<p style="color:#dc2626">Error: '+err.message+' <button onclick="refreshSection(\\''+sid+'\\')">Retry</button></p>';}
   }
   function renderResumePreview(el,rd){
     let h='<div class="resume-preview" style="font-family:Arial,sans-serif;max-width:700px;border:1px solid #e2e8f0;border-radius:8px;padding:24px;background:#fff;margin-bottom:14px">';
@@ -3215,7 +3289,9 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
     '.sec.done{border-left-color:#48bb78}',
     '.sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}',
     '.sec-em{font-size:20px;line-height:1}',
-    '.sec-hd h2{font-size:15px;font-weight:700;color:#1a3a5c}',
+    '.sec-hd h2{font-size:15px;font-weight:700;color:#1a3a5c;flex:1}',
+    '.sec-refresh-btn{padding:3px 8px;background:var(--bg-surface,#f7fafc);border:1.5px solid var(--border-medium,#e2e8f0);border-radius:5px;font-size:11px;cursor:pointer;opacity:0.6;transition:opacity .2s}',
+    '.sec-refresh-btn:hover{opacity:1}',
     '.sec-hint{font-size:11px;color:#a0aec0;margin-bottom:10px;line-height:1.4}',
     '.sec-content{font-size:13px;line-height:1.75;color:#2d3748;min-height:40px}',
     '.empty-msg{color:#cbd5e0;font-style:italic;font-size:12px}',
