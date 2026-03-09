@@ -2786,14 +2786,16 @@ function generateResearchBrief() {
     {id:'s1',emoji:'🏢',title:'Company Snapshot',       hint:'Mission, size, stage, business model, recent news, investors, culture.'},
     {id:'s2',emoji:'📋',title:'Role Breakdown',          hint:'Key responsibilities, must-have skills, day-1 priorities, success metrics.'},
     {id:'s3',emoji:'🛍️',title:'Product & Problem Space', hint:'Core products, target customers, differentiators, competitors, market trends.'},
-    {id:'s4',emoji:'⚠️',title:'Key Concerns & Pre-emptions', hint:'Likely tough questions with strong answers.'},
-    {id:'s5',emoji:'👤',title:'Interviewer Insights',    hint:'Research each person — background, focus areas, good topics to reference.'},
-    {id:'s6',emoji:'🎤',title:'Tell Me About Yourself',  hint:'A tailored 90-second opener connecting your story to this role.'},
-    {id:'s7',emoji:'📄',title:'Tailored Resume',          hint:'Your real resume, subtly reframed for this role. Only highlights and reorders existing experience — nothing fabricated. Review, then export as DOCX or PDF.'},
+    {id:'s4',emoji:'🎯',title:'Key Skepticisms & Counter-Stories', hint:'Top 4-5 reasons they might doubt your candidacy — with the specific story or accomplishment that neutralizes each one.'},
+    {id:'s5',emoji:'👤',title:'Interviewer Insights',    hint:'Each interviewer\'s background, recent posts/opinions, and specific talking points to align with their views.'},
+    {id:'s6',emoji:'🎤',title:'Your Sales Pitch (TMAY)',  hint:'The "why I\'m the perfect fit" format: 2-3 sentence summary → 3 accomplishments addressing skepticisms → why this role. Under 90 seconds.'},
+    {id:'s7',emoji:'📄',title:'Tailored Resume',          hint:'Your real resume, reframed for this role. Bullets ordered by what the recruiter is scanning for. Export as DOCX or PDF.'},
     {id:'s8',emoji:'❓',title:'Questions to Ask Them',   hint:'Strategic questions about roadmap, team, success definition.'},
+    {id:'s9',emoji:'✉️',title:'Cover Letter & Cold Outreach', hint:'A customized cover letter, LinkedIn connection request, and cold email for networking into this role.'},
+    {id:'s10',emoji:'🏆',title:'Post-Interview Playbook', hint:'Thank-you email template (send within 2 hours), "cherry on top" work product idea, and debrief checklist.'},
   ];
 
-  const refreshableSections = new Set(['s5','s6','s7']);
+  const refreshableSections = new Set(['s5','s6','s7','s9','s10']);
   const sectionsHtml = sectionDefs.map(function(s) {
     const refreshBtn = refreshableSections.has(s.id)
       ? '<button class="sec-refresh-btn" onclick="refreshSection(\'' + s.id + '\')" title="Regenerate this section">🔄</button>'
@@ -2850,8 +2852,8 @@ function generateResearchBrief() {
     const statusEl=document.getElementById('stream-status');
     statusEl.textContent='🔄 Connecting to Claude…';
     statusEl.style.display='block';
-    const SECTION_MARKERS=['## 1:','## 2:','## 3:','## 4:','## 5:','## 6:','## 7:','## 8:'];
-    const SECTION_IDS=['s1','s2','s3','s4','s5','s6','s7','s8'];
+    const SECTION_MARKERS=['## 1:','## 2:','## 3:','## 4:','## 5:','## 6:','## 7:','## 8:','## 9:','## 10:'];
+    const SECTION_IDS=['s1','s2','s3','s4','s5','s6','s7','s8','s9','s10'];
     try{
       const resp=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
@@ -2863,7 +2865,7 @@ function generateResearchBrief() {
         },
         body:JSON.stringify({
           model:'claude-sonnet-4-6',
-          max_tokens:8000,
+          max_tokens:12000,
           stream:true,
           system:\`You are generating an interview prep research brief for me. Write everything in FIRST PERSON — address me as "you" and "your", never "Ili" or "the candidate". This is my personal prep tool.
 
@@ -2894,11 +2896,29 @@ TITLE ACCURACY: My Yahoo progression was "Principal PM → Director → Sr. Dire
 Output your research in EXACTLY this format with these section markers. Each section MUST start with the marker on its own line:
 
 ## 1: Company Snapshot
+Company stage, employee count, last fundraise/valuation/market cap, latest financials, mission, culture, recent news. Include what software artifacts a PM in this role would own.
+
 ## 2: Role Breakdown
+Key responsibilities, must-have skills, day-1 priorities, success metrics. Identify the ONE hardest-to-find skill the recruiter is scanning for.
+
 ## 3: Product & Problem Space
-## 4: Key Concerns & Pre-emptions
+Core products, target customers, buyer/user personas, differentiators, competitors, market trends. Describe the specific part of the product org this role sits in.
+
+## 4: Key Skepticisms & Counter-Stories
+Identify the top 4-5 reasons the hiring committee would be SKEPTICAL about my candidacy for this specific role. For each skepticism, map it to a specific story or accomplishment from my background that neutralizes it. Format as:
+**Skepticism 1: [what they would doubt]**
+→ Counter-story: [specific accomplishment + metric that disproves it]
+→ Use in: [TMAY / Resume / Q&A — where to deploy this counter]
+
 ## 5: Interviewer Insights
-## 6: Tell Me About Yourself
+For each interviewer: their background, current role, years at company, any LinkedIn posts or published content, their likely opinions and philosophies about product management. Then suggest specific talking points that ALIGN with their known views. If no interviewers provided, give general advice for common PM interviewer archetypes (HM, skip-level, XFN eng/design, recruiter).
+
+## 6: Your Sales Pitch (Tell Me About Yourself)
+Write this as a FIRST PERSON script I would actually say. Follow this EXACT 3-part structure (under 90 seconds total):
+PART 1 — Summary (2-3 sentences): Who I am and my through-line/brand. Match seniority framing to the target role. If IC role, do NOT lead with "Sr. Director-level".
+PART 2 — Three Accomplishments: Pick exactly 3 accomplishments that directly ADDRESS the top skepticisms from Section 4. Each should use the SAD format (Surface → Action → Data). These are NOT a chronological walk-through — they are cherry-picked to neutralize doubts.
+PART 3 — Why This Role (2-3 sentences): Why I specifically want THIS role at THIS company. Must be specific enough that swapping in a competitor's name would NOT still make sense.
+
 ## 7: Tailored Resume
 Output EXACTLY the JSON structure below (inside a JSON code block).
 
@@ -2914,11 +2934,15 @@ STRICT RULES:
 2. SKILLS LINE: Pick 5-8 from ONLY this pool, reorder by relevance to the role:
    [Addressability & Identity Resolution, First-Party Data Activation, Data Collaboration, Programmatic & RTB, Privacy Law (GDPR / CCPA), Publisher Monetization, Real-Time Decisioning, Audience Segmentation, AI/ML Platforms, Agentic Systems & RAG, Search & Ranking, Ad Quality & Trust, Cross-Functional Leadership, Platform Infrastructure]
    Do NOT invent skills. Do NOT pull keywords from the JD as skills.
-3. SUMMARY: 3-4 sentences reframing the same real experience through a lens relevant to this role. MUST mention "$500M+ revenue products at Yahoo" and "20B+ daily ads scale". For the opening, match seniority framing to the TARGET ROLE: if the role is IC (Principal PM, Staff PM, etc.), do NOT lead with "Sr. Director-level" — instead use framing like "Product leader with 10+ years" or "Principal-level product leader with 10+ years". Only use "Sr. Director-level" if applying to a Director+ management role. Do NOT add capabilities or experience not in the bullet bank.
-4. BULLETS: Choose from the BULLET BANK below. You may lightly rephrase for flow (see examples) but every metric, every number, every claim must match the original. You may combine two related bullets into one. You may reorder bullets within a role. Bold the key metrics with **.
+3. SUMMARY AS SKEPTICISM PIN: The summary must directly address the recruiter's #1 doubt about my candidacy (identified in Section 4). 3-4 sentences reframing the same real experience through a lens relevant to this role. MUST mention "$500M+ revenue products at Yahoo" and "20B+ daily ads scale". For the opening, match seniority framing to the TARGET ROLE: if the role is IC (Principal PM, Staff PM, etc.), do NOT lead with "Sr. Director-level" — instead use framing like "Product leader with 10+ years" or "Principal-level product leader with 10+ years". Only use "Sr. Director-level" if applying to a Director+ management role. Do NOT add capabilities or experience not in the bullet bank.
+4. BULLETS: Choose from the BULLET BANK below. You may lightly rephrase for flow (see examples) but every metric, every number, every claim must match the original. You may combine two related bullets into one.
+   ORDERING RULE: Within each role, put the bullet that is MOST relevant to the JD's hardest-to-find requirement FIRST. Order remaining bullets by relevance to the role, not chronologically. Bold the key metrics with **.
+   SAD CHECK: Every bullet should follow Surface → Action → Data. If a bullet bank entry lacks one element, that's fine — do not invent data.
+   VERB CHECK: Never start bullets with weak verbs (helped, worked, managed, participated, assisted, implemented). Use strong verbs (built, designed, led, drove, launched, reduced, accelerated, owned, scaled).
 5. DO NOT add JD-specific keywords, technologies, or frameworks that don't appear in the bullet bank. The resume should feel naturally relevant, not keyword-stuffed.
 6. Mindjet role: include ONLY if relevant, otherwise omit entirely.
 7. JPMC bullets 3 and 4 can be combined into one bullet (see bullet bank).
+8. COMPANY CONTEXT for lesser-known companies: For New Relic, Conversant, and Mindjet, the subtitle should include a brief company descriptor (e.g. "SaaS observability platform, $100M+ ARR at time" or "Digital advertising platform, ValueClick subsidiary"). JPMC and Yahoo need no descriptor.
 
 GOOD vs BAD examples:
 GOOD reframe: "Owned $500M+ annual revenue across targeting infrastructure; led migration from batch to real-time decisioning, improving advertiser CPA 25% and enabling addressable audience activation at scale" ← adds "enabling addressable audience activation at scale" which is a true description of what the system did
@@ -2968,9 +2992,43 @@ JSON FORMAT:
 {"summary":"...","skills":"Skill1 · Skill2 · ...","experience":[{"company":"JPMorgan Chase","title":"Product Director, AI & LLM","level":"(Executive Director)","dates":"2021 – 2026","subtitle":"AI-powered search, retrieval, and decisioning platforms for investment banking workflows","bullets":["..."]},{"company":"Yahoo (Verizon Media / Oath)","title":"Principal PM → Director → Sr. Director","dates":"2016 – 2021","subtitle":"...","bullets":["..."]},{"company":"New Relic","title":"Product Manager → Sr. Manager, Product","dates":"2014 – 2016","subtitle":"Billing, provisioning, and packaging systems during hypergrowth","bullets":["..."]},{"company":"Conversant","title":"Product Manager","dates":"2011 – 2014","subtitle":"Tag management, mobile measurement, and conversion tracking","bullets":["..."]}],"certs":"Project Management Professional (PMP) · Certified Scrum Master (CSM) · B.S., University of California, Santa Barbara","publication":{"title":"MetaCon: Unified Predictive Segments System with Trillion Concept Meta-Learning","venue":"arXiv, 2022 · Co-author","description":"AI system predicting user interests across 68+ tasks simultaneously; improved targeting accuracy 15.4% over prior production system at 20B+ daily ads scale"}}
 \\\`\\\`\\\`
 ## 8: Questions to Ask Them
+Be specific, opinionated, and direct. No filler. Write as if advising a senior PM colleague. Include at least one question that demonstrates you understand the company's specific challenges. Advanced tip: weave in an accomplishment — e.g. "At Yahoo I did X — have you guys tried something similar?"
 
-Be specific, opinionated, and direct. No filler. Write as if advising a senior PM colleague.\`,
-          messages:[{role:'user',content:'Research ' + ${JSON.stringify(company)} + ' for the ' + ${JSON.stringify(role)} + ' role' + ${jdUrl ? JSON.stringify(' — job posting: '+jdUrl) : "''"} + ${interviewers ? JSON.stringify(' — interviewers: '+interviewers) : "''"} + '. Generate a complete interview prep brief covering all 8 sections.' + ${JSON.stringify(networkCtx)}}]
+## 9: Cover Letter & Cold Outreach
+Generate THREE pieces of outreach content:
+
+**A. Cover Letter (for applications)**
+Follow this 4-element formula:
+1. Specific, relevant experience connecting my background to this role's requirements
+2. Proof I've studied the product (mention a specific feature, metric, or challenge)
+3. Role-relevant skills addressing the gap areas
+4. A brief product idea or observation relevant to the role (the "work product" hook)
+Keep it to 4-5 short paragraphs. Professional but not stiff.
+
+**B. LinkedIn Connection Request (300 char max)**
+For reaching out to someone at the company. Personalize with something that ties us together, qualify myself for the role in one sentence, and ask for a chat. Include a meeting link placeholder.
+
+**C. Cold Email (for networking)**
+Semi-personalized outreach for someone at the company. Include: a hook showing I researched them, qualification for the role, and a soft ask for a referral or chat. Keep it under 150 words.
+
+## 10: Post-Interview Playbook
+Generate three things:
+
+**A. Thank-You Email Template**
+A concise thank-you note to send within 2 HOURS (not 24) of the interview. Reference the conversation specifically — include placeholders like [topic you discussed] and [their point about X]. Keep it 3-4 sentences + one sentence about continued interest.
+
+**B. "Cherry on Top" Work Product Idea**
+Based on the role and company, suggest ONE specific work product I could create and send to the hiring manager to stand out: a competitor feature teardown, a mini product spec, a metrics framework, or a strategy one-pager. Describe what it would contain in 3-4 bullet points. This should take no more than 2-3 hours.
+
+**C. Debrief Checklist**
+A quick checklist for after each interview round:
+- What went well?
+- What didn't go well?
+- What questions were asked?
+- Did I inject all my counter-stories from Section 4?
+- Who might be my voice in the debrief meeting?
+- What follow-up is needed?\`,
+          messages:[{role:'user',content:'Research ' + ${JSON.stringify(company)} + ' for the ' + ${JSON.stringify(role)} + ' role' + ${jdUrl ? JSON.stringify(' — job posting: '+jdUrl) : "''"} + ${interviewers ? JSON.stringify(' — interviewers: '+interviewers) : "''"} + '. Generate a complete interview prep brief covering all 10 sections.' + ${JSON.stringify(networkCtx)}}]
         })
       });
       if(!resp.ok){
@@ -3040,14 +3098,14 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
   }
   let resumeData=null;
   function renderSections(text){
-    const MARKERS=[/^## 1:/m,/^## 2:/m,/^## 3:/m,/^## 4:/m,/^## 5:/m,/^## 6:/m,/^## 7:/m,/^## 8:/m];
-    const IDS=['s1','s2','s3','s4','s5','s6','s7','s8'];
+    const MARKERS=[/^## 1:/m,/^## 2:/m,/^## 3:/m,/^## 4:/m,/^## 5:/m,/^## 6:/m,/^## 7:/m,/^## 8:/m,/^## 9:/m,/^## 10:/m];
+    const IDS=['s1','s2','s3','s4','s5','s6','s7','s8','s9','s10'];
     const positions=MARKERS.map(function(m){const match=text.match(m);return match?text.indexOf(match[0]):-1;});
-    for(let i=0;i<8;i++){
+    for(let i=0;i<10;i++){
       if(positions[i]===-1)continue;
       const start=text.indexOf('\\n',positions[i]);
       if(start===-1)continue;
-      const end=(i<7&&positions[i+1]!==-1)?positions[i+1]:text.length;
+      const end=(i<9&&positions[i+1]!==-1)?positions[i+1]:text.length;
       const content=text.slice(start+1,end).trim();
       if(!content)continue;
       const el=document.getElementById('content-'+IDS[i]);
@@ -3078,16 +3136,18 @@ Be specific, opinionated, and direct. No filler. Write as if advising a senior P
     var el=document.getElementById('content-'+sid);
     if(!el)return;
     el.innerHTML='<p class="streaming-msg">🔄 Regenerating…</p>';
-    var sNames={s5:'Interviewer Insights',s6:'Tell Me About Yourself',s7:'Tailored Resume'};
+    var sNames={s5:'Interviewer Insights',s6:'Your Sales Pitch (Tell Me About Yourself)',s7:'Tailored Resume',s9:'Cover Letter & Cold Outreach',s10:'Post-Interview Playbook'};
     var sNum=parseInt(sid.replace('s',''));
     var cached=localStorage.getItem('${storageKey}_ai_research')||'';
     var ctxM=cached.match(/## 1:[\\s\\S]*?(?=## 3:|$)/);
     var ctx=ctxM?ctxM[0].slice(0,1500):'';
     var jdCtx=(cached.match(/## 2:[\\s\\S]*?(?=## 3:|$)/)||[''])[0].slice(0,1000);
     var prompts={};
-    prompts.s5='Regenerate Section 5: Interviewer Insights. Write in second person (your, you). Previous context:\\n'+ctx;
-    prompts.s6='Regenerate Section 6: Tell Me About Yourself. Write a 90-second opener in FIRST PERSON as a script I would say. Start with "I am a Sr. Director-level product leader...". My Yahoo progression was "Principal PM then Director then Sr. Director" — NEVER use "Principal PM" alone. JPMC title: "Product Director, AI and LLM (Executive Director)". Context:\\n'+ctx+'\\n'+jdCtx;
-    prompts.s7='Regenerate Section 7: Tailored Resume. Output ONLY a JSON code block. RULES: Use EXACT titles (Product Director AI and LLM with level Executive Director; Principal PM then Director then Sr. Director; Product Manager then Sr. Manager Product; Product Manager at Conversant). Skills from ONLY: Addressability and Identity Resolution, First-Party Data Activation, Data Collaboration, Programmatic and RTB, Privacy Law GDPR CCPA, Publisher Monetization, Real-Time Decisioning, Audience Segmentation, AI/ML Platforms, Agentic Systems and RAG, Search and Ranking, Ad Quality and Trust, Cross-Functional Leadership, Platform Infrastructure. NEVER invent skills or pull JD keywords. All bullets must use real metrics from my actual experience. Context:\\n'+jdCtx;
+    prompts.s5='Regenerate Section 5: Interviewer Insights. For each interviewer: background, current role, years at company, any LinkedIn posts or published content, their likely opinions/philosophies. Suggest specific talking points that ALIGN with their known views. Write in second person (your, you). Previous context:\\n'+ctx;
+    prompts.s6='Regenerate Section 6: Your Sales Pitch (Tell Me About Yourself). Write in FIRST PERSON as a script I would say. Follow this EXACT 3-part structure (under 90 seconds total): PART 1 — Summary (2-3 sentences): Who I am and my brand. Match seniority to role — if IC, do NOT say Sr. Director-level. PART 2 — Three Accomplishments that address top skepticisms about my candidacy. Use SAD format (Surface, Action, Data). PART 3 — Why This Role (2-3 sentences, specific to THIS company — swapping in a competitor name should NOT still make sense). My Yahoo progression was "Principal PM then Director then Sr. Director". JPMC title: "Product Director, AI and LLM (Executive Director)". Context:\\n'+ctx+'\\n'+jdCtx;
+    prompts.s7='Regenerate Section 7: Tailored Resume. Output ONLY a JSON code block. RULES: Use EXACT titles (Product Director AI and LLM with level Executive Director; Principal PM then Director then Sr. Director; Product Manager then Sr. Manager Product; Product Manager at Conversant). Skills from ONLY: Addressability and Identity Resolution, First-Party Data Activation, Data Collaboration, Programmatic and RTB, Privacy Law GDPR CCPA, Publisher Monetization, Real-Time Decisioning, Audience Segmentation, AI/ML Platforms, Agentic Systems and RAG, Search and Ranking, Ad Quality and Trust, Cross-Functional Leadership, Platform Infrastructure. NEVER invent skills or pull JD keywords. All bullets must use real metrics from my actual experience. Order bullets within each role by relevance to JD hardest-to-find skill FIRST. Use strong verbs (built, designed, led, drove, launched). Summary must address recruiter top skepticism as a pin. For lesser-known companies (New Relic, Conversant, Mindjet), include company descriptor in subtitle. Context:\\n'+jdCtx;
+    prompts.s9='Regenerate Section 9: Cover Letter and Cold Outreach. Generate three pieces: A) Cover letter (4-5 paragraphs, 4-element formula: relevant experience, product knowledge proof, role-relevant skills, product idea hook). B) LinkedIn connection request (300 char max). C) Cold email for networking (under 150 words). Write in first person. Context:\\n'+ctx+'\\n'+jdCtx;
+    prompts.s10='Regenerate Section 10: Post-Interview Playbook. Generate: A) Thank-you email template to send within 2 HOURS of interview, with [placeholders] for conversation specifics. B) One cherry-on-top work product idea (competitor teardown, mini spec, metrics framework, or strategy one-pager) described in 3-4 bullets. C) Debrief checklist (what went well, what didnt, questions asked, did I inject counter-stories, who is my voice in debrief, what follow-up needed). Context:\\n'+ctx+'\\n'+jdCtx;
     var sysP='You are regenerating one section of my interview prep brief. Write in second person (you/your) except Section 6 which should be first person. NEVER refer to me as Ili or the candidate. My background: JPMC 2021-2026 Product Director AI/LLM (ED), Yahoo 2016-2021 Principal PM to Director to Sr. Director ($500M+ revenue, 20B+ daily ads), New Relic 2014-2016, Conversant 2011-2014. Publication: MetaCon arXiv 2022.';
     try{
       var resp=await fetch('https://api.anthropic.com/v1/messages',{
